@@ -1,0 +1,232 @@
+---
+import DashboardLayout from '../../layouts/dashboard.astro';
+import { ProyeccionesGrid } from '../../components/explorer/ProyeccionesGrid.tsx';
+import { clerkClient } from '@clerk/astro/server';
+import { getUserPlan } from '../../lib/plan';
+
+let userPlan = { plan: 'free' as const };
+try {
+  const auth = (Astro.locals as any).auth?.();
+  const userId = auth?.userId;
+  if (userId) {
+    const client = clerkClient({ secretKey: import.meta.env.CLERK_SECRET_KEY });
+    const user = await client.users.getUser(userId);
+    const meta = (user.publicMetadata as Record<string, any>) || {};
+    userPlan = getUserPlan(meta, user.username || undefined, userId);
+  }
+} catch { /* non-fatal */ }
+const isFree = userPlan.plan === 'free';
+---
+
+<DashboardLayout title="Explorer — elicita_">
+
+  <div class="exp-header">
+    <div>
+      <h1 class="exp-title">Explorer <span data-help="proyecciones" style="display:none"></span></h1>
+      <p class="exp-subtitle" id="exp-subtitle">Cargando…</p>
+    </div>
+    <div class="proyeccion-badge">[PROYECCIÓN] Basado en ciclos históricos</div>
+  </div>
+
+  <div class="exp-table-wrap" id="grid-mount">
+    {!isFree ? (
+      <ProyeccionesGrid client:only="react" rows={[]} />
+    ) : null}
+  </div>
+
+  {isFree && (
+    <div class="pro-cta-section">
+      <div class="pro-cta-glass">
+        <div class="pro-cta-icon">🔒</div>
+        <div class="pro-cta-title">Las proyecciones de renovación requieren Pro</div>
+        <div class="pro-cta-desc">
+          Sube de plan para desbloquear proyecciones de renovación y el resto de funciones Pro.
+        </div>
+        <a href="/precios" class="pro-cta-btn">Desbloquear con Pro →</a>
+      </div>
+    </div>
+  )}
+
+</DashboardLayout>
+
+<style is:global>
+  .exp-header {
+    padding: 20px 32px 16px;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+    position: sticky; top: 0; background: hsl(var(--card)); z-index: 10;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .exp-title { font-size: 18px; font-weight: 400; color: hsl(var(--foreground) / 0.85); margin-bottom: 4px; }
+  .exp-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: hsl(var(--foreground) / 0.3); }
+  .proyeccion-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: hsl(var(--warning) / 0.7); background: hsl(var(--warning) / 0.06);
+    border: 1px solid hsl(var(--warning) / 0.2); border-radius: 4px;
+    padding: 4px 10px; white-space: nowrap; align-self: center;
+  }
+
+  .exp-table-wrap {
+    margin: 0 32px 32px;
+    overflow: hidden;
+    max-height: calc(100vh - 180px);
+  }
+
+  .pro-cta-section {
+    padding: 48px 24px;
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 8px;
+    background: hsl(var(--foreground) / 0.02);
+    margin: 0 32px 32px;
+  }
+  .pro-cta-glass { text-align: center; max-width: 420px; margin: 0 auto; }
+  .pro-cta-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.8; }
+  .pro-cta-title { font-size: 1.125rem; font-weight: 500; color: hsl(var(--foreground) / 0.85); margin-bottom: 8px; }
+  .pro-cta-desc { font-size: 0.875rem; color: hsl(var(--foreground) / 0.45); line-height: 1.5; margin-bottom: 20px; }
+  .pro-cta-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 24px;
+    background: hsl(var(--primary) / 0.12); border: 1px solid hsl(var(--primary) / 0.35);
+    border-radius: 6px; color: hsl(var(--primary));
+    font-size: 0.875rem; font-weight: 500; text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pro-cta-btn:hover { background: hsl(var(--primary) / 0.2); border-color: hsl(var(--primary) / 0.5); }
+
+  @media (max-width: 767px) {
+    .exp-header { padding: 16px; }
+    .exp-table-wrap { margin: 0 16px 16px; max-height: calc(100vh - 160px); }
+    .pro-cta-section { margin: 0 16px 16px; }
+    .proyeccion-badge { display: none; }
+  }
+</style>
+
+<script is:inline>
+(function() {
+  const MOUNT = document.getElementById('grid-mount');
+  const SUBTITLE = document.getElementById('exp-subtitle');
+  const isFree = (window.__elicitaPlan && window.__elicitaPlan.plan) === 'free';
+  if (isFree) {
+    if (SUBTITLE) SUBTITLE.textContent = '';
+    return;
+  }
+
+  function emptyHtml() {
+    return `
+      <div style="text-align:center;padding:48px 24px;border:1px solid hsl(var(--foreground) / 0.06);border-radius:8px">
+        <div style="font-size:3rem;margin-bottom:16px;opacity:0.6">📊</div>
+        <div style="font-size:1rem;color:hsl(var(--foreground) / 0.7);margin-bottom:8px">Configura tu empresa para ver proyecciones</div>
+        <div style="font-size:0.875rem;color:hsl(var(--muted-foreground));margin-bottom:16px">Las proyecciones de renovación se calculan a partir de tu historial de adjudicaciones</div>
+        <a href="/cuenta/onboard" style="display:inline-block;padding:8px 20px;background:hsl(var(--primary) / 0.1);border:1px solid hsl(var(--primary) / 0.3);border-radius:6px;color:hsl(var(--primary));font-size:0.875rem;text-decoration:none">Configurar empresa →</a>
+      </div>`;
+  }
+
+  function updateIsland(rows) {
+    const island = MOUNT && MOUNT.querySelector('astro-island[data-component*="ProyeccionesGrid"]');
+    if (!island) return false;
+    const raw = island.getAttribute('data-props');
+    if (!raw) return false;
+    try {
+      const decoded = JSON.parse(decodeURIComponent(atob(raw)));
+      decoded.rows = rows;
+      island.setAttribute('data-props', btoa(encodeURIComponent(JSON.stringify(decoded))));
+      if (island._e && island._e.length) {
+        island._e.forEach(function(fn){ fn(); });
+      }
+      return true;
+    } catch(e) {}
+    return false;
+  }
+
+  function tryRender(rows) {
+    if (updateIsland(rows)) return true;
+    if (MOUNT && typeof React !== 'undefined' && typeof ReactDOM !== 'undefined' && window.ProyeccionesGrid) {
+      const root = ReactDOM.createRoot(MOUNT);
+      root.render(React.createElement(window.ProyeccionesGrid, { rows: rows }));
+      return true;
+    }
+    return false;
+  }
+
+  async function fetchWithTimeout(url, ms = 10000, init = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), ms);
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timeoutId);
+      return res;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') throw new Error('Tiempo de espera agotado');
+      throw err;
+    }
+  }
+
+  async function load() {
+    try {
+      const res = await fetchWithTimeout('/api/profile');
+      if (res.status === 401) {
+        const returnUrl = encodeURIComponent(location.pathname + location.search);
+        location.href = '/sign-in?redirect_url=' + returnUrl;
+        return;
+      }
+      if (!res.ok) throw new Error('API '+res.status);
+      const pj = await res.json();
+      const d = pj?.data || {};
+
+      const seen = new Set();
+      const rows = (d.ciclos_renovacion || [])
+        .filter(function(c) {
+          const raw = (c.proximo_estimado || '').replace('[PROYECCIÓN] ', '').trim();
+          const ym = raw.match(/^(\d{4})/);
+          return ym && parseInt(ym[1]) >= 2026;
+        })
+        .filter(function(c) {
+          const key = (c.organismo || '') + '|' + (c.cpv || '').replace('.0', '');
+          if (seen.has(key)) return false;
+          seen.add(key); return true;
+        });
+
+      if (SUBTITLE) SUBTITLE.textContent = rows.length + ' predicciones · basado en 63M registros históricos';
+
+      if (!rows.length) {
+        if (MOUNT) MOUNT.innerHTML = emptyHtml();
+        return;
+      }
+
+      if (tryRender(rows)) return;
+
+      // Use requestIdleCallback when available for a cleaner deferred hydration fallback;
+      // otherwise wait a short tick with setTimeout.
+      function scheduleHydrationCheck(fn) {
+        if (typeof requestIdleCallback !== 'undefined') {
+          return requestIdleCallback(fn, { timeout: 3000 });
+        }
+        return setTimeout(fn, 50);
+      }
+
+      var attempts = 0;
+      var checkId = null;
+      function hydrateStep() {
+        attempts++;
+        if (tryRender(rows)) return;
+        if (attempts <= 30) {
+          checkId = scheduleHydrationCheck(hydrateStep);
+        } else {
+          if (MOUNT) MOUNT.innerHTML = emptyHtml();
+        }
+      }
+      hydrateStep();
+    } catch (err) {
+      console.error('[proyecciones] load error:', err);
+      if (SUBTITLE) SUBTITLE.textContent = '';
+      if (MOUNT) MOUNT.innerHTML = emptyHtml();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', load);
+  } else {
+    load();
+  }
+})();
+</script>

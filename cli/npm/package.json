@@ -1,0 +1,35 @@
+{
+  "name": "@elcanosail/elicitac",
+  "version": "0.3.0",
+  "description": "CLI for Spanish public procurement data — 66.4M+ records",
+  "bin": {
+    "elicitac": "bin/elicitac"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elCanosail/elicita",
+    "directory": "cli"
+  },
+  "keywords": [
+    "elicitac",
+    "elicita",
+    "licitaciones",
+    "contratos",
+    "cpv",
+    "transparencia",
+    "españa"
+  ],
+  "author": "elCanosail",
+  "license": "MIT",
+  "files": [
+    "bin/",
+    "install.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

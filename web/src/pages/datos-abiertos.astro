@@ -1,0 +1,161 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/main.astro';
+import DataTransparency from '@/components/DataTransparency.astro';
+import {
+  TECHNOLOGY_DATASET,
+  downloadArtifacts,
+  loadPublishedMarketSnapshot,
+  marketIntelligenceLatestPath,
+} from '@/lib/market-intelligence';
+import { buildOpenDataDatasetJsonLd, loadDatasetContext } from '@/lib/jsonld-dataset';
+
+const publication = await loadPublishedMarketSnapshot();
+const metadata = {
+  title: 'Datos abiertos — Elicita',
+  description: 'Snapshots verificables de inteligencia de mercado sobre contratación pública española.',
+};
+
+// JSON-LD Dataset (propuesta B, 07-10): misma tarjeta canónica que /cobertura
+// (la URL canónica del dataset). Licencia desde el snapshot.json publicado y
+// dateModified desde status.json; sin artifact que respalde un campo, se omite.
+const datasetCtx = await loadDatasetContext();
+const datasetJsonLd = buildOpenDataDatasetJsonLd({
+  description:
+    '63M+ registros oficiales —contratación y mercantil— de 16 fuentes, 7 sectores publicados con métricas y actualización cada 4 horas.',
+  license: datasetCtx.license,
+  dateModified: datasetCtx.dateModified,
+});
+
+const formatDate = (date: string) => new Intl.DateTimeFormat('es-ES', {
+  dateStyle: 'long',
+  timeZone: 'UTC',
+}).format(new Date(date));
+const formatCount = (value: number) => new Intl.NumberFormat('es-ES').format(value);
+const formatAmount = (value: number) => new Intl.NumberFormat('es-ES', {
+  style: 'currency',
+  currency: 'EUR',
+  maximumFractionDigits: 0,
+}).format(value);
+---
+
+<Layout title={metadata.title} description={metadata.description} staticHtml={true}>
+  <script type="application/ld+json" set:html={JSON.stringify(datasetJsonLd)} slot="head" />
+  <section class="border-b border-border">
+    <div class="container mx-auto max-w-6xl px-4 py-16 md:py-24">
+      <p class="font-mono text-xs uppercase tracking-wider text-primary">Elicita Open Data</p>
+      <h1 class="mt-4 max-w-4xl text-4xl tracking-tight text-foreground md:text-5xl">Datos de mercado que se pueden revisar.</h1>
+      <p class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
+        Publicamos snapshots agregados, sus definiciones y su evidencia de generación. Una cifra solo aparece cuando el contrato, el recibo y los hashes verifican el mismo resultado.
+      </p>
+    </div>
+  </section>
+
+  <section class="border-b border-border bg-card/30">
+    <div class="container mx-auto max-w-6xl px-4 py-10 md:py-14">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Catálogo</p>
+          <h2 class="mt-2 text-2xl tracking-tight text-foreground">Tecnología y telecomunicaciones</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Piloto de Market Intelligence basado en reglas CPV versionadas, entidades resueltas y exclusiones agregadas.</p>
+        </div>
+        {publication.status === 'published' ? (
+          <span class="inline-flex w-fit rounded-full border border-primary px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-primary">Disponible</span>
+        ) : (
+          <span class="inline-flex w-fit rounded-full border border-warning px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-warning">Sin publicación aprobada</span>
+        )}
+      </div>
+
+      {publication.status === 'published' ? (
+        <div class="mt-8 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+          <div class="bg-background p-5">
+            <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Frescura de fuente</p>
+            <p class="mt-2 font-mono text-sm text-foreground">{publication.value.snapshot.source.freshness_date}</p>
+          </div>
+          <div class="bg-background p-5">
+            <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Periodo</p>
+            <p class="mt-2 font-mono text-sm text-foreground">{publication.value.snapshot.period.from} — {publication.value.snapshot.period.to}</p>
+          </div>
+          <div class="bg-background p-5">
+            <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Contratos analíticos</p>
+            <p class="mt-2 font-mono text-sm text-foreground">{formatCount(publication.value.snapshot.universe.analytic_contracts)}</p>
+          </div>
+          <div class="bg-background p-5">
+            <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Importe observado</p>
+            <p class="mt-2 font-mono text-sm text-foreground">{formatAmount(publication.value.snapshot.metrics.observed_amount_eur)}</p>
+          </div>
+        </div>
+      ) : (
+        <div class="mt-8 max-w-3xl rounded-lg border border-warning/50 bg-warning/10 p-5 text-sm leading-6 text-muted-foreground" role="status">
+          <p class="text-foreground">{publication.reason}</p>
+          <p class="mt-2">El catálogo está listo, pero no hay cifras ni archivos que descargar. El primer snapshot se mostrará solo después de pasar la validación y la revisión editorial.</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="container mx-auto max-w-6xl px-4 py-12 md:py-16">
+    <DataTransparency publication={publication} heading="Ficha de transparencia del dataset" />
+  </section>
+
+  {publication.status === 'published' && (
+    <>
+      <section class="border-y border-border bg-card/30">
+        <div class="container mx-auto max-w-6xl px-4 py-12 md:py-16">
+          <div class="max-w-3xl">
+            <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Descargas verificables</p>
+            <h2 class="mt-2 text-2xl tracking-tight text-foreground">Artefactos del snapshot</h2>
+            <p class="mt-3 text-sm leading-6 text-muted-foreground">Los enlaces se renderizan en el HTML del build. Cada archivo se verifica contra el recibo de generación y el manifiesto SHA-256 antes de aparecer aquí.</p>
+          </div>
+          <ul class="mt-8 grid gap-3 md:grid-cols-2" role="list">
+            {downloadArtifacts.map(({ filename, label, description }) => (
+              <li class="rounded-lg border border-border bg-background p-4">
+                <a href={`${marketIntelligenceLatestPath(TECHNOLOGY_DATASET)}${filename}`} class="font-mono text-sm text-primary underline decoration-primary/40 underline-offset-4 hover:text-foreground">{label}</a>
+                <p class="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+                <p class="mt-3 break-all font-mono text-xs text-muted-foreground">{filename}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section class="container mx-auto max-w-6xl px-4 py-12 md:py-16">
+        <div class="grid gap-8 lg:grid-cols-2">
+          <div>
+            <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Versiones y trazabilidad</p>
+            <h2 class="mt-2 text-2xl tracking-tight text-foreground">Cómo reproducir la lectura</h2>
+            <dl class="mt-5 space-y-3 text-sm leading-6">
+              <div class="flex flex-col gap-1 border-b border-border pb-3 sm:flex-row sm:justify-between sm:gap-6"><dt class="text-muted-foreground">Snapshot</dt><dd class="break-all font-mono text-foreground">{publication.value.snapshot.snapshot_id}</dd></div>
+              <div class="flex flex-col gap-1 border-b border-border pb-3 sm:flex-row sm:justify-between sm:gap-6"><dt class="text-muted-foreground">Generado</dt><dd class="text-foreground">{formatDate(publication.value.snapshot.generated_at)}</dd></div>
+              <div class="flex flex-col gap-1 border-b border-border pb-3 sm:flex-row sm:justify-between sm:gap-6"><dt class="text-muted-foreground">Metodología</dt><dd class="font-mono text-foreground">{publication.value.snapshot.methodology.methodology_version}</dd></div>
+              <div class="flex flex-col gap-1 border-b border-border pb-3 sm:flex-row sm:justify-between sm:gap-6"><dt class="text-muted-foreground">Licencia</dt><dd><a class="font-mono text-primary underline decoration-primary/40 underline-offset-4 hover:text-foreground" href={publication.value.snapshot.license.url}>{publication.value.snapshot.license.name}</a></dd></div>
+            </dl>
+          </div>
+          <div>
+            <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Histórico</p>
+            <h2 class="mt-2 text-2xl tracking-tight text-foreground">Snapshots conservados</h2>
+            <p class="mt-3 text-sm leading-6 text-muted-foreground">Los snapshots aprobados no se reescriben. La versión actual se sirve desde <code class="font-mono text-foreground">latest/</code>; su copia inmutable queda bajo el identificador del snapshot.</p>
+            <a class="mt-5 inline-flex rounded-full border border-border px-4 py-2 font-mono text-xs uppercase tracking-wider text-foreground transition-colors hover:border-primary hover:text-primary" href={`/data/market-intelligence/technology/snapshots/${publication.value.snapshot.snapshot_id}/snapshot.json`}>Abrir este snapshot histórico</a>
+          </div>
+        </div>
+      </section>
+    </>
+  )}
+
+  <section class="border-t border-border">
+    <div class="container mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-2 md:py-16">
+      <div>
+        <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Metodología y límites</p>
+        <h2 class="mt-2 text-2xl tracking-tight text-foreground">Qué mide este catálogo</h2>
+        <p class="mt-3 text-sm leading-6 text-muted-foreground">El importe observado no equivale a gasto ejecutado. Las sociedades no se fusionan por similitud de nombre; los grupos requieren evidencia y vigencia; las UTE sin reparto verificable permanecen separadas.</p>
+      </div>
+      <div>
+        <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Atribución</p>
+        <h2 class="mt-2 text-2xl tracking-tight text-foreground">Datos públicos, transformación trazable</h2>
+        <p class="mt-3 text-sm leading-6 text-muted-foreground">Elicita agrega fuentes administrativas de terceros; no sustituye a la fuente oficial ni adquiere derechos sobre los registros de origen. Consulta las condiciones de reutilización antes de redistribuir.</p>
+        <p class="mt-4 text-sm"><a class="font-mono text-primary underline decoration-primary/40 underline-offset-4 hover:text-foreground" href="/reutilizacion-y-atribucion">Reutilización y atribución</a><span aria-hidden="true"> · </span><a class="font-mono text-primary underline decoration-primary/40 underline-offset-4 hover:text-foreground" href="/fuentes">Fuentes de datos</a></p>
+      </div>
+    </div>
+  </section>
+</Layout>

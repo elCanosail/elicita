@@ -1,0 +1,296 @@
+---
+import Layout from '../../../layouts/main.astro';
+import { query } from '../../../lib/duckdb';
+import { decodificarParam, urlFichaNormalizada, urlPerfilNormalizada } from '../../../lib/licitacion-url';
+import { rateLimitGuard } from '../../../lib/rate-limit';
+import { FICHA_TTL_MS, fichaCache } from '../../../lib/escudo-ssr';
+
+// Escudo de origen (tarea 40): la ficha es un SELECT por petición y el sitemap
+// pone al rastreador delante — rate limit 120/min por IP (patrón tarea 29)
+// ANTES de tocar BD. 429 con Retry-After; el escudo real para el volumen es el
+// memo de datos + CF (ajuste fino de rastreo: Search Console, operador).
+const rateLimited = rateLimitGuard(Astro.request, { name: 'licitacion-ficha', limit: 120, windowMs: 60_000 });
+if (rateLimited) return rateLimited;
+
+// Astro NO decodifica los params de ruta (sondeo tarea 38): llegan tal cual
+// el path. Decodificar SIEMPRE antes de consultar — así la forma RAW y la
+// encoded del mismo contrato resuelven la misma fila (política en
+// lib/licitacion-url.ts). Malformado (% suelto) → sin consulta → no-encontrada.
+const fuenteRaw = Astro.params.fuente || '';
+const idRaw = Astro.params.id || '';
+const fuente = decodificarParam(fuenteRaw) || '';
+const id = decodificarParam(idRaw) || '';
+
+interface Licitacion {
+  id?: string;
+  fuente?: string;
+  expediente?: string | null;
+  organismo?: string | null;
+  objeto?: string | null;
+  estado?: string | null;
+  importe_licitacion?: number | null;
+  importe_adjudicacion?: number | null;
+  fecha_publicacion?: string | null;
+  fecha_fin?: string | null;
+  fecha_actualizacion?: string | null;
+  cpv?: string | null;
+  cpvs?: string[] | null;
+  adjudicatario?: string | null;
+  nif_adjudicatario?: string | null;
+  url?: string | null;
+}
+
+let licitacion: any = null;
+try {
+  if (fuente && id) {
+    // Memo de DATOS (no HTML): fila por FUENTE|id, LRU 10.000 · TTL 600s. La
+    // clave usa la MISMA normalización que la query (fuente uppercase). Un
+    // fallo DuckDB lanza y NO se cachea; el null de no-encontrada SÍ (mata
+    // también las tormentas de 404). El render sigue siendo por petición.
+    const clave = `${fuente.toUpperCase()}|${id}`;
+    licitacion = await fichaCache.cached(clave, FICHA_TTL_MS, async () => {
+      const results = await query<any>(
+        `SELECT * FROM contratos_vivos WHERE fuente = ? AND id = ? LIMIT 1`,
+        [fuente.toUpperCase(), id]
+      );
+      return results[0] || null;
+    });
+  }
+} catch (e) {
+  console.error('[licitacion]', e);
+}
+
+// No-encontrada (id inexistente, encoding malformado o params vacíos) es un
+// 404 REAL — antes servía 200 (soft-404, la clase que la tarea 38 destapó).
+// La página de «no encontrada» se conserva para el humano.
+if (!licitacion) {
+  Astro.response.status = 404;
+}
+
+// Canonical: la forma normalizada del contrato según la BD (RAW si safe, si no
+// encoded) — RAW y encoded consolidan en una única URL, la misma que emite el
+// sitemap. Se emite vía prop del Layout (el canonical autocanónico del Layout
+// usaría la URL pedida, que es justo lo que hay que consolidar).
+const canonicalPath = licitacion
+  ? urlFichaNormalizada(String(licitacion.fuente || fuente), String(licitacion.id || id))
+  : null;
+
+const l: Licitacion = licitacion || {};
+
+const objeto = l.objeto || 'Licitación';
+const organismo = l.organismo || null;
+const expediente = l.expediente || null;
+const estado = l.estado || null;
+const importeLicitacion = l.importe_licitacion ?? null;
+const importeAdjudicacion = l.importe_adjudicacion ?? null;
+const fechaPub = l.fecha_publicacion || null;
+const fechaFin = l.fecha_fin || null;
+const fechaActualizacion = l.fecha_actualizacion || null;
+const cpv = l.cpv || null;
+const cpvs = Array.isArray(l.cpvs) ? l.cpvs : [];
+const adjudicatario = l.adjudicatario || null;
+const nifAdj = l.nif_adjudicatario || null;
+const url = l.url || null;
+// Descubrimiento del activo de perfiles (tarea 42): el adjudicatario con NIF
+// resuelto enlaza a su perfil interno — la ficha era una isla sin un solo
+// enlace saliente al histórico del proveedor. Forma normalizada (RAW si safe,
+// encoded si no): el perfil decodifica el param, ambas resuelven la misma fila.
+const perfilPath = nifAdj ? urlPerfilNormalizada(String(nifAdj).trim()) : null;
+
+function fmtMoney(v: number | null | undefined): string {
+  if (v == null || v === 0) return '—';
+  return `${v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+}
+
+function fmtDate(d: string | null | undefined): string {
+  if (!d) return '—';
+  const s = String(d).slice(0, 10);
+  return s;
+}
+
+function estadoClass(s: string | null): string {
+  if (!s) return 'bg-white/5 text-white/50';
+  const base = s.toLowerCase();
+  if (base.includes('adjudic')) return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+  if (base.includes('abiert') || base.includes('public')) return 'bg-blue-500/15 text-blue-400 border border-blue-500/30';
+  if (base.includes('cerr') || base.includes('final') || base.includes('resuel')) return 'bg-white/10 text-white/60 border border-white/15';
+  if (base.includes('en curso') || base.includes('evalu')) return 'bg-amber-500/15 text-amber-400 border border-amber-500/30';
+  return 'bg-white/5 text-white/50 border border-white/10';
+}
+
+const metadata = {
+  title: `${objeto} — Elicita`,
+  description: `Licitación pública de ${l.fuente || fuente}${organismo ? ` — ${organismo}` : ''}${importeLicitacion ? ` — Importe: ${fmtMoney(importeLicitacion)}` : ''}. Encuentra licitaciones públicas con Elicita.`,
+};
+
+const jsonLd: Record<string, any> = {
+  '@context': 'https://schema.org',
+  '@type': 'GovernmentService',
+  name: objeto,
+  serviceType: cpv || undefined,
+  provider: organismo ? { '@type': 'GovernmentOrganization', name: organismo } : undefined,
+  datePublished: fechaPub || undefined,
+  validThrough: fechaFin || undefined,
+  offers: importeLicitacion
+    ? { '@type': 'Offer', price: importeLicitacion, priceCurrency: 'EUR' }
+    : undefined,
+  recipient: adjudicatario
+    ? { '@type': 'Organization', name: adjudicatario, identifier: nifAdj || undefined }
+    : undefined,
+};
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: 'https://elicita.es/',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Licitaciones',
+      item: 'https://elicita.es/buscar',
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: l.fuente || fuente || 'Fuente',
+      item: `https://elicita.es/buscar?fuente=${l.fuente || fuente}`,
+    },
+    {
+      '@type': 'ListItem',
+      position: 4,
+      name: expediente || id || 'Licitación',
+      item: `https://elicita.es${licitacion ? canonicalPath : `/licitacion/${fuente}/${id}`}`,
+    },
+  ],
+};
+
+Object.keys(jsonLd).forEach((key) => {
+  if (jsonLd[key] === undefined) delete jsonLd[key];
+});
+---
+
+{!licitacion && (
+  <Layout title="Licitación no encontrada — Elicita" description="No hemos encontrado esta licitación. Busca entre millones de contratos públicos en Elicita.">
+    <section class="py-20 md:py-32">
+      <div class="container mx-auto px-4 max-w-4xl text-center">
+        <p class="font-mono text-xs text-emerald-400 tracking-widest uppercase mb-4">404</p>
+        <h1 class="text-3xl md:text-5xl font-light text-white mb-4">Licitación no encontrada</h1>
+        <p class="text-white/50 mb-8 max-w-lg mx-auto">La licitación que buscas no existe o ha sido eliminada. Puede que la URL esté mal escrita.</p>
+        <a href="/buscar" class="inline-block bg-emerald-500 hover:bg-emerald-600 text-black font-mono text-sm px-6 py-3 rounded font-medium">← Volver a buscar licitaciones</a>
+      </div>
+    </section>
+  </Layout>
+)}
+
+{licitacion && (
+  <Layout title={metadata.title} description={metadata.description} canonical={`https://elicita.es${canonicalPath}`}>
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} slot="head" />
+    <meta property="og:type" content="article" slot="head" />
+    <meta property="og:title" content={metadata.title} slot="head" />
+    <meta property="og:description" content={metadata.description} slot="head" />
+
+    <section class="py-12 md:py-20">
+      <div class="container mx-auto px-4 max-w-4xl">
+        <a href="/buscar" class="font-mono text-xs text-emerald-400 hover:text-emerald-400 mb-8 inline-block">← Volver a buscar</a>
+
+        <div class="space-y-8">
+          <div>
+            <div class="flex flex-wrap items-center gap-2 mb-4">
+              <span class="font-mono text-xs text-emerald-400 tracking-widest uppercase">{l.fuente || fuente}</span>
+              {expediente && <span class="font-mono text-xs text-white/50">· {expediente}</span>}
+            </div>
+            <h1 class="text-2xl md:text-4xl font-light text-white leading-tight">{objeto}</h1>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6 border-t border-white/7">
+            {organismo && (
+              <div>
+                <p class="font-mono text-xs text-white/50 uppercase mb-1">Organismo</p>
+                <p class="text-white/80 text-sm leading-relaxed">{organismo}</p>
+              </div>
+            )}
+            {estado && (
+              <div>
+                <p class="font-mono text-xs text-white/50 uppercase mb-1">Estado</p>
+                <span class={`inline-block text-xs px-2.5 py-1 rounded font-mono ${estadoClass(estado)}`}>{estado}</span>
+              </div>
+            )}
+            {importeLicitacion != null && (
+              <div>
+                <p class="font-mono text-xs text-white/50 uppercase mb-1">Importe licitación</p>
+                <p class="text-white/80 text-sm font-mono">{fmtMoney(importeLicitacion)}</p>
+              </div>
+            )}
+            {importeAdjudicacion != null && (
+              <div>
+                <p class="font-mono text-xs text-white/50 uppercase mb-1">Importe adjudicación</p>
+                <p class="text-white/80 text-sm font-mono text-emerald-400">{fmtMoney(importeAdjudicacion)}</p>
+              </div>
+            )}
+            <div>
+              <p class="font-mono text-xs text-white/50 uppercase mb-1">Fecha publicación</p>
+              <p class="text-white/70 text-sm">{fmtDate(fechaPub)}</p>
+              {fechaActualizacion && (
+                <p class="text-white/50 text-xs mt-1">Actualizado: {fmtDate(fechaActualizacion)}</p>
+              )}
+            </div>
+            {fechaFin && (
+              <div>
+                <p class="font-mono text-xs text-white/50 uppercase mb-1">Fecha fin presentación</p>
+                <p class="text-white/70 text-sm">{fmtDate(fechaFin)}</p>
+              </div>
+            )}
+            {cpv && (
+              <div class="md:col-span-2">
+                <p class="font-mono text-xs text-white/50 uppercase mb-1">CPV</p>
+                <p class="text-white/80 text-sm font-mono">{cpv}</p>
+                {cpvs.length > 1 && (
+                  <ul class="mt-2 space-y-1">
+                    {cpvs.slice(0, 10).map((c) => (
+                      <li class="text-white/50 text-xs font-mono">{c}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+            {adjudicatario && (
+              <div class="md:col-span-2">
+                <p class="font-mono text-xs text-white/50 uppercase mb-1">Adjudicatario</p>
+                <p class="text-sm">
+                  {perfilPath
+                    ? <a href={perfilPath} class="text-emerald-400/80 hover:text-emerald-400 underline decoration-line" title="Ver el histórico de contratos del adjudicatario">{adjudicatario}</a>
+                    : <span class="text-white/80">{adjudicatario}</span>}
+                </p>
+                {nifAdj && <p class="text-white/50 text-xs font-mono mt-1">NIF: {nifAdj}</p>}
+              </div>
+            )}
+          </div>
+
+          {url && (
+            <div class="pt-4">
+              <a href={url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 border border-white/10 hover:border-emerald-500/40 text-white/60 hover:text-emerald-400 font-mono text-xs px-4 py-2 rounded transition-colors">
+                Ver en fuente original ↗
+              </a>
+            </div>
+          )}
+
+          <div class="pt-8 border-t border-white/7 flex flex-col sm:flex-row gap-4">
+            <a href="/sign-up" class="bg-emerald-500 hover:bg-emerald-600 text-black font-mono text-sm px-6 py-3 rounded font-medium text-center">
+              Monitorizar este organismo →
+            </a>
+            <a href={`/buscar?fuente=${l.fuente || fuente}`} class="border border-white/10 hover:border-white/20 text-white/50 hover:text-white/70 font-mono text-sm px-6 py-3 rounded text-center">
+              Ver más licitaciones →
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </Layout>
+)}

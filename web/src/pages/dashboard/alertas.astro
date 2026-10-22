@@ -1,0 +1,153 @@
+---
+import Layout from '../../layouts/dashboard.astro';
+
+const auth = (Astro.locals as any).auth?.();
+const userId = auth?.userId;
+
+// If not logged in, redirect to sign-in
+if (!userId) {
+  return Astro.redirect('/sign-in?redirect=/dashboard/alertas');
+}
+---
+
+<Layout title="Alertas — Elicita">
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-2">🔔 Alertas</h1>
+    <p class="text-gray-400 mb-6">Recibe un email cuando se publiquen contratos que coincidan con tus filtros.</p>
+
+    <div id="alert-limit" class="mb-6 p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-300">Plan: <span id="plan-name" class="font-semibold">—</span></span>
+        <span class="text-sm text-gray-300"><span id="alert-count">0</span> / <span id="alert-limit-num">1</span> alertas</span>
+      </div>
+      <div class="mt-2 w-full bg-gray-700 rounded-full h-2">
+        <div id="alert-bar" class="bg-blue-500 rounded-full h-2 transition-all" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Create alert form -->
+    <div class="mb-8 p-6 rounded-lg border border-gray-700 bg-gray-800/50">
+      <h2 class="text-lg font-semibold mb-4">Nueva alerta</h2>
+      <form id="create-alert-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">NIF del proveedor (opcional)</label>
+          <input type="text" name="nif_proveedor" placeholder="Ej: B15044357"
+            class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500" />
+          <p class="text-xs text-gray-500 mt-1">Te avisamos cuando este proveedor gane un contrato</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">CPV (opcional)</label>
+          <input type="text" name="cpv" placeholder="Ej: 33140000"
+            class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500" />
+          <p class="text-xs text-gray-500 mt-1">Te avisamos cuando se publique un contrato de este sector</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Organismo (opcional)</label>
+          <input type="text" name="organismo" placeholder="Ej: Servicio Andaluz de Salud"
+            class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-blue-500" />
+          <p class="text-xs text-gray-500 mt-1">Te avisamos cuando este organismo publique un contrato</p>
+        </div>
+        <p class="text-xs text-gray-500">Al menos un filtro es obligatorio. Los emails se envían cada 4 horas.</p>
+        <button type="submit"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors">
+          Crear alerta
+        </button>
+      </form>
+      <div id="create-error" class="mt-2 text-sm text-red-400 hidden"></div>
+    </div>
+
+    <!-- Active alerts list -->
+    <div>
+      <h2 class="text-lg font-semibold mb-4">Tus alertas activas</h2>
+      <div id="alerts-list" class="space-y-3">
+        <div class="text-gray-500 text-center py-8">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadAlerts() {
+      try {
+        const res = await fetch('/api/v1/alerts');
+        const data = await res.json();
+        if (!data.ok) return;
+
+        document.getElementById('plan-name').textContent = data.plan;
+        document.getElementById('alert-count').textContent = data.alerts.length;
+        document.getElementById('alert-limit-num').textContent = data.limit;
+        const pct = Math.min(100, (data.alerts.length / data.limit) * 100);
+        document.getElementById('alert-bar').style.width = pct + '%';
+
+        const list = document.getElementById('alerts-list');
+        if (data.alerts.length === 0) {
+          list.innerHTML = '<div class="text-gray-500 text-center py-8">No tienes alertas activas. Crea una arriba.</div>';
+          return;
+        }
+
+        list.innerHTML = data.alerts.map(a => {
+          const filters = [
+            a.nif_proveedor ? `NIF: ${a.nif_proveedor}` : null,
+            a.cpv ? `CPV: ${a.cpv}` : null,
+            a.organismo ? `Organismo: ${a.organismo}` : null,
+          ].filter(Boolean).join(' · ');
+
+          const created = new Date(a.created_at).toLocaleDateString('es-ES');
+          const lastSent = a.last_sent_at ? new Date(a.last_sent_at).toLocaleString('es-ES') : 'Nunca';
+
+          return `
+            <div class="p-4 rounded-lg border border-gray-700 bg-gray-800/50 flex justify-between items-start">
+              <div>
+                <div class="font-medium text-white">${filters || 'Sin filtros'}</div>
+                <div class="text-xs text-gray-400 mt-1">Creada: ${created} | Último envío: ${lastSent}</div>
+              </div>
+              <button onclick="deleteAlert('${a.id}')" class="text-red-400 hover:text-red-300 text-sm">Eliminar</button>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Error loading alerts:', err);
+      }
+    }
+
+    async function deleteAlert(id) {
+      if (!confirm('¿Eliminar esta alerta?')) return;
+      try {
+        await fetch(`/api/v1/alerts?id=${id}`, { method: 'DELETE' });
+        loadAlerts();
+      } catch (err) {
+        console.error('Error deleting alert:', err);
+      }
+    }
+
+    document.getElementById('create-alert-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const body = {
+        nif_proveedor: form.nif_proveedor.value.trim() || undefined,
+        cpv: form.cpv.value.trim() || undefined,
+        organismo: form.organismo.value.trim() || undefined,
+      };
+
+      try {
+        const res = await fetch('/api/v1/alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          form.reset();
+          loadAlerts();
+        } else {
+          const errEl = document.getElementById('create-error');
+          errEl.textContent = data.error || 'Error al crear alerta';
+          errEl.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error('Error creating alert:', err);
+      }
+    });
+
+    loadAlerts();
+  </script>
+</Layout>

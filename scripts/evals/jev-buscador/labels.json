@@ -1,0 +1,30 @@
+{
+  "criterio": "Relevancia por título, juicio estricto: ¿el título responde claramente a la necesidad del usuario? Los índices son posiciones del pool clásico (mrr-eval.json → classic).",
+  "queries": [
+    {
+      "q": "gestión de residuos tóxicos generados por un laboratorio",
+      "relevant_idx": [0, 1, 3, 9],
+      "nota": "idx0 gestión residuos de sección de Higiene; idx1 CSN recogida/gestión/tratamiento; idx3 residuos tóxicos y peligrosos (RTP); idx9 retirada de residuos de laboratorio. El resto: residuos genéricos/sanitarios sin origen laboratorio o fuera de tema."
+    },
+    {
+      "q": "consumibles y aparatos de análisis para laboratorio de hospital",
+      "relevant_idx": [0, 1, 2, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 17, 18, 19],
+      "nota": "Consumibles, reactivos y equipos de análisis de laboratorio. Excluidos: software/sistemas de información (3, 10), recogida de muestras (4), herramienta meta (16)."
+    },
+    {
+      "q": "equipamiento de laboratorio de investigación en inteligencia artificial",
+      "relevant_idx": [2, 4],
+      "nota": "Solo 'ejecución local de modelos de inteligencia artificial' (x2). El resto: consumibles genéricos, suscripciones software, cursos, mobiliario sin confirmar AI."
+    },
+    {
+      "q": "arreglo de puente en carretera de montaña",
+      "relevant_idx": [5, 6, 7, 8, 10, 14, 16, 18, 19],
+      "nota": "Obras/reconstrucción/conservación de puentes en carretera y su dirección de obra. Excluidos: seguridad y salud (9), contención genérica (12), carretera sin puente (13)."
+    },
+    {
+      "q": "luces LED para embalses y presas",
+      "relevant_idx": [],
+      "nota": "Sin matches reales en el pool (iluminación de embarcaciones deportivas, teatros, calles). La consulta sondea la conducta honesta ante ausencia de match: se excluye de las medias."
+    }
+  ]
+}

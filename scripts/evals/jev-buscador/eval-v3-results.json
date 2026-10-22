@@ -1,0 +1,162 @@
+[
+  {
+    "q": "equipamiento de laboratorio de investigación en inteligencia artificial",
+    "hoyCount": 0,
+    "poolSize": 35,
+    "top5": [
+      {
+        "id": "EUS:INV2023/11/XI/112",
+        "titulo": "Centésimo décimo segundo contrato derivado del Acuerdo Marco para el sumini",
+        "s": 0.46
+      },
+      {
+        "id": "EUS:INV2023/11/XI/113",
+        "titulo": "Centésimo décimo tercer contrato derivado del Acuerdo Marco para el suminis",
+        "s": 0.43
+      },
+      {
+        "id": "AND:1007940",
+        "titulo": "Servicios de laboratorio de investigación\t",
+        "s": 0.43
+      },
+      {
+        "id": "EUS:INV2023/11/IV/73",
+        "titulo": "Septuagésimo tercer  contrato derivado del Acuerdo Marco para el suministro",
+        "s": 0.38
+      },
+      {
+        "id": "EUS:2026/012958/0001",
+        "titulo": "Equipamiento ikaslab",
+        "s": 0.31
+      }
+    ]
+  },
+  {
+    "q": "luces LED para embalses y presas",
+    "hoyCount": 0,
+    "poolSize": 24,
+    "top5": [
+      {
+        "id": "PLACSP:2026-061-A:Junta de Gobierno del Ayuntamiento de Palma de Mallorca",
+        "titulo": "Contratación de un espectáculo de gran formato y multidisciplinarios, con m",
+        "s": 0.06
+      },
+      {
+        "id": "PLACSP:PSS/2025/0000124153:Consejería de Agricultura, Ganadería y Medio Natural",
+        "titulo": "SERRE25090 Asistencia para el mantenimiento, la conservación y ayuda a la e",
+        "s": 0.06
+      },
+      {
+        "id": "PLACSP:1436735Q:Junta de Gobierno del Ayuntamiento de Albacete",
+        "titulo": "Suministro e instalación para reposición de luces de emergencia en los cent",
+        "s": 0.05
+      },
+      {
+        "id": "EUS:CMENOR_2026_24",
+        "titulo": "Servicio de mantenimiento del boulder de Pando Aisia y rocódromo de Zubi-Al",
+        "s": 0.05
+      },
+      {
+        "id": "PLACSP:300/2025/04076:Distrito de Puente de Vallecas",
+        "titulo": "Contrato de Servicios de Montaje, Mantenimiento y Desmontaje de Luces con m",
+        "s": 0.04
+      }
+    ]
+  },
+  {
+    "q": "gestión de residuos tóxicos generados por un laboratorio",
+    "hoyCount": 0,
+    "poolSize": 38,
+    "top5": [
+      {
+        "id": "AND:1007633",
+        "titulo": "Servicio de retirada de residuos tóxicos",
+        "s": 0.9
+      },
+      {
+        "id": "PLACSP:2026/SSV/000828:Órganos Directivos del Ayuntamiento de Sevilla",
+        "titulo": "Gestión externa de los residuos generados por el trabajo en la Sección de H",
+        "s": 0.88
+      },
+      {
+        "id": "PLACE:19910661",
+        "titulo": "Servicio de recogida, transporte y tratamiento de residuos",
+        "s": 0.86
+      },
+      {
+        "id": "PLACSP:44/2026:Presidencia de la Autoridad Portuaria de Ceuta",
+        "titulo": "Servicio de gestión de residuos tóxicos y peligrosos (RTP) y mantenimiento ",
+        "s": 0.76
+      },
+      {
+        "id": "PLACSP:PAS 357/2026:Departamento de Salud de Torrevieja. Dirección Económica-Gerencia",
+        "titulo": "Servicio de aplicación de un sistema de bioseguridad para contención y aisl",
+        "s": 0.63
+      }
+    ]
+  },
+  {
+    "q": "consumibles y aparatos de análisis para laboratorio de hospital",
+    "hoyCount": 0,
+    "poolSize": 38,
+    "top5": [
+      {
+        "id": "EUS:INV2023/11/XI/112",
+        "titulo": "Centésimo décimo segundo contrato derivado del Acuerdo Marco para el sumini",
+        "s": 0.85
+      },
+      {
+        "id": "EUS:INV2023/11/IV/73",
+        "titulo": "Septuagésimo tercer  contrato derivado del Acuerdo Marco para el suministro",
+        "s": 0.84
+      },
+      {
+        "id": "AND:980066",
+        "titulo": "Materiales para análisis de muestras laboratorio",
+        "s": 0.82
+      },
+      {
+        "id": "EUS:P20028028",
+        "titulo": "Suministro consumibles",
+        "s": 0.63
+      },
+      {
+        "id": "EUS:P20027891",
+        "titulo": "Suministro consumibles",
+        "s": 0.61
+      }
+    ]
+  },
+  {
+    "q": "arreglo de puente en carretera de montaña",
+    "hoyCount": 0,
+    "poolSize": 32,
+    "top5": [
+      {
+        "id": "GAL:CM:2088519",
+        "titulo": "TRANSPORTES",
+        "s": 0.63
+      },
+      {
+        "id": "PLACSP:1891/2026 Los santos de Maimona:Alcaldía del Ayuntamiento de los Santos de Maimona",
+        "titulo": "Suministro de zahorras, áridos y material de aporte, destinados al arreglo ",
+        "s": 0.44
+      },
+      {
+        "id": "AND:935693",
+        "titulo": "MEJORA DE SEGURIDAD VIAL CARRETERA A-378 OSUNA - MARTÍN DE LA JARA",
+        "s": 0.31
+      },
+      {
+        "id": "PLACSP:114/2026/01432:Distrito de Puente de Vallecas",
+        "titulo": "Acondicionamiento de cubierta, mejoras puntuales y varios. 26-C-27 EI El Ca",
+        "s": 0.27
+      },
+      {
+        "id": "PLACSP:2025/D31000/006-013/00209:Junta de Gobierno de la Diputación Provincial de Almería",
+        "titulo": "Bulevar Carretera De Gádor A Laujar 2 Fase. Instinción 89PPOS24-27BI",
+        "s": 0.26
+      }
+    ]
+  }
+]

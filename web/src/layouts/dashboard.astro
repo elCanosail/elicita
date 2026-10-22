@@ -1,0 +1,1368 @@
+---
+// Dashboard layout — elicita_ (unified)
+// Protegido por Clerk middleware (src/middleware.ts)
+// Sidebar: Monitor (Licitaciones) + Explorer (Predicciones)
+import '../styles/global.css';
+import { clerkClient } from '@clerk/astro/server';
+import { getUserPlan } from '../lib/plan';
+
+const { title = "dashboard_ — elicita_", isDemo = false } = Astro.props;
+const pathname = Astro.url.pathname;
+
+// Detect plan + CIF for upgrade CTA and onboard redirect
+let userPlan = { plan: 'free' as const, hasAccess: true, planName: 'Free' };
+let hasCif = false;
+let clientName = '—';
+try {
+  const auth = (Astro.locals as any).auth?.();
+  const userId = auth?.userId;
+  console.log('[PLAN-DEBUG] userId:', userId);
+  if (userId) {
+    const client = clerkClient({ secretKey: import.meta.env.CLERK_SECRET_KEY });
+    const user = await client.users.getUser(userId);
+    const meta = (user.publicMetadata as Record<string, any>) || {};
+    console.log('[PLAN-DEBUG] username:', user.username, 'meta.plan:', meta.plan, 'meta.plan_status:', meta.plan_status);
+    userPlan = getUserPlan(meta, user.username || undefined, userId);
+    console.log('[PLAN-DEBUG] resolved plan:', userPlan.plan, 'hasAccess:', userPlan.hasAccess);
+    hasCif = !!meta.cif;
+    if (meta.cif) clientName = meta.cif;
+  }
+} catch { /* non-fatal */ }
+
+const isFree = userPlan.plan === 'free';
+// Trial removed — only Free and Pro plans exist
+
+// Onboard redirect is handled in middleware — layout just shows the UI
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <!-- Plausible Analytics -->
+  <script defer data-domain="elicita.es" src="https://analytics.elicita.es/js/script.js"></script>
+
+  <!-- Theme init — respect prefers-color-scheme, default to dark via localStorage fallback -->
+  <script is:inline>
+    (function () {
+      const root = document.documentElement;
+      const stored = (function () {
+        try { return localStorage.getItem('elicita-theme'); }
+        catch (e) { return null; }
+      })();
+
+      if (stored === 'light') {
+        root.classList.remove('dark');
+        root.classList.add('light');
+      } else if (stored === 'dark') {
+        root.classList.add('dark');
+        root.classList.remove('light');
+      } else {
+        // No stored preference: use system if available, otherwise default to dark (legacy behavior)
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          root.classList.remove('dark');
+          root.classList.add('light');
+        } else {
+          root.classList.add('dark');
+          root.classList.remove('light');
+        }
+      }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.gstatic.com/s/instrumentsans/v4/pxiTypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr0She1YmV.woff2" as="font" type="font/woff2" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style is:global>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Instrument Sans', sans-serif;
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      display: flex;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Focus visible — global accessible outline for all interactive elements */
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+      outline: 2px solid hsl(152 60% 45%);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    /* Never remove outline without a focus-visible replacement */
+    *:focus { outline: none; }
+
+    /* Sidebar */
+    aside {
+      width: 220px;
+      min-width: 220px;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: hsl(var(--background));
+      border-right: 1px solid hsl(var(--border));
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+    .sidebar-logo a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      color: hsl(var(--foreground));
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .sidebar-logo a span { color: hsl(var(--emerald)); animation: blink 1.2s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* Theme toggle button */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: 1px solid hsl(var(--foreground) / 0.08);
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 11px;
+      color: hsl(var(--foreground) / 0.35);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .theme-toggle:hover { color: hsl(var(--foreground) / 0.6); border-color: hsl(var(--foreground) / 0.15); }
+
+    .sidebar-client {
+      margin: 12px 16px;
+      padding: 10px 12px;
+      background: hsl(var(--emerald) 0.06);
+      border: 1px solid hsl(var(--emerald) 0.12);
+      border-radius: 6px;
+    }
+    .sidebar-client .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: hsl(var(--emerald) 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 3px;
+    }
+    .sidebar-client .name {
+      font-size: 11px;
+      color: hsl(var(--foreground) / 0.7);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+    .nav-section {
+      padding: 12px 16px 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: hsl(var(--foreground) / 0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 13px;
+      color: hsl(var(--foreground) / 0.4);
+      text-decoration: none;
+      transition: color 0.15s, background 0.15s;
+      border-left: 2px solid transparent;
+    }
+    nav a:hover { color: hsl(var(--foreground) / 0.7); background: hsl(var(--foreground) / 0.03); }
+    nav a.active { color: hsl(var(--foreground) / 0.9); border-left-color: hsl(var(--emerald)); background: hsl(var(--emerald) 0.05); }
+    nav a .icon { font-size: 12px; width: 16px; text-align: center; opacity: 0.7; }
+
+    .sidebar-bottom {
+      padding: 16px;
+      border-top: 1px solid hsl(var(--foreground) / 0.05);
+    }
+    .sidebar-bottom a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: hsl(var(--foreground) / 0.25);
+      text-decoration: none;
+      padding: 6px 4px;
+      transition: color 0.15s;
+    }
+    .sidebar-bottom a:hover { color: hsl(var(--foreground) / 0.5); }
+
+    .upgrade-cta {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px !important;
+      font-weight: 500;
+      color: hsl(var(--emerald)) !important;
+      text-decoration: none;
+      padding: 8px 12px !important;
+      margin-bottom: 8px;
+      background: hsl(var(--emerald) 0.08);
+      border: 1px solid hsl(var(--emerald) 0.2);
+      border-radius: 6px;
+      transition: background 0.15s, border-color 0.15s !important;
+    }
+    .upgrade-cta:hover {
+      background: hsl(var(--emerald) 0.14) !important;
+      border-color: hsl(var(--emerald) 0.35) !important;
+      color: hsl(var(--emerald)) !important;
+    }
+    .upgrade-cta {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px !important;
+      font-weight: 600;
+      color: hsl(var(--primary)) !important;
+      text-decoration: none;
+      padding: 8px 12px !important;
+      margin-bottom: 8px;
+      background: hsl(var(--primary) / 0.08);
+      border: 1px solid hsl(var(--primary) / 0.2);
+      border-radius: 6px;
+      transition: background 0.15s, border-color 0.15s !important;
+    }
+    .upgrade-cta:hover {
+      background: hsl(var(--primary) / 0.14) !important;
+      border-color: hsl(var(--primary) / 0.35) !important;
+      color: hsl(var(--primary)) !important;
+    }
+
+    /* Top upgrade banner for free users */
+    .upgrade-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      height: 40px;
+      padding: 0 20px;
+      background: hsl(var(--emerald) 0.05);
+      border-bottom: 1px solid hsl(var(--emerald) 0.12);
+      font-size: 12px;
+      color: hsl(var(--foreground) / 0.55);
+      flex-shrink: 0;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .upgrade-banner.hidden {
+      display: none;
+    }
+    .upgrade-banner .upgrade-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .upgrade-banner .upgrade-plan {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: hsl(var(--emerald));
+      background: hsl(var(--emerald) 0.1);
+      border: 1px solid hsl(var(--emerald) 0.25);
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+    .upgrade-banner .upgrade-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .upgrade-banner .upgrade-btn {
+      font-size: 12px;
+      font-weight: 500;
+      color: hsl(var(--emerald));
+      text-decoration: none;
+      border: 1px solid hsl(var(--emerald) 0.3);
+      padding: 4px 12px;
+      border-radius: 4px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .upgrade-banner .upgrade-btn:hover { background: hsl(var(--emerald) 0.1); }
+    .upgrade-banner .upgrade-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      background: none;
+      border: none;
+      border-radius: 4px;
+      color: hsl(var(--foreground) / 0.3);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+    }
+    .upgrade-banner .upgrade-close:hover {
+      background: hsl(var(--foreground) / 0.05);
+      color: hsl(var(--foreground) / 0.6);
+    }
+    @media (max-width: 767px) {
+      .upgrade-banner { padding: 0 16px; gap: 10px; }
+      .upgrade-banner .upgrade-text { font-size: 11px; }
+      .upgrade-banner .upgrade-btn { padding: 3px 10px; font-size: 11px; }
+      .upgrade-banner .upgrade-close { width: 22px; height: 22px; }
+    }
+
+    /* Demo banner */
+    .demo-banner {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 40px;
+      padding: 0 20px;
+      background: hsl(var(--warning) / 0.08);
+      border-bottom: 1px solid hsl(var(--warning) / 0.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: hsl(var(--warning) / 0.9);
+      flex-shrink: 0;
+    }
+    .demo-banner .demo-text { display: flex; align-items: center; gap: 8px; }
+    .demo-banner .demo-cta {
+      font-size: 11px;
+      color: hsl(var(--emerald));
+      text-decoration: none;
+      border: 1px solid hsl(var(--emerald) 0.3);
+      padding: 4px 10px;
+      border-radius: 4px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .demo-banner .demo-cta:hover { background: hsl(var(--emerald) 0.1); }
+
+    /* Setup banner (no CIF) */
+    .setup-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 36px;
+      padding: 0 20px;
+      background: hsl(var(--emerald) 0.04);
+      border-bottom: 1px solid hsl(var(--emerald) 0.1);
+      font-size: 12px;
+      color: hsl(var(--foreground) / 0.5);
+      flex-shrink: 0;
+    }
+    .setup-banner .setup-text { display: flex; align-items: center; gap: 8px; }
+    .setup-banner .setup-cta {
+      font-size: 11px;
+      color: hsl(var(--emerald));
+      text-decoration: none;
+      border: 1px solid hsl(var(--emerald) 0.2);
+      padding: 3px 10px;
+      border-radius: 4px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .setup-banner .setup-cta:hover { background: hsl(var(--emerald) 0.08); }
+
+    /* Feedback */
+    .feedback-trigger {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1px solid hsl(var(--foreground) / 0.08);
+      border-radius: 4px; padding: 3px 10px;
+      color: hsl(var(--foreground) / 0.35); font-size: 11px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .feedback-trigger:hover { color: hsl(var(--foreground) / 0.6); border-color: hsl(var(--foreground) / 0.15); }
+    .feedback-trigger span { font-family: 'Instrument Sans', sans-serif; }
+    .feedback-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .feedback-backdrop { position: absolute; inset: 0; background: hsl(var(--background) / 0.6); }
+    .feedback-dialog {
+      position: relative; background: hsl(var(--background));
+      border: 1px solid hsl(var(--foreground) / 0.1); border-radius: 8px;
+      width: 100%; max-width: 420px; margin: 16px;
+      box-shadow: 0 25px 50px hsl(var(--background) / 0.5);
+    }
+    .feedback-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+    }
+    .feedback-header-left { display: flex; align-items: center; gap: 8px; color: hsl(var(--foreground) / 0.85); font-size: 14px; font-weight: 600; }
+    .feedback-close-btn { background: none; border: none; color: hsl(var(--foreground) / 0.3); cursor: pointer; padding: 4px; }
+    .feedback-close-btn:hover { color: hsl(var(--foreground) / 0.6); }
+    .feedback-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .feedback-types { display: flex; gap: 8px; }
+    .feedback-type {
+      flex: 1; background: hsl(var(--foreground) / 0.03); border: 1px solid hsl(var(--foreground) / 0.08);
+      border-radius: 4px; padding: 8px; font-size: 12px; color: hsl(var(--foreground) / 0.4);
+      cursor: pointer; transition: all 0.15s; text-align: center;
+    }
+    .feedback-type:hover { border-color: hsl(var(--foreground) / 0.15); color: hsl(var(--foreground) / 0.6); }
+    .feedback-type.active { border-color: hsl(var(--emerald) 0.4); color: hsl(var(--emerald)); }
+    .feedback-body textarea {
+      width: 100%; background: hsl(var(--foreground) / 0.03);
+      border: 1px solid hsl(var(--foreground) / 0.08); border-radius: 4px;
+      padding: 10px 12px; color: hsl(var(--foreground) / 0.85);
+      font-size: 13px; font-family: 'Instrument Sans', sans-serif;
+      resize: none; transition: border-color 0.15s;
+    }
+    .feedback-body textarea::placeholder { color: hsl(var(--foreground) / 0.2); }
+    .feedback-body textarea:focus { border-color: hsl(var(--emerald) 0.3); outline: none; }
+    .feedback-send {
+      width: 100%; padding: 10px; background: hsl(var(--emerald)); color: hsl(var(--background));
+      border: none; border-radius: 4px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .feedback-send:hover { background: hsl(152 60% 55%); }
+    .feedback-send:disabled { opacity: 0.5; cursor: not-allowed; }
+    .feedback-msg { text-align: center; font-size: 13px; padding: 8px 0; }
+    .feedback-msg-ok { color: hsl(var(--emerald)); }
+    .feedback-msg-err { color: hsl(0 84% 60%); }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 32px;
+      background: hsl(var(--emerald) 0.03);
+      border-bottom: 1px solid hsl(var(--emerald) 0.08);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: hsl(var(--emerald));
+      box-shadow: 0 0 6px hsl(var(--emerald) 0.4);
+      flex-shrink: 0;
+    }
+    .status-text {
+      color: hsl(var(--foreground) / 0.35);
+    }
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .status-link {
+      color: hsl(var(--foreground) / 0.2);
+      text-decoration: none;
+      font-size: 10px;
+      transition: color 0.15s;
+    }
+    .status-link:hover {
+      color: hsl(var(--foreground) / 0.5);
+    }
+    @media (max-width: 767px) {
+      .status-bar { padding: 0 16px; font-size: 10px; }
+      .status-link { display: none; }
+    }
+
+    /* Main */
+    main {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0;
+    }
+    .main-header {
+      padding: 20px 32px;
+      border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: hsl(var(--background));
+      z-index: 10;
+    }
+    .main-content { padding: 28px 32px; }
+
+    /* ── Command Palette (⌘K) ── */
+    #cmdk-overlay {
+      position: fixed;
+      inset: 0;
+      background: hsl(var(--background) / 0.6);
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    #cmdk-modal {
+      max-width: 580px;
+      margin: 20vh auto 0;
+      background: hsl(var(--background));
+      border: 1px solid hsl(var(--foreground) / 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px hsl(var(--background) / 0.6);
+    }
+    #cmdk-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid hsl(var(--foreground) / 0.06);
+    }
+    #cmdk-input {
+      width: 100%;
+      padding: 16px 60px 16px 20px;
+      background: transparent;
+      border: none;
+      color: hsl(var(--foreground) / 0.9);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      outline: none;
+    }
+    #cmdk-input:focus {
+      outline: none;
+    }
+    #cmdk-input::placeholder { color: hsl(var(--foreground) / 0.2); }
+    #cmdk-shortcut-badge {
+      position: absolute;
+      right: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: hsl(var(--foreground) / 0.2);
+      background: hsl(var(--foreground) / 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+    #cmdk-results {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    #cmdk-results:empty::after {
+      content: 'Sin resultados';
+      display: block;
+      padding: 24px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: hsl(var(--foreground) / 0.2);
+      text-align: center;
+    }
+    .cmdk-category {
+      padding: 8px 20px 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: hsl(var(--foreground) / 0.2);
+    }
+    .cmdk-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 13px;
+      color: hsl(var(--foreground) / 0.65);
+      border-left: 2px solid transparent;
+      transition: background 0.1s;
+    }
+    .cmdk-item:hover { background: hsl(var(--foreground) / 0.04); }
+    .cmdk-item.selected {
+      background: hsl(var(--emerald) 0.1);
+      border-left-color: hsl(var(--emerald));
+      color: hsl(var(--foreground) / 0.9);
+    }
+    .cmdk-item .cmdk-icon { font-size: 12px; width: 18px; text-align: center; flex-shrink: 0; }
+    .cmdk-item .cmdk-sub {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: hsl(var(--foreground) / 0.2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+
+    /* ── Mobile topbar ── */
+    .mobile-topbar {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: 48px;
+      background: hsl(var(--background));
+      border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    #sidebar-toggle {
+      background: none;
+      border: 1px solid hsl(var(--foreground) / 0.1);
+      color: hsl(var(--foreground) / 0.7);
+      font-size: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    #sidebar-toggle:hover { background: hsl(var(--foreground) / 0.06); }
+    .mobile-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: hsl(var(--foreground) / 0.9);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .mobile-logo span { color: hsl(var(--emerald)); animation: blink 1.2s infinite; }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: hsl(var(--background) / 0.6);
+      z-index: 199;
+    }
+    .sidebar-backdrop.open { display: block; }
+
+    /* ── Mobile responsive ── */
+    @media (max-width: 767px) {
+      .mobile-topbar { display: flex; }
+      aside {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 200;
+        transition: left 0.25s ease;
+        width: 240px;
+        min-width: 240px;
+      }
+      aside.open { left: 0; }
+      body { flex-direction: column; }
+      main { width: 100%; }
+      .main-header { padding: 16px; }
+      .main-content { padding: 16px; }
+      #cmdk-modal {
+        margin: 10vh 16px 0 !important;
+        max-width: none !important;
+      }
+    }
+
+    /* Hint en sidebar */
+    .cmdk-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: hsl(var(--foreground) / 0.18);
+      cursor: pointer;
+      transition: color 0.15s;
+      border-radius: 4px;
+    }
+    .cmdk-hint:hover { color: hsl(var(--foreground) / 0.4); }
+    .cmdk-hint kbd {
+      background: hsl(var(--foreground) / 0.06);
+      border: 1px solid hsl(var(--foreground) / 0.1);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile topbar — SOLO visible en <768px -->
+  <div class="mobile-topbar">
+    <button id="sidebar-toggle" aria-label="Menú">☰</button>
+    <a href="/monitor/activas" class="mobile-logo">elicita<span>_</span></a>
+  </div>
+
+  <!-- Sidebar backdrop (mobile overlay) -->
+  <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-logo">
+      <a href="/monitor/activas">elicita<span>_</span></a>
+    </div>
+
+    <div class="sidebar-client">
+      <div class="label">cliente activo</div>
+      <div class="name" id="sidebar-client-name">{clientName}</div>
+    </div>
+
+    <nav>
+      <div class="nav-section">Monitor</div>
+      <a href="/monitor/activas" aria-label="Activas" class={pathname === '/monitor/activas' || pathname.startsWith('/monitor/licitacion') ? 'active' : ''}>
+        <span class="icon">📡</span> Activas
+      </a>
+      <a href="/monitor/terminales" aria-label="Terminales" class={pathname === '/monitor/terminales' ? 'active' : ''}>
+        <span class="icon">🏁</span> Terminales
+      </a>
+
+      <div class="nav-section" style="margin-top:12px">Explorer</div>
+      <a href="/explorer/proyecciones" aria-label="Proyecciones" class={pathname === '/explorer/proyecciones' || pathname.startsWith('/explorer/oportunidad') ? 'active' : ''}>
+        <span class="icon">🔭</span> Proyecciones
+      </a>
+      <a href="/explorer/oportunidades-mercado" aria-label="Oportunidades" class={pathname === '/explorer/oportunidades-mercado' ? 'active' : ''}>
+        <span class="icon">🎯</span> Oportunidades
+      </a>
+      <a href="/explorer/competidores" aria-label="Competidores" class={pathname === '/explorer/competidores' ? 'active' : ''}>
+        <span class="icon">🏢</span> Competidores
+      </a>
+      <a href="/explorer/universo" aria-label="Universo" class={pathname === '/explorer/universo' ? 'active' : ''}>
+        <span class="icon">🌐</span> Universo
+      </a>
+
+      <div class="nav-section" style="margin-top:12px">Buscador</div>
+      <a href="/buscar" aria-label="Buscador" class={pathname === '/buscar' || pathname.startsWith('/buscar') ? 'active' : ''}>
+        <span class="icon">🔍</span> Buscador
+      </a>
+
+      <div class="nav-section" style="margin-top:12px">Alertas</div>
+      <a href="/cuenta/alertas" aria-label="Configurar alertas" class={pathname === '/cuenta/alertas' ? 'active' : ''}>
+        <span class="icon">🔔</span> Configurar alertas
+      </a>
+      <a href="/cuenta/perfil-ia" aria-label="Perfil IA" class={pathname === '/cuenta/perfil-ia' ? 'active' : ''}>
+        <span class="icon">🤖</span> Perfil IA
+      </a>
+
+      <div class="nav-section" style="margin-top:12px">Cuenta</div>
+      <a href="/cuenta/empresa" aria-label="Perfil de empresa" class={pathname.startsWith('/cuenta/empresa') || pathname.startsWith('/cuenta/onboard') ? 'active' : ''}>
+        <span class="icon">⚙</span> Perfil de empresa
+      </a>
+      <a href="/cuenta/plan" aria-label="Facturación" class={pathname.startsWith('/cuenta/plan') ? 'active' : ''}>
+        <span class="icon">💳</span> Facturación
+      </a>
+      <a href="/cuenta" aria-label="Usuario" class={pathname === '/cuenta' ? 'active' : ''}>
+        <span class="icon">👤</span> Usuario
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <!-- Theme toggle removed — dark mode permanente -->
+      {isFree && (
+        <a href="/cuenta/plan" class="upgrade-cta">
+          ⚡ Subir a Pro
+        </a>
+      )}
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar tema">
+        <span id="theme-icon">🌙</span>
+        <span id="theme-label">Tema oscuro</span>
+      </button>
+      <div class="cmdk-hint" id="cmdk-trigger">
+        <kbd>⌘K</kbd> Buscar
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main>
+    {isDemo && (
+      <div class="demo-banner">
+        <span class="demo-text">
+          <span>⚠️</span>
+          <span>DEMOSTRACIÓN — Datos ficticios. Activa tu empresa para ver datos reales.</span>
+        </span>
+        <a href="/contact" class="demo-cta">Activar mi empresa →</a>
+      </div>
+    )}
+    {!isDemo && isFree && (
+      <div id="upgrade-banner" class="upgrade-banner">
+        <span class="upgrade-text">
+          <span>⚡</span>
+          <span>Estás usando el plan Free</span>
+          <span class="upgrade-plan">FREE</span>
+        </span>
+        <span class="upgrade-actions">
+          <a href="/precios" class="upgrade-btn">Ver planes →</a>
+          <button id="upgrade-banner-close" class="upgrade-close" aria-label="Cerrar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </span>
+      </div>
+    )}
+    {!isDemo && !hasCif && (
+      <div id="setup-banner" class="setup-banner">
+        <span class="setup-text">
+          <span>💡</span>
+          <span>Configura tu empresa para desbloquear competidores, proyecciones y datos personalizados</span>
+        </span>
+        <span class="upgrade-actions">
+          <a href="/cuenta/onboard" class="setup-cta">Configurar →</a>
+          <button id="setup-banner-close" class="upgrade-close" aria-label="Cerrar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </span>
+      </div>
+    )}
+    <!-- Status bar -->
+    <div class="status-bar" id="status-bar">
+      <div class="status-left">
+        <span class="status-dot"></span>
+        <span class="status-text" id="status-text">Conectando…</span>
+      </div>
+      <div class="status-right">
+        <button id="feedback-btn" class="feedback-trigger" title="Enviar feedback" aria-label="Enviar feedback">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          <span>Feedback</span>
+        </button>
+        <a href="/docs/metodologia" class="status-link">¿De dónde vienen los datos?</a>
+      </div>
+    </div>
+    <slot />
+
+    <!-- Feedback modal -->
+    <div id="feedback-modal" class="feedback-overlay" style="display:none">
+      <div class="feedback-backdrop"></div>
+      <div class="feedback-dialog">
+        <div class="feedback-header">
+          <div class="feedback-header-left">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--emerald))" stroke-width="1.5" stroke-linecap="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            <span>Feedback</span>
+          </div>
+          <button id="feedback-close" class="feedback-close-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <form id="feedback-form" class="feedback-body">
+          <div class="feedback-types">
+            <button type="button" data-type="bug" class="feedback-type">🐛 Bug</button>
+            <button type="button" data-type="idea" class="feedback-type">💡 Idea</button>
+            <button type="button" data-type="otro" class="feedback-type">💬 Otro</button>
+          </div>
+          <textarea id="feedback-text" name="mensaje" placeholder="¿Qué podemos mejorar?" rows="4" required></textarea>
+          <button type="submit" id="feedback-submit" class="feedback-send">Enviar</button>
+          <div id="feedback-success" class="feedback-msg feedback-msg-ok" style="display:none">✓ Gracias por tu feedback</div>
+          <div id="feedback-error" class="feedback-msg feedback-msg-err" style="display:none">Error al enviar. Inténtalo de nuevo.</div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Command Palette ⌘K -->
+  <div id="cmdk-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Búsqueda global">
+    <div id="cmdk-modal">
+      <div id="cmdk-input-wrap">
+        <input id="cmdk-input" type="text" placeholder="Buscar contratos, organismos, CPVs..." autocomplete="off" spellcheck="false" />
+        <span id="cmdk-shortcut-badge">⌘K</span>
+      </div>
+      <div id="cmdk-results"></div>
+    </div>
+  </div>
+
+  <!-- Plan info for client-side feature gating -->
+  <script define:vars={{ userPlanJson: JSON.stringify({ plan: userPlan.plan, hasAccess: userPlan.hasAccess, planName: userPlan.planName,  }) }}>
+    window.__elicitaPlan = JSON.parse(userPlanJson);
+  </script>
+
+</body>
+
+{isDemo && (
+  <script>
+    (function() {
+      var origFetch = window.fetch.bind(window);
+      window.fetch = function(input, init) {
+        if (typeof input === 'string' && input.startsWith('/api/') && !input.startsWith('/api/demo/') && !input.startsWith('/api/contact')) {
+          input = input.replace('/api/', '/api/demo/');
+        }
+        return origFetch(input, init);
+      };
+    })();
+  </script>
+)}
+
+<script is:inline>
+  // ── Mobile sidebar toggle ──────────────────────────────────────────────────
+  (function() {
+    const toggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.querySelector('aside');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (!toggle || !sidebar || !backdrop) return;
+    toggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      backdrop.classList.toggle('open');
+    });
+    backdrop.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('open');
+    });
+    sidebar.querySelectorAll('nav a').forEach(a => {
+      a.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('open');
+      });
+    });
+  })();
+
+  // ── Upgrade banner: remember dismiss in localStorage ───────────────────────
+  (function() {
+    const banner = document.getElementById('upgrade-banner');
+    const closeBtn = document.getElementById('upgrade-banner-close');
+    if (!banner || !closeBtn) return;
+    const key = 'elicita_upgrade_banner_dismissed';
+    try {
+      if (localStorage.getItem(key)) {
+        banner.classList.add('hidden');
+      }
+    } catch { /* storage disabled */ }
+    closeBtn.addEventListener('click', function() {
+      banner.classList.add('hidden');
+      try { localStorage.setItem(key, '1'); } catch {}
+    });
+  })();
+
+  // ── Setup banner: remember dismiss in localStorage ───────────────────────────
+  (function() {
+    const banner = document.getElementById('setup-banner');
+    const closeBtn = document.getElementById('setup-banner-close');
+    if (!banner || !closeBtn) return;
+    const key = 'elicita_setup_banner_dismissed';
+    try {
+      if (localStorage.getItem(key)) {
+        banner.classList.add('hidden');
+      }
+    } catch { /* storage disabled */ }
+    closeBtn.addEventListener('click', function() {
+      banner.classList.add('hidden');
+      try { localStorage.setItem(key, '1'); } catch {}
+    });
+  })();
+
+  // ── Theme toggle: light / dark with localStorage persistence ─────────────────
+  (function() {
+    const root = document.documentElement;
+    const toggleBtn = document.getElementById('theme-toggle');
+    const iconEl = document.getElementById('theme-icon');
+    const labelEl = document.getElementById('theme-label');
+    if (!toggleBtn) return;
+
+    const STORAGE_KEY = 'elicita-theme';
+
+    function isDark() {
+      return root.classList.contains('dark');
+    }
+
+    function updateUI() {
+      const dark = isDark();
+      if (iconEl) iconEl.textContent = dark ? '🌙' : '☀️';
+      if (labelEl) labelEl.textContent = dark ? 'Tema oscuro' : 'Tema claro';
+    }
+
+    function setTheme(theme) {
+      if (theme === 'light') {
+        root.classList.remove('dark');
+        root.classList.add('light');
+      } else {
+        root.classList.remove('light');
+        root.classList.add('dark');
+      }
+      try { localStorage.setItem(STORAGE_KEY, theme); } catch {}
+      updateUI();
+    }
+
+    toggleBtn.addEventListener('click', function() {
+      setTheme(isDark() ? 'light' : 'dark');
+    });
+
+    // Sync if changed from another tab
+    window.addEventListener('storage', function(e) {
+      if (e.key === STORAGE_KEY) {
+        const t = e.newValue;
+        if (t === 'light' || t === 'dark') setTheme(t);
+      }
+    });
+
+    updateUI();
+  })();
+</script>
+
+<script>
+  // Profile-aware sidebar: load company name if available, update status bar.
+  // Cache /api/data response so monitor pages can reuse it instead of refetching.
+  (async function() {
+    try {
+      const [profileRes, dataRes] = await Promise.all([
+        fetch('/api/profile'),
+        fetch('/api/data')
+      ]);
+
+      if (profileRes.ok) {
+        const pj = await profileRes.json();
+        const nombre = pj?.data?.empresa;
+        if (nombre) {
+          const el = document.getElementById('sidebar-client-name');
+          if (el) el.textContent = nombre;
+        }
+      }
+
+      if (dataRes.ok) {
+        const dj = await dataRes.json();
+        // Share lightweight metadata with monitor pages to avoid a second /api/data fetch.
+        window.__elicitaStatusBar = {
+          lastUpdate: dj?.ultima_actualizacion || null,
+          totalResults: dj?.total ?? (dj?.contratos?.length || 0)
+        };
+        const lastUpdate = dj?.ultima_actualizacion;
+        const statusEl = document.getElementById('status-text');
+        if (statusEl) {
+          let timeAgo = '';
+          if (lastUpdate) {
+            const diff = Date.now() - new Date(lastUpdate).getTime();
+            const hours = Math.floor(diff / 3600000);
+            const mins = Math.floor(diff / 60000);
+            if (hours > 24) timeAgo = `hace ${Math.floor(hours/24)}d`;
+            else if (hours > 0) timeAgo = `hace ${hours}h`;
+            else timeAgo = `hace ${mins}min`;
+          }
+          statusEl.textContent = timeAgo ? `Última actualización: ${timeAgo}.` : '';
+        }
+      }
+    } catch {
+      const statusEl = document.getElementById('status-text');
+      if (statusEl) statusEl.textContent = 'Sin conexión';
+    }
+  })();
+</script>
+
+<script>
+// ── Command Palette ⌘K ──────────────────────────────────────────────────────
+(function() {
+  const overlay   = document.getElementById('cmdk-overlay');
+  const modal     = document.getElementById('cmdk-modal');
+  const input     = document.getElementById('cmdk-input');
+  const results   = document.getElementById('cmdk-results');
+  const trigger   = document.getElementById('cmdk-trigger');
+
+  let cache = null;
+  let allItems = [];
+  let filtered = [];
+  let selectedIndex = -1;
+  let debounceTimer = null;
+  let isOpen = false;
+
+  // ── Static pages (Monitor + Explorer) ────────────────────────────────────
+  const PAGES = [
+    { type: 'page', icon: '📡', label: 'Activas', url: '/monitor/activas', section: 'Monitor' },
+    { type: 'page', icon: '🏁', label: 'Terminales', url: '/monitor/terminales', section: 'Monitor' },
+    { type: 'page', icon: '🎯', label: 'Predicciones', url: '/explorer',  section: 'Explorer' },
+    { type: 'page', icon: '⚙',  label: 'Perfil de empresa', url: '/cuenta/onboard', section: 'Cuenta' },
+  ];
+
+  // ── Load data ──────────────────────────────────────────────────────────────
+  async function loadData() {
+    if (cache) return cache;
+    try {
+      const [dataRes, profileRes] = await Promise.allSettled([
+        fetch('/api/data'),
+        fetch('/api/profile'),
+      ]);
+
+      let contracts = [];
+      let competitors = [];
+
+      if (dataRes.status === 'fulfilled' && dataRes.value.ok) {
+        const json = await dataRes.value.json();
+        const raw = json?.contratos ?? json?.data ?? json ?? [];
+        contracts = Array.isArray(raw) ? raw : [];
+      }
+
+      if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
+        const json = await profileRes.value.json();
+        const raw = json?.data?.competidores ?? json?.competidores ?? [];
+        competitors = Array.isArray(raw) ? raw : [];
+      }
+
+      cache = { contracts, competitors };
+      buildIndex();
+      return cache;
+    } catch (e) {
+      console.warn('[cmdk] loadData error', e);
+      cache = { contracts: [], competitors: [] };
+      buildIndex();
+      return cache;
+    }
+  }
+
+  function buildIndex() {
+    allItems = [];
+
+    (cache.contracts || []).forEach(c => {
+      const id = c.id ?? c._id ?? c.expediente ?? '';
+      const label = c.objeto ?? c.titulo ?? c.title ?? String(id);
+      const org   = c.organismo ?? c.organo_contratacion ?? c.entidad ?? '';
+      allItems.push({ type: 'contrato', icon: '📄', label, sub: org, id, url: `/monitor/licitacion/${id}` });
+    });
+
+    const orgsSet = new Map();
+    (cache.contracts || []).forEach(c => {
+      const org = c.organismo ?? c.organo_contratacion ?? c.entidad ?? '';
+      if (org && !orgsSet.has(org)) {
+        orgsSet.set(org, true);
+        allItems.push({ type: 'organismo', icon: '🏛', label: org, sub: '', url: `/monitor?org=${encodeURIComponent(org)}` });
+      }
+    });
+
+    PAGES.forEach(p => allItems.push(p));
+
+    (cache.competitors || []).forEach(comp => {
+      const name = typeof comp === 'string' ? comp : (comp.nombre ?? comp.name ?? String(comp));
+      allItems.push({ type: 'competidor', icon: '🏢', label: name, sub: '', url: '/explorer' });
+    });
+  }
+
+  // ── Search ─────────────────────────────────────────────────────────────────
+  function search(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) return PAGES.map(p => ({ ...p }));
+    return allItems.filter(item =>
+      item.label.toLowerCase().includes(q) ||
+      (item.sub && item.sub.toLowerCase().includes(q))
+    ).slice(0, 40);
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  const CATEGORY_LABELS = {
+    contrato:  '📄 Contratos',
+    organismo: '🏛 Organismos',
+    page:      '📊 Páginas',
+    competidor:'🏢 Competidores',
+  };
+
+  function render(items) {
+    filtered = items;
+    selectedIndex = items.length > 0 ? 0 : -1;
+
+    if (!items.length) {
+      results.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    let lastType = null;
+    items.forEach((item, i) => {
+      const t = item.type;
+      if (t !== lastType) {
+        html += `<div class="cmdk-category">${CATEGORY_LABELS[t] ?? t}</div>`;
+        lastType = t;
+      }
+      const sel = i === selectedIndex ? ' selected' : '';
+      const sub = item.sub ? `<span class="cmdk-sub">${escHtml(item.sub)}</span>` : '';
+      html += `<div class="cmdk-item${sel}" data-index="${i}" data-url="${escAttr(item.url)}">
+        <span class="cmdk-icon">${item.icon}</span>
+        <span>${escHtml(item.label)}</span>
+        ${sub}
+      </div>`;
+    });
+    results.innerHTML = html;
+    attachItemListeners();
+    scrollSelectedIntoView();
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function escAttr(s) {
+    return String(s).replace(/"/g,'&quot;');
+  }
+
+  function attachItemListeners() {
+    results.querySelectorAll('.cmdk-item').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        selectedIndex = Number(el.dataset.index);
+        updateSelected();
+      });
+      el.addEventListener('click', () => {
+        navigate(el.dataset.url);
+      });
+    });
+  }
+
+  function updateSelected() {
+    results.querySelectorAll('.cmdk-item').forEach((el, i) => {
+      el.classList.toggle('selected', i === selectedIndex);
+    });
+    scrollSelectedIntoView();
+  }
+
+  function scrollSelectedIntoView() {
+    const el = results.querySelector('.cmdk-item.selected');
+    if (el) el.scrollIntoView({ block: 'nearest' });
+  }
+
+  function navigate(url) {
+    if (!url) return;
+    close();
+    window.location.href = url;
+  }
+
+  async function open() {
+    isOpen = true;
+    overlay.style.display = 'block';
+    input.value = '';
+    render(PAGES);
+    input.focus();
+    loadData().then(() => {
+      if (isOpen) render(search(input.value));
+    });
+  }
+
+  function close() {
+    isOpen = false;
+    overlay.style.display = 'none';
+    input.value = '';
+    results.innerHTML = '';
+    selectedIndex = -1;
+  }
+
+  function toggle() {
+    isOpen ? close() : open();
+  }
+
+  document.addEventListener('keydown', e => {
+    const isK = e.key === 'k' || e.key === 'K';
+    if ((e.metaKey || e.ctrlKey) && isK) {
+      e.preventDefault();
+      toggle();
+      return;
+    }
+    if (!isOpen) return;
+
+    if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = Math.min(selectedIndex + 1, filtered.length - 1);
+      updateSelected();
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = Math.max(selectedIndex - 1, 0);
+      updateSelected();
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const item = filtered[selectedIndex];
+      if (item) navigate(item.url);
+      return;
+    }
+  });
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      render(search(input.value));
+    }, 150);
+  });
+
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) close();
+  });
+
+  if (trigger) trigger.addEventListener('click', open);
+})();
+</script>
+
+<script is:inline>
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('feedback-btn');
+  var modal = document.getElementById('feedback-modal');
+  var backdrop = modal ? modal.querySelector('.feedback-backdrop') : null;
+  var closeBtn = document.getElementById('feedback-close');
+  var form = document.getElementById('feedback-form');
+  var textArea = document.getElementById('feedback-text');
+  var submitBtn = document.getElementById('feedback-submit');
+  var successEl = document.getElementById('feedback-success');
+  var errorEl = document.getElementById('feedback-error');
+  if (!btn || !modal) return;
+
+  var selectedType = 'otro';
+
+  modal.querySelectorAll('.feedback-type').forEach(function(b) {
+    b.addEventListener('click', function() {
+      modal.querySelectorAll('.feedback-type').forEach(function(x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      selectedType = b.dataset.type || 'otro';
+    });
+  });
+
+  function openModal() { modal.style.display = 'flex'; if (textArea) textArea.focus(); }
+  function closeModal() {
+    modal.style.display = 'none';
+    if (form) form.reset();
+    if (successEl) successEl.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
+    if (submitBtn) { submitBtn.style.display = ''; submitBtn.disabled = false; submitBtn.textContent = 'Enviar'; }
+    modal.querySelectorAll('.feedback-type').forEach(function(x) { x.classList.remove('active'); });
+    selectedType = 'otro';
+  }
+
+  btn.addEventListener('click', openModal);
+  if (backdrop) backdrop.addEventListener('click', closeModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.style.display !== 'none') closeModal(); });
+
+  if (form) form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!textArea || !textArea.value.trim()) return;
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enviando...'; }
+    if (errorEl) errorEl.style.display = 'none';
+
+    fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: selectedType, message: textArea.value.trim() })
+    }).then(function(res) {
+      if (res.ok) {
+        form.reset();
+        if (submitBtn) submitBtn.style.display = 'none';
+        if (successEl) successEl.style.display = '';
+        setTimeout(closeModal, 1500);
+      } else { throw new Error(); }
+    }).catch(function() {
+      if (errorEl) errorEl.style.display = '';
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Enviar'; }
+    });
+  });
+});
+</script>
+
+
+
+<script is:inline src="/js/contextual-help.js"></script>
+
+</html>

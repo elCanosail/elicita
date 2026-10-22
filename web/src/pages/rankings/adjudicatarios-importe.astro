@@ -1,0 +1,102 @@
+---
+import Layout from '../../layouts/main.astro';
+
+import adjudicatarios from '../../data/rankings-adjudicatarios.json';
+import meta from '../../data/rankings-adjudicatarios-meta.json';
+
+const description = "Top 50 adjudicatarios de contratación pública española por importe total. Ranking de empresas con más facturación en contratos públicos.";
+
+// Frescura visible (tarea 56): fecha de datos y de regeneración bajo el lede.
+const generadoUtc = meta.generado_utc.replace('T', ' ').slice(0, 16) + ' UTC';
+
+// Enlace al perfil público solo con NIF con formato válido (tarea 48)
+const NIF_RE = /^[A-Z0-9]{9}$/;
+
+function formatMoney(n: number): string {
+  if (n >= 1e9) return `€${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `€${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `€${(n / 1e3).toFixed(0)}K`;
+  return `€${n.toFixed(0)}`;
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString('es-ES');
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: 'Top adjudicatarios por importe — Contratación pública España',
+  description: description,
+  url: 'https://elicita.es/rankings/adjudicatarios-importe',
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  creator: { '@type': 'Organization', name: 'Elicita', url: 'https://elicita.es' },
+  isBasedOn: [
+    { '@type': 'Dataset', name: 'PLACSP', url: 'https://contrataciondelestado.es' },
+    { '@type': 'Dataset', name: 'TED UE', url: 'https://ted.europa.eu' },
+  ],
+};
+---
+
+<Layout title="Top adjudicatarios por importe — Elicita" description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+
+  <section class="py-20 md:py-32">
+    <div class="container mx-auto px-4">
+      <div class="max-w-5xl mx-auto">
+        <div class="space-y-4 mb-12">
+          <div class="flex items-center gap-2 text-sm text-white/50">
+            <a href="/rankings" class="hover:text-emerald-400 transition-colors">Rankings</a>
+            <span>/</span>
+            <span class="text-white/60">Adjudicatarios por importe</span>
+          </div>
+          <h1 class="text-3xl md:text-5xl font-light text-white">Top adjudicatarios por importe</h1>
+          <p class="text-white/50 text-lg max-w-2xl">
+            Las empresas con mayor facturación en contratación pública española.
+            Ranking por importe total adjudicado. Datos de PLACSP + TED + fuentes autonómicas.
+          </p>
+          <p class="font-mono text-xs text-white/50">
+            Datos a {meta.fecha_corte || '—'} · {formatNumber(meta.filas_base)} contratos analizados · regenerado {generadoUtc}
+          </p>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10 text-left text-white/50">
+                <th class="py-3 px-4 font-normal">#</th>
+                <th class="py-3 px-4 font-normal">Empresa</th>
+                <th class="py-3 px-4 font-normal hidden md:table-cell">NIF</th>
+                <th class="py-3 px-4 font-normal text-right">Contratos</th>
+                <th class="py-3 px-4 font-normal text-right">Importe total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {adjudicatarios.map((item, i) => (
+                <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-4 text-white/50 font-mono">{i + 1}</td>
+                  <td class="py-3 px-4 text-white/80 font-medium">{item.nombre}</td>
+                  <td class="py-3 px-4 font-mono text-xs hidden md:table-cell">{NIF_RE.test(item.nif || '') ? <a href={`/perfil/${item.nif}`} class="text-white/50 hover:text-emerald-300 hover:underline underline-offset-2 transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-emerald-400" title={`Ver perfil de ${item.nombre}`}>{item.nif}</a> : <span class="text-white/50">{item.nif}</span>}</td>
+                  <td class="py-3 px-4 text-white/60 text-right font-mono">{formatNumber(item.contratos)}</td>
+                  <td class="py-3 px-4 text-emerald-400 text-right font-mono font-medium">{formatMoney(item.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-8 pt-8 border-t border-white/5 space-y-3">
+          <p class="text-sm text-white/50">
+            Datos estructurados por Elicita a partir de PLACSP, TED UE y boletines autonómicos.
+            Licencia CC BY 4.0 — cita la fuente: <em>«PLACSP/TED vía Elicita (elicita.es). CC BY 4.0»</em>.
+          </p>
+          <p class="text-sm text-white/50">
+            Ver también: <a href="/rankings/adjudicatarios-volumen" class="text-emerald-400 hover:text-emerald-300">adjudicatarios por volumen</a> ·
+            <a href="/rankings/organismos-importe" class="text-emerald-400 hover:text-emerald-300">organismos por importe</a> ·
+            <a href="/rankings/organismos-volumen" class="text-emerald-400 hover:text-emerald-300">organismos por volumen</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

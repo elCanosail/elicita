@@ -1,0 +1,63 @@
+{
+  "schema": "elicita.market-intelligence/v1",
+  "snapshot_id": "technology-20260914-220000Z",
+  "dataset": "technology",
+  "title": "Fixture de contrato Market Intelligence",
+  "generated_at": "2026-09-14T22:00:00Z",
+  "period": {
+    "from": "2022-01-01",
+    "to": "2026-09-14"
+  },
+  "source": {
+    "name": "Synthetic fixture only",
+    "freshness_date": "2026-09-14",
+    "fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "methodology": {
+    "schema_version": "1",
+    "methodology_version": "1.0.0",
+    "taxonomy_version": "1.0.0",
+    "identity_registry_version": "1.0.0"
+  },
+  "universe": {
+    "source_rows": 12,
+    "sector_candidates": 10,
+    "analytic_contracts": 8,
+    "excluded_rows": 2
+  },
+  "coverage": {
+    "cpv_resolved_pct": 100,
+    "amount_valid_pct": 95,
+    "supplier_nif_valid_pct": 75,
+    "supplier_resolved_pct": 62.5,
+    "business_group_resolved_pct": 50,
+    "buyer_resolved_pct": 87.5,
+    "ute_unresolved_amount_pct": 10
+  },
+  "metrics": {
+    "observed_amount_eur": 1000000,
+    "companies": 2,
+    "business_groups": 1,
+    "buyers": 2,
+    "hhi_amount": 2000,
+    "hhi_contracts": 1953.125
+  },
+  "downloads": {
+    "companies_csv": "companies.csv",
+    "business_groups_csv": "business-groups.csv",
+    "buyers_csv": "buyers.csv",
+    "concentration_csv": "concentration.csv",
+    "evolution_csv": "evolution.csv",
+    "coverage_csv": "coverage.csv",
+    "exclusions_csv": "exclusions.csv"
+  },
+  "limitations": [
+    "Fixture sintético para pruebas; no representa el mercado ni producción.",
+    "El importe observado no equivale a gasto ejecutado."
+  ],
+  "license": {
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "receipt": "generation-receipt.json"
+}

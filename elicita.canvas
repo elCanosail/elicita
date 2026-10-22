@@ -1,0 +1,340 @@
+{
+	"nodes": [
+		{
+			"id": "legend",
+			"type": "text",
+			"text": "## Legend\n🔴 **Red** = To Do (ready)\n⬜ **Gray** = Blocked\n🟠 **Orange** = Doing\n🔵 **Cyan** = Ready to review\n🟢 **Green** = Done\n🟣 **Purple** = Proposed by agent",
+			"x": -560,
+			"y": 0,
+			"width": 380,
+			"height": 230,
+			"color": "0"
+		},
+		{
+			"id": "canvas-errors",
+			"type": "text",
+			"text": "## Errors\n✓ None",
+			"x": -560,
+			"y": 250,
+			"width": 380,
+			"height": 100,
+			"color": "1"
+		},
+		{
+			"id": "canvas-warnings",
+			"type": "text",
+			"text": "## Warnings\n✓ None",
+			"x": -560,
+			"y": 370,
+			"width": 380,
+			"height": 100,
+			"color": "3"
+		},
+		{
+			"id": "group-done",
+			"type": "group",
+			"x": 0,
+			"y": 0,
+			"width": 420,
+			"height": 1460,
+			"label": "Done"
+		},
+		{
+			"id": "group-todo",
+			"type": "group",
+			"x": 480,
+			"y": 0,
+			"width": 420,
+			"height": 1415,
+			"label": "To Do"
+		},
+		{
+			"id": "group-proposed",
+			"type": "group",
+			"x": 960,
+			"y": 0,
+			"width": 420,
+			"height": 970,
+			"label": "Proposed"
+		},
+		{
+			"id": "d01",
+			"type": "text",
+			"text": "## EL-01 Dashboard e-xplorer\nActivas, terminales, proyecciones",
+			"x": 20,
+			"y": 50,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d02",
+			"type": "text",
+			"text": "## EL-02 Buscador MVP\n7 sources, expandable rows",
+			"x": 20,
+			"y": 175,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d03",
+			"type": "text",
+			"text": "## EL-03 Onboard flow\nCIF/NIF/NIE + manual CPV",
+			"x": 20,
+			"y": 300,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d04",
+			"type": "text",
+			"text": "## EL-04 Quality Score\n20 indicators, 8.7M records",
+			"x": 20,
+			"y": 425,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d05",
+			"type": "text",
+			"text": "## EL-05 Competitor detail pages\nFull competitor profiles",
+			"x": 20,
+			"y": 550,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d06",
+			"type": "text",
+			"text": "## EL-06 Organism detail pages\nFull organism profiles",
+			"x": 20,
+			"y": 675,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d07",
+			"type": "text",
+			"text": "## EL-07 Universo graph visualization\nInteractive graph view",
+			"x": 20,
+			"y": 800,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d08",
+			"type": "text",
+			"text": "## EL-08 Pricing\nFree / Pro / Empresa tiers",
+			"x": 20,
+			"y": 925,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d09",
+			"type": "text",
+			"text": "## EL-09 Feature gates\nMonitor 10, buscador 5/day, explorer blocked",
+			"x": 20,
+			"y": 1050,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d10",
+			"type": "text",
+			"text": "## EL-10 Stripe integration\nPayment processing live",
+			"x": 20,
+			"y": 1175,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "d11",
+			"type": "text",
+			"text": "## EL-11 Clerk auth (production)\nAuth live in production",
+			"x": 20,
+			"y": 1300,
+			"width": 380,
+			"height": 110,
+			"color": "4"
+		},
+		{
+			"id": "t01",
+			"type": "text",
+			"text": "## EL-12 ⌘K command palette search\nGlobal search command palette",
+			"x": 500,
+			"y": 50,
+			"width": 380,
+			"height": 110,
+			"color": "1"
+		},
+		{
+			"id": "t02",
+			"type": "text",
+			"text": "## EL-13 Buscador performance optimization\n~8s → target <2s",
+			"x": 500,
+			"y": 175,
+			"width": 380,
+			"height": 110,
+			"color": "1"
+		},
+		{
+			"id": "t03",
+			"type": "text",
+			"text": "## EL-14 Resend domain setup\nCustom domain for transactional email",
+			"x": 500,
+			"y": 300,
+			"width": 380,
+			"height": 110,
+			"color": "1"
+		},
+		{
+			"id": "t04",
+			"type": "text",
+			"text": "## EL-15 Clerk email templates in Spanish\nTranslate all Clerk emails to Spanish",
+			"x": 500,
+			"y": 425,
+			"width": 380,
+			"height": 110,
+			"color": "0"
+		},
+		{
+			"id": "t05",
+			"type": "text",
+			"text": "## EL-16 STATUS.md\nArchitecture map document",
+			"x": 500,
+			"y": 550,
+			"width": 380,
+			"height": 110,
+			"color": "1"
+		},
+		{
+			"id": "t06",
+			"type": "text",
+			"text": "## EL-17 BORME integration scope definition\nDefine scope and approach",
+			"x": 500,
+			"y": 675,
+			"width": 380,
+			"height": 110,
+			"color": "1"
+		},
+		{
+			"id": "t07",
+			"type": "text",
+			"text": "## EL-18 Demo with Applus\nPrepare and deliver demo",
+			"x": 500,
+			"y": 800,
+			"width": 380,
+			"height": 110,
+			"color": "1"
+		},
+		{
+			"id": "t08",
+			"type": "text",
+			"text": "## EL-19 Stripe Tax activation\nEnable tax calculation in Stripe",
+			"x": 500,
+			"y": 925,
+			"width": 380,
+			"height": 110,
+			"color": "1"
+		},
+		{
+			"id": "p01",
+			"type": "text",
+			"text": "## EL-20 Semantic analysis of tender documents\nCognee, Fase 4+",
+			"x": 980,
+			"y": 50,
+			"width": 380,
+			"height": 110,
+			"color": "6"
+		},
+		{
+			"id": "p02",
+			"type": "text",
+			"text": "## EL-21 API pública\nPublic REST API for integrations",
+			"x": 980,
+			"y": 175,
+			"width": 380,
+			"height": 110,
+			"color": "6"
+		},
+		{
+			"id": "p03",
+			"type": "text",
+			"text": "## EL-22 Multi-tenant advanced features\nEnterprise multi-tenant capabilities",
+			"x": 980,
+			"y": 300,
+			"width": 380,
+			"height": 110,
+			"color": "6"
+		},
+		{
+			"id": "7f3283a7",
+			"type": "text",
+			"text": "## EL-23 DIRCE enrichment — perfiles de empresa\nIntegrar datos del DIRCE (INE) para enriquecer perfiles de competidores: número de empleados (por tramos), CNAE, antigüedad. API JSON INE disponible sin auth. Mostrar en ficha de empresa: '50-99 empleados · CNAE 41 · fundada 2003'. Backlog v2 — no bloquea lanzamiento.",
+			"x": 500,
+			"y": 1055,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "4703398b",
+			"type": "text",
+			"text": "## EL-24 Búsqueda texto libre — n-gramas dispersos\nImplementar búsqueda por descripción de licitación (texto libre), no solo por CIF/CPV. Referencia técnica: artículo Cursor sobre n-gramas dispersos con pesos por frecuencia (https://cursor.com/es/blog/fast-regex-search). DuckDB tiene FTS nativo (fts extension) — evaluar primero antes de implementación custom. Backlog v2 — depende de feedback de primeros clientes.",
+			"x": 500,
+			"y": 1235,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "9237c9bb",
+			"type": "text",
+			"text": "## EL-25 Alertas con lógica custom — Dynamic Workers sandbox\nPermitir que usuarios definan reglas de alerta con lógica personalizada (ej: contrato de empresa X en CCAA Y con importe > Z€). Ejecutar esa lógica en Cloudflare Dynamic Workers (open beta) — sandbox aislado por usuario, arranque en microsegundos, sin coste de contenedores. Requiere: motor de alertas actual como base, migración parcial a Cloudflare Workers para la capa de evaluación de reglas. Referencia: https://blog.cloudflare.com/dynamic-workers/ — Code Mode reduce tokens un 81%.",
+			"x": 980,
+			"y": 430,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "1f88ea43",
+			"type": "text",
+			"text": "## EL-26 Wiki de inteligencia acumulada (patrón Karpathy)\nLLM construye y mantiene wiki persistente por cliente: páginas de compradores, sectores y patrones actualizadas con cada licitación nueva. Conocimiento compilado, no re-descubierto en cada query. Diferencial vs competidores que solo tienen búsqueda. Pregunta pendiente: wiki por cliente (privado, caro) vs wiki global (escalable, riesgo competitivo). Ref: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f",
+			"x": 980,
+			"y": 610,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		},
+		{
+			"id": "fdbb680b",
+			"type": "text",
+			"text": "## EL-27 DESIGN.md — sistema de diseño Elicita\nCrear DESIGN.md en formato Google Stitch (ref: awesome-design-md). Capturar identidad visual actual para que sub-agentes generen UI coherente sin instrucciones extra. Hacerlo en el próximo toque de frontend.",
+			"x": 980,
+			"y": 790,
+			"width": 280,
+			"height": 160,
+			"color": "6"
+		}
+	],
+	"edges": [
+		{
+			"id": "edge-001",
+			"fromNode": "t03",
+			"fromSide": "bottom",
+			"toNode": "t04",
+			"toSide": "top"
+		}
+	]
+}

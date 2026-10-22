@@ -1,0 +1,223 @@
+---
+title: "Radiografía #3 — CPV: el ADN de cada contrato público"
+excerpt: "Los códigos CPV clasifican cada céntimo del gasto público. Construcción domina con 533.000M €, pero los sectores con más oportunidades reales no son los más grandes."
+date: "2026-03-15"
+readTime: "10 min"
+category: "Radiografía"
+series: "Radiografía"
+author: "Equipo Elicita"
+tags: ["radiografía", "CPV", "sectores", "oportunidades", "análisis"]
+draft: false
+---
+
+*Este es el tercer artículo de la serie **"Radiografía de la Contratación Pública Española"** — análisis exhaustivo sobre datos reales de 13,4 millones de contratos del PLACE.*
+
+---
+
+## ¿Qué es un CPV y por qué debería importarte?
+
+Antes de hablar de sectores, volúmenes y oportunidades, necesitamos hablar de un acrónimo que pocas empresas conocen pero que lo decide casi todo: el **CPV**.
+
+CPV son las siglas de *Common Procurement Vocabulary* — el vocabulario común de compras públicas. Es el sistema que usan todos los organismos europeos para clasificar lo que compran. Cada contrato público lleva asignado (al menos) un código CPV: un número de 8 dígitos que dice exactamente de qué trata.
+
+**¿Por qué importa?** Porque si no sabes cuál es tu CPV, no puedes montar una alerta eficaz. Recibirás decenas de contratos que no te interesan o, peor, te perderás los que sí.
+
+El CPV funciona como un sistema jerárquico:
+- **2 dígitos** → gran sector (ej.: 45 = Construcción)
+- **4 dígitos** → subsector (ej.: 4523 = Carreteras, autovías, vías de tráfico)
+- **8 dígitos** → producto o servicio específico (ej.: 45233141-9 = Mantenimiento de carreteras)
+
+En nuestro dataset de 13,4 millones de contratos del PLACE, **hemos analizado cómo se distribuye el gasto público entre los ~100 sectores CPV de 2 dígitos**. Esto es lo que revela.
+
+---
+
+## El mapa del gasto: quién se lleva cada euro
+
+El volumen total de adjudicaciones en el PLACE supera los **2 billones de euros**. Pero ese dinero no se reparte uniformemente. Tres sectores concentran casi la mitad:
+
+| # | CPV | Sector | Contratos | Volumen total | Importe medio |
+|---|-----|--------|-----------|---------------|---------------|
+| 1 | 45 | Obras y construcción civil | 827.793 | **533.000 M €** | 643.854 € |
+| 2 | 90 | Limpieza y gestión ambiental | 204.685 | **158.800 M €** | 775.894 € |
+| 3 | 85 | Servicios sanitarios | 199.856 | **134.300 M €** | 672.017 € |
+| 4 | 50 | Servicios de mantenimiento | 452.585 | **125.600 M €** | 277.439 € |
+| 5 | 33 | Equipos médicos y material sanitario | 382.936 | **104.800 M €** | 273.620 € |
+| 6 | 34 | Vehículos y equipos de transporte | 192.254 | **103.900 M €** | 540.650 € |
+| 7 | 35 | Equipos de seguridad y defensa | 60.884 | **100.200 M €** | 1.645.122 € |
+| 8 | 72 | Servicios tecnológicos (TI) | 244.061 | **90.500 M €** | 370.739 € |
+| 9 | 79 | Servicios profesionales (publicidad, consultoría) | 582.546 | **81.500 M €** | 139.950 € |
+| 10 | 93 | Servicios recreativos, culturales y deportivos | 23.849 | **62.300 M €** | 2.612.029 € |
+
+*Fuente: PLACE — 13,4M registros, filtrado importe < 10.000M € para eliminar errores de codificación*
+
+El sector **45 (Construcción)** es el rey indiscutible: 533.000 millones de euros en contratos, el doble del segundo clasificado. Pero fíjate en el importe medio: 643.000 € por contrato. No es un mercado de pequeñas empresas.
+
+**Lo que el ranking no cuenta:** el sector con más contratos no es el de más volumen. Los **79 (Servicios profesionales)** acumulan 582.546 adjudicaciones — más que nadie — con un importe medio de solo 140.000 €. Es el sector más accesible para pymes y autónomos.
+
+---
+
+## Dentro de cada sector: la distribución real
+
+Saber que Construcción mueve 533.000 M € es útil. Saber qué porcentaje de esos contratos son accesibles para una empresa mediana es más útil todavía.
+
+Hemos segmentado los cinco sectores más grandes por rangos de importe:
+
+### Construcción (CPV 45) — 827.793 contratos
+
+| Rango | Contratos | % | Volumen |
+|-------|-----------|---|---------|
+| < 15.000 € | 130.277 | 15,7% | 821 M € |
+| 15.000 – 50.000 € | 195.628 | 23,6% | 6.416 M € |
+| 50.000 – 200.000 € | 271.811 | 32,8% | 28.785 M € |
+| 200.000 – 1.000.000 € | 162.848 | 19,7% | 69.743 M € |
+| > 1.000.000 € | 67.229 | 8,1% | **427.213 M €** |
+
+El 8,1% de los contratos de construcción mueve el 80% del dinero. Si eres una constructora mediana, tu mercado real son los **162.000 contratos entre 200K y 1M €** — que juntos suman 70.000 M €. Nada mal.
+
+### Mantenimiento (CPV 50) — 452.585 contratos
+
+| Rango | Contratos | % | Volumen |
+|-------|-----------|---|---------|
+| < 15.000 € | 258.962 | 57,2% | 874 M € |
+| 15.000 – 50.000 € | 69.214 | 15,3% | 2.085 M € |
+| 50.000 – 200.000 € | 68.814 | 15,2% | 7.047 M € |
+| 200.000 – 1.000.000 € | 38.042 | 8,4% | 16.627 M € |
+| > 1.000.000 € | 17.553 | 3,9% | 98.932 M € |
+
+Mantenimiento tiene la distribución más peculiar: **el 57% de sus contratos son micro (< 15.000 €)**. Volumen bajo, pero cantidad enorme. El mercado accesible para una empresa de mantenimiento técnico es gigantesco en número de oportunidades — aunque hay que saber filtrar.
+
+### Equipos médicos (CPV 33) — 382.936 contratos
+
+| Rango | Contratos | % | Volumen |
+|-------|-----------|---|---------|
+| < 15.000 € | 189.049 | 49,4% | 610 M € |
+| 15.000 – 50.000 € | 61.362 | 16,0% | 1.863 M € |
+| 50.000 – 200.000 € | 69.145 | 18,1% | 7.145 M € |
+| 200.000 – 1.000.000 € | 45.169 | 11,8% | 20.387 M € |
+| > 1.000.000 € | 18.211 | 4,8% | **74.774 M €** |
+
+El material sanitario tiene los grandes contratos concentrados en muy pocos expedientes. El **72% del volumen del sector está en contratos de más de 1M €** — acuerdos marco con hospitales públicos y compras centralizadas de CCAA.
+
+---
+
+## El factor concentración: ¿con quién compites realmente?
+
+Entrar en un sector no solo depende del volumen. Depende de si ese mercado está abierto o si lo controlan cuatro empresas.
+
+Hemos calculado qué porcentaje del gasto de cada sector acaparan los **10 mayores adjudicatarios**:
+
+| CPV | Sector | Concentración top 10 | Señal |
+|-----|--------|---------------------|-------|
+| 93 | Servicios recreativos, culturales y deportivos | **93,6%** | 🔴 Oligopolio total |
+| 09 | Combustibles y gas | **86,2%** | 🔴 Oligopolio |
+| 91 | Servicios de clubes | **82,4%** | 🔴 Oligopolio |
+| 35 | Seguridad y defensa | **80,7%** | 🔴 Muy cerrado |
+| 64 | Telecomunicaciones | **79,4%** | 🔴 Oligopolio |
+| 60 | Transporte terrestre | **55,7%** | 🟡 Concentrado |
+| 90 | Limpieza ambiental | **47,2%** | 🟡 Semi-concentrado |
+| 34 | Vehículos | **45,9%** | 🟡 Semi-concentrado |
+| 85 | Salud | **44,7%** | 🟡 Semi-concentrado |
+| 33 | Equipos médicos | **35,9%** | 🟢 Más abierto |
+| 38 | Instrumentos laboratorio | **30,8%** | 🟢 Fragmentado |
+| 30 | Máquinas de oficina | **30,8%** | 🟢 Fragmentado |
+
+**La trampa del volumen:** El CPV 93 mueve 62.300 M € pero el 93,6% lo adjudican 10 empresas. El mero volumen de un sector no dice nada sobre tu oportunidad real.
+
+> **Nota:** El CPV 93 corresponde a servicios recreativos, culturales y deportivos, no a suministro energético. El suministro energético se clasifica principalmente en CPV 09 (combustibles y energía) y/o CPV 65 (servicios de suministro de agua, gas, electricidad y calefacción); no fabricamos aquí cifras separadas de energía al no formar parte de este ranking.
+
+**El dato que más sorprende:** El sector de construcción (45), con 533.000 M €, no aparece en la lista de concentrados. Es un mercado genuinamente fragmentado, con miles de empresas compitiendo. Que domine el gasto público no significa que lo controle una élite.
+
+---
+
+## Los nichos con más potencial
+
+Una categoría especialmente interesante: sectores con **volumen elevado pero pocos adjudicatarios activos** — indicador de que el mercado no está saturado de competidores:
+
+| CPV | Sector | Adjudicatarios únicos | Volumen | Volumen medio por empresa |
+|-----|--------|-----------------------|---------|--------------------------|
+| 64 | Telecomunicaciones y correos | 3.156 | 38.022 M € | **12,0 M €/empresa** |
+| 91 | Servicios especializados | 1.479 | 17.549 M € | **11,9 M €/empresa** |
+| 09 | Combustibles | 3.568 | 26.426 M € | **7,4 M €/empresa** |
+| 63 | Actividades auxiliares de transporte | 4.886 | 22.106 M € | **4,5 M €/empresa** |
+| 73 | I+D y servicios de investigación | 4.692 | 10.482 M € | **2,2 M €/empresa** |
+
+**Advertencia:** Los tres primeros (telecomunicaciones, servicios especializados, combustibles) son oligopolios disfrazados de nicho — pocas empresas porque son sectores naturalmente concentrados. El interesante de verdad es el **73 (I+D)**: 10.500 M € repartidos entre apenas 4.692 empresas, con menor concentración en los grandes adjudicatarios.
+
+---
+
+## Cómo operan las empresas que ganan
+
+Hemos analizado cuántos sectores CPV distintos trabaja cada adjudicatario activo (con al menos 3 contratos):
+
+- **57,1% de las empresas** opera en un solo sector CPV → especialistas puros
+- **21,9%** opera en 2 sectores
+- **8,9%** opera en 3 sectores
+- Solo el **1,1%** opera en más de 7 sectores distintos
+
+La empresa mediana que gana contratos públicos es **altamente especializada**. La media es 2,03 sectores CPV; la mediana, 1.
+
+**¿Qué significa esto?** Dos cosas contradictorias según el ángulo:
+
+1. **Si eres una empresa especializada:** tu perfil encaja con cómo funciona el mercado. Profundiza en tu CPV, conócelo mejor que nadie, construye historial en él.
+
+2. **Si eres una empresa diversificada:** la diversificación *funciona*, pero solo a escala. Las 2.140 empresas con más de 10 sectores CPV son grandes grupos, UTEs o integradores con capacidad de respuesta en múltiples líneas. Para una pyme, diversificarse sin escala es dispersar esfuerzo.
+
+---
+
+## Guía práctica: cómo usar los CPV a tu favor
+
+### Paso 1: Encuentra tu CPV exacto
+
+No todos los CPV de 8 dígitos que parecen tu sector son iguales. Busca contratos recientes de tu competencia y comprueba qué códigos están usando. La diferencia entre CPV 72212000 (servicios de programación) y CPV 72220000 (consultoría en sistemas y en tecnología) puede separarte de decenas de contratos relevantes.
+
+### Paso 2: Monitoriza en anchura, ejecuta en profundidad
+
+Configura alertas para el CPV de 4 dígitos (subsector completo) pero filtra por los rangos de importe donde puedes competir. Un contrato de 50M € en tu sector no es una oportunidad — es ruido.
+
+### Paso 3: Entiende el calendario de tu sector
+
+En los datos de evolución temporal (2020–2025), los picos de adjudicación varían por sector. Construcción tiene máximos en primavera y en septiembre (cuando se cierran presupuestos). Equipos TI repunta en el cuarto trimestre. Conocer el ritmo de tu sector te permite preparar propuestas cuando hay más demanda.
+
+### Paso 4: Analiza la concentración de tu nicho
+
+Si el top 10 de adjudicatarios de tu CPV acapara más del 70% del volumen, evalúa dos cosas antes de entrar: (a) si hay contratos en rangos donde esos gigantes no compiten (contratos < 50K, por ejemplo) y (b) si la concentración viene de acuerdos marco renovables que bloquean el acceso a nuevos entrantes.
+
+---
+
+## Lo que los números revelan del sector público español
+
+Tres lecturas de fondo que van más allá de las cifras:
+
+**1. España construye, mucho.** El 26,7% del gasto público licitado va a obras. Es una economía que todavía resuelve sus problemas con cemento. Esto no es un juicio — es una realidad que define décadas de política presupuestaria.
+
+**2. La sanidad es el segundo mercado, pero con dos velocidades.** 134.000 M € en servicios sanitarios y 104.800 M € en equipos médicos. Pero la distribución es muy diferente: los servicios van a grandes conciertos y contratos de larga duración; el equipamiento se fragmenta en cientos de hospitales comprando de forma independiente.
+
+**3. Los servicios profesionales (CPV 79) son el mercado más democrático.** 582.546 contratos, importe medio de 140.000 €, concentración baja. Es el sector donde una pyme de 5 personas puede competir en igualdad de condiciones con una multinacional — si sabe dónde mirar.
+
+---
+
+## En el próximo artículo: los 17 reinos
+
+Hasta ahora hemos analizado la contratación pública española como si fuera un solo mercado. No lo es.
+
+España tiene 17 comunidades autónomas, 8.100+ ayuntamientos y miles de organismos intermedios — y cada uno contrata de forma diferente, publica en portales distintos y tiene sus propias dinámicas de mercado.
+
+En el **Radiografía #4** vamos a cartografiar la fragmentación autonómica: qué regiones lideran en volumen, cuáles tienen las mejores condiciones para nuevos entrantes, y por qué el mismo CPV puede ser un mercado abierto en Aragón y un oligopolio local en otra comunidad.
+
+**Si tu empresa quiere expandirse geográficamente en el mercado público, el siguiente artículo es imprescindible.**
+
+---
+
+## La serie completa: Radiografía de la Contratación Pública Española
+
+| # | Título | Estado |
+|---|--------|--------|
+| 1 | [El mapa del tesoro: 30,9 millones de licitaciones bajo el microscopio](/blog/radiografia-01-mapa-tesoro) | ✅ Publicado |
+| 2 | El tiempo es dinero: anatomía del contrato público (ciclos, plazos, renovaciones) | 🔜 Próximo |
+| **3** | **CPV: el ADN de cada contrato público** | **📍 Estás aquí** |
+| 4 | Los 17 reinos: fragmentación autonómica y sus implicaciones | 🔜 Próximo |
+| 5 | El factor humano: quién firma los contratos y por qué importa | 🔜 Próximo |
+
+---
+
+*Todos los datos de esta serie proceden del análisis directo de los 13,4 millones de registros del PLACE (Plataforma de Contratación del Sector Público) disponibles en Elicita. Sin estimaciones, sin proyecciones de consultora: lo que ves es lo que hay.*

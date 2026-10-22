@@ -1,0 +1,925 @@
+---
+import Layout from '../../../../../layouts/dashboard.astro';
+import { query } from '../../../../../lib/duckdb';
+import { titleCase } from '../../../../../lib/format';
+
+const { nif } = Astro.params;
+const orgParts = (Astro.params.org as string | undefined) || '';
+const organismoRaw = decodeURIComponent(orgParts);
+
+if (!nif || !organismoRaw) {
+  return Astro.redirect('/explorer/universo');
+}
+
+const organismo = organismoRaw;
+
+// CPV dictionary
+let cpvDict: Record<string, string> = {};
+try {
+  const cpvModule = await import('../../../../../data/cpv_es.json');
+  cpvDict = (cpvModule.default || cpvModule) as Record<string, string>;
+} catch {}
+
+interface Contrato {
+  id: string;
+  fuente: string;
+  expediente: string;
+  organismo: string;
+  objeto: string;
+  cpv: string;
+  importe_licitacion: number;
+  importe_adjudicacion: number;
+  fecha_publicacion: string;
+  fecha_fin: string;
+  url: string;
+  estado: string;
+  adjudicatario: string;
+  nif_adjudicatario: string;
+}
+
+let empresaName = nif;
+let totalContratos = 0;
+let totalVolumen = 0;
+let importeMedio = 0;
+let primeraFecha: string | null = null;
+let ultimaFecha: string | null = null;
+let contratos: Contrato[] = [];
+let evolucionAnual: { ano: number; contratos: number; volumen: number }[] = [];
+let topCpvs: { code: string; name: string; count: number }[] = [];
+
+let errorMessage: string | null = null;
+
+// Helpers
+function fmtDate(d: any): string {
+  if (!d) return '—';
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  const s = String(d);
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) return dt.toISOString().slice(0, 10);
+  return s.slice(0, 10);
+}
+
+try {
+  const [
+    nameRows,
+    statsRows,
+    contratoRows,
+    evoRows,
+    cpvRows,
+  ] = await Promise.all([
+    query(`SELECT DISTINCT adjudicatario FROM contratos_vivos WHERE nif_adjudicatario = ? AND adjudicatario IS NOT NULL LIMIT 1`, [nif]),
+    query(`SELECT COUNT(*) AS total, COALESCE(SUM(importe_adjudicacion), 0) AS volumen, MIN(fecha_publicacion) AS primera, MAX(fecha_publicacion) AS ultima FROM contratos_vivos WHERE nif_adjudicatario = ? AND organismo = ?`, [nif, organismo]),
+    query(`SELECT id, fuente, expediente, organismo, objeto, cpv, importe_licitacion, importe_adjudicacion, fecha_publicacion, fecha_fin, url, estado, adjudicatario, nif_adjudicatario FROM contratos_vivos WHERE nif_adjudicatario = ? AND organismo = ? ORDER BY fecha_publicacion DESC LIMIT 500`, [nif, organismo]),
+    query(`SELECT EXTRACT(YEAR FROM fecha_publicacion) AS ano, COUNT(*) AS contratos, COALESCE(SUM(importe_adjudicacion), 0) AS volumen FROM contratos_vivos WHERE nif_adjudicatario = ? AND organismo = ? AND fecha_publicacion IS NOT NULL GROUP BY 1 ORDER BY 1`, [nif, organismo]),
+    query(`SELECT cpv, COUNT(*) AS cnt FROM contratos_vivos WHERE nif_adjudicatario = ? AND organismo = ? AND cpv IS NOT NULL GROUP BY cpv ORDER BY cnt DESC LIMIT 10`, [nif, organismo]),
+  ]);
+
+  if (nameRows.length > 0) {
+    empresaName = titleCase(nameRows[0].adjudicatario) || nameRows[0].adjudicatario || nif;
+  }
+
+  if (statsRows.length > 0) {
+    const row = statsRows[0];
+    totalContratos = Number(row.total) || 0;
+    totalVolumen = Number(row.volumen) || 0;
+    importeMedio = totalContratos > 0 ? totalVolumen / totalContratos : 0;
+    primeraFecha = row.primera ? fmtDate(row.primera) : null;
+    ultimaFecha = row.ultima ? fmtDate(row.ultima) : null;
+  }
+
+  contratos = contratoRows.map((r: any) => ({
+    id: r.id ? String(r.id) : '',
+    fuente: r.fuente || '—',
+    expediente: r.expediente || '—',
+    organismo: r.organismo || organismo,
+    objeto: r.objeto || '—',
+    cpv: r.cpv ? String(r.cpv).replace(/\.0$/, '').trim() : '',
+    importe_licitacion: Number(r.importe_licitacion) || 0,
+    importe_adjudicacion: Number(r.importe_adjudicacion) || 0,
+    fecha_publicacion: r.fecha_publicacion ? fmtDate(r.fecha_publicacion) : '—',
+    fecha_fin: r.fecha_fin ? fmtDate(r.fecha_fin) : '—',
+    url: r.url || '',
+    estado: r.estado || '—',
+    adjudicatario: r.adjudicatario || empresaName,
+    nif_adjudicatario: r.nif_adjudicatario || nif,
+  }));
+
+  evolucionAnual = evoRows.map((r: any) => ({
+    ano: Number(r.ano),
+    contratos: Number(r.contratos) || 0,
+    volumen: Number(r.volumen) || 0,
+  }));
+
+  topCpvs = cpvRows.map((r: any) => {
+    const code = String(r.cpv).replace(/\.0$/, '').trim();
+    return {
+      code,
+      name: cpvDict[code] || code,
+      count: Number(r.cnt) || 0,
+    };
+  });
+} catch (e: any) {
+  console.error('[universo relacion] error:', e?.message);
+  errorMessage = e?.message || 'Error al cargar los datos';
+}
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=3600');
+
+// Helpers
+function fmtVol(v: number): string {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M€';
+  if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K€';
+  return v.toFixed(0) + '€';
+}
+
+const metaDescription = `Contratos entre ${empresaName} y ${titleCase(organismo)} — ${totalContratos.toLocaleString('es-ES')} contratos, ${fmtVol(totalVolumen)}`;
+const pageTitle = `${empresaName} ↔ ${titleCase(organismo)} — elicita_`;
+const tableDataJson = JSON.stringify(contratos);
+const maxEvoVolumen = evolucionAnual.length > 0 ? Math.max(...evolucionAnual.map(r => r.volumen)) : 1;
+---
+
+<Layout title={pageTitle} active="universo">
+  <meta slot="head" name="description" content={metaDescription} />
+
+  <div class="relacion-wrap">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/explorer/universo">Universo</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Relación</span>
+    </nav>
+
+    <!-- Back -->
+    <a href="/explorer/universo" class="back-link">← Volver al Universo</a>
+
+    <!-- Header -->
+    <div class="relacion-header">
+      <div class="relacion-entities">
+        <div class="entity-card entity-empresa">
+          <div class="entity-label">Empresa</div>
+          <div class="entity-name" title={empresaName}>{empresaName}</div>
+          <div class="entity-meta mono">NIF: {nif}</div>
+        </div>
+        <div class="entity-connector">↔</div>
+        <div class="entity-card entity-organismo">
+          <div class="entity-label">Organismo</div>
+          <div class="entity-name" title={titleCase(organismo)}>{titleCase(organismo)}</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val mono">{totalContratos.toLocaleString('es-ES')}</div>
+          <div class="stat-lbl">Total contratos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{fmtVol(totalVolumen)}</div>
+          <div class="stat-lbl">Volumen total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{fmtVol(importeMedio)}</div>
+          <div class="stat-lbl">Importe medio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{primeraFecha || '—'}</div>
+          <div class="stat-lbl">Primer contrato</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{ultimaFecha || '—'}</div>
+          <div class="stat-lbl">Último contrato</div>
+        </div>
+      </div>
+    </div>
+
+    {errorMessage && (
+      <div class="error-card">Error al cargar datos: {errorMessage}</div>
+    )}
+
+    {totalContratos === 0 && !errorMessage && (
+      <div class="empty-card">No se encontraron contratos entre esta empresa y organismo.</div>
+    )}
+
+    {totalContratos > 0 && (
+      <>
+        <!-- Contracts table -->
+        <div class="section-title">
+          <span class="section-line"></span>
+          <span>CONTRATOS</span>
+          <span class="section-line"></span>
+        </div>
+
+        <div class="card">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <span class="toolbar-count mono">{totalContratos.toLocaleString('es-ES')} contratos</span>
+            </div>
+            <div class="toolbar-right">
+              <button type="button" class="sort-btn" data-sort="fecha" data-dir="desc">
+                <span>Fecha</span>
+                <span class="sort-icon">↓</span>
+              </button>
+              <button type="button" class="sort-btn" data-sort="importe" data-dir="desc">
+                <span>Importe</span>
+                <span class="sort-icon">↓</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Desktop table -->
+          <div class="table-wrap desktop-only">
+            <table class="data-table" id="contratos-table">
+              <thead>
+                <tr>
+                  <th>Objeto</th>
+                  <th class="th-r">Importe adjudicación</th>
+                  <th class="th-r">Fecha publicación</th>
+                  <th>Estado</th>
+                  <th>CPV</th>
+                  <th>Fuente</th>
+                </tr>
+              </thead>
+              <tbody id="contratos-tbody">
+                {contratos.slice(0, 50).map(c => (
+                  <tr class={c.url ? 'clickable-row' : ''} data-href={c.url || undefined} data-fecha={c.fecha_publicacion} data-importe={c.importe_adjudicacion}>
+                    <td class="td-objeto">
+                      <div class="obj-clamp" title={c.objeto}>{c.objeto}</div>
+                      <div class="expediente mono">{c.expediente}</div>
+                    </td>
+                    <td class="td-r mono">{fmtVol(c.importe_adjudicacion)}</td>
+                    <td class="td-r mono">{c.fecha_publicacion}</td>
+                    <td class="td-estado"><span class="estado-pill">{c.estado}</span></td>
+                    <td class="td-cpv">
+                      {c.cpv && (
+                        <span class="cpv-pill" title={`${c.cpv} — ${cpvDict[c.cpv] || ''}`}>
+                          <span class="cpv-code mono">{c.cpv}</span>
+                        </span>
+                      )}
+                    </td>
+                    <td class="td-fuente mono">{c.fuente}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile cards -->
+          <div class="cards-wrap mobile-only" id="contratos-cards">
+            {contratos.slice(0, 50).map(c => (
+              <div class={c.url ? 'contract-card clickable-row' : 'contract-card'} data-href={c.url || undefined} data-fecha={c.fecha_publicacion} data-importe={c.importe_adjudicacion}>
+                <div class="contract-header">
+                  <span class="contract-date mono">{c.fecha_publicacion}</span>
+                  <span class="contract-amount mono">{fmtVol(c.importe_adjudicacion)}</span>
+                </div>
+                <div class="contract-objeto">{c.objeto}</div>
+                <div class="contract-footer">
+                  <span class="estado-pill">{c.estado}</span>
+                  {c.cpv && <span class="cpv-pill"><span class="cpv-code mono">{c.cpv}</span></span>}
+                  <span class="contract-fuente mono">{c.fuente}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination" id="pagination">
+            <button type="button" class="page-btn" id="prev-page" disabled>← Anterior</button>
+            <span class="page-info mono" id="page-info">1 / 1</span>
+            <button type="button" class="page-btn" id="next-page" disabled>Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- Side / bottom section: evolution + top CPVs -->
+        <div class="secondary-grid">
+          {evolucionAnual.length > 0 && (
+            <div class="card">
+              <div class="card-header">Evolución anual</div>
+              <div class="evo-table-wrap">
+                <table class="data-table evo-table">
+                  <thead>
+                    <tr>
+                      <th>Año</th>
+                      <th class="th-r">Contratos</th>
+                      <th class="th-r">Volumen</th>
+                      <th class="th-bar">Distribución</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {evolucionAnual.map(row => (
+                      <tr>
+                        <td class="mono">{row.ano}</td>
+                        <td class="td-r mono">{row.contratos.toLocaleString('es-ES')}</td>
+                        <td class="td-r mono">{fmtVol(row.volumen)}</td>
+                        <td class="td-bar">
+                          <div class="bar-wrap">
+                            <div class="bar-fill" style={`width:${Math.max(1, (row.volumen / maxEvoVolumen) * 100)}%`}></div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {topCpvs.length > 0 && (
+            <div class="card">
+              <div class="card-header">Top CPVs</div>
+              <div class="cpv-table-wrap">
+                <table class="data-table cpv-table">
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Nombre</th>
+                      <th class="th-r">Count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {topCpvs.map(cpv => (
+                      <tr>
+                        <td class="mono">{cpv.code}</td>
+                        <td class="td-cpv-name" title={cpv.name}>{cpv.name.replace(/\.$/, '').slice(0, 70)}{cpv.name.length > 70 ? '…' : ''}</td>
+                        <td class="td-r mono">{cpv.count.toLocaleString('es-ES')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </>
+    )}
+  </div>
+
+  <script is:inline define:vars={{ tableDataJson }}>
+    window.__contratosData = JSON.parse(tableDataJson);
+  </script>
+
+  <script is:inline>
+    (function() {
+      const ROWS_PER_PAGE = 50;
+      let currentSort = { field: 'fecha', dir: 'desc' };
+      let currentPage = 1;
+      let filteredRows = [];
+
+      const tbody = document.getElementById('contratos-tbody');
+      const cardsWrap = document.getElementById('contratos-cards');
+      const prevBtn = document.getElementById('prev-page');
+      const nextBtn = document.getElementById('next-page');
+      const pageInfo = document.getElementById('page-info');
+      const sortButtons = document.querySelectorAll('.sort-btn');
+
+      const data = window.__contratosData || [];
+
+      function fmtVol(v) {
+        if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M€';
+        if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K€';
+        return v.toFixed(0) + '€';
+      }
+
+      function escHtml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function sortData() {
+        filteredRows = [...data].sort((a, b) => {
+          let va, vb;
+          if (currentSort.field === 'fecha') {
+            va = a.fecha_publicacion || '';
+            vb = b.fecha_publicacion || '';
+          } else {
+            va = Number(a.importe_adjudicacion) || 0;
+            vb = Number(b.importe_adjudicacion) || 0;
+          }
+          if (va < vb) return currentSort.dir === 'asc' ? -1 : 1;
+          if (va > vb) return currentSort.dir === 'asc' ? 1 : -1;
+          return 0;
+        });
+        currentPage = 1;
+        render();
+      }
+
+      function render() {
+        const start = (currentPage - 1) * ROWS_PER_PAGE;
+        const pageRows = filteredRows.slice(start, start + ROWS_PER_PAGE);
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / ROWS_PER_PAGE));
+
+        // Desktop
+        if (tbody) {
+          tbody.innerHTML = pageRows.map(c => `
+            <tr class="${c.url ? 'clickable-row' : ''}" data-href="${c.url ? escHtml(c.url) : ''}" data-fecha="${escHtml(c.fecha_publicacion)}" data-importe="${c.importe_adjudicacion}">
+              <td class="td-objeto">
+                <div class="obj-clamp" title="${escHtml(c.objeto)}">${escHtml(c.objeto)}</div>
+                <div class="expediente mono">${escHtml(c.expediente)}</div>
+              </td>
+              <td class="td-r mono">${fmtVol(Number(c.importe_adjudicacion) || 0)}</td>
+              <td class="td-r mono">${escHtml(c.fecha_publicacion)}</td>
+              <td class="td-estado"><span class="estado-pill">${escHtml(c.estado)}</span></td>
+              <td class="td-cpv">
+                ${c.cpv ? `<span class="cpv-pill" title="${escHtml(c.cpv)}"><span class="cpv-code mono">${escHtml(c.cpv)}</span></span>` : ''}
+              </td>
+              <td class="td-fuente mono">${escHtml(c.fuente)}</td>
+            </tr>
+          `).join('');
+        }
+
+        // Mobile
+        if (cardsWrap) {
+          cardsWrap.innerHTML = pageRows.map(c => `
+            <div class="${c.url ? 'contract-card clickable-row' : 'contract-card'}" data-href="${c.url ? escHtml(c.url) : ''}" data-fecha="${escHtml(c.fecha_publicacion)}" data-importe="${c.importe_adjudicacion}">
+              <div class="contract-header">
+                <span class="contract-date mono">${escHtml(c.fecha_publicacion)}</span>
+                <span class="contract-amount mono">${fmtVol(Number(c.importe_adjudicacion) || 0)}</span>
+              </div>
+              <div class="contract-objeto">${escHtml(c.objeto)}</div>
+              <div class="contract-footer">
+                <span class="estado-pill">${escHtml(c.estado)}</span>
+                ${c.cpv ? `<span class="cpv-pill"><span class="cpv-code mono">${escHtml(c.cpv)}</span></span>` : ''}
+                <span class="contract-fuente mono">${escHtml(c.fuente)}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        if (pageInfo) pageInfo.textContent = `${currentPage} / ${totalPages}`;
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+        attachClickHandlers();
+      }
+
+      function attachClickHandlers() {
+        document.querySelectorAll('.clickable-row[data-href]').forEach(row => {
+          row.addEventListener('click', () => {
+            const href = row.getAttribute('data-href');
+            if (href) window.open(href, '_blank', 'noopener,noreferrer');
+          });
+        });
+      }
+
+      // Sort buttons
+      sortButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const field = btn.getAttribute('data-sort');
+          const icon = btn.querySelector('.sort-icon');
+          if (currentSort.field === field) {
+            currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            currentSort.field = field;
+            currentSort.dir = 'desc';
+          }
+          sortButtons.forEach(b => {
+            b.classList.remove('active');
+            const i = b.querySelector('.sort-icon');
+            if (i) i.textContent = '↓';
+          });
+          btn.classList.add('active');
+          if (icon) icon.textContent = currentSort.dir === 'asc' ? '↑' : '↓';
+          btn.setAttribute('data-dir', currentSort.dir);
+          sortData();
+        });
+      });
+
+      // Pagination
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          if (currentPage > 1) { currentPage--; render(); }
+        });
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          const totalPages = Math.ceil(filteredRows.length / ROWS_PER_PAGE);
+          if (currentPage < totalPages) { currentPage++; render(); }
+        });
+      }
+
+      // Initial render
+      sortData();
+    })();
+  </script>
+</Layout>
+
+<style is:global>
+  .relacion-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.25);
+    margin-bottom: 12px;
+  }
+  .breadcrumb a {
+    color: hsl(var(--foreground) / 0.35);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .breadcrumb a:hover { color: hsl(var(--primary)); }
+  .breadcrumb-sep { color: hsl(var(--foreground) / 0.15); }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.3);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: hsl(var(--info)); }
+
+  .relacion-header {
+    margin-bottom: 24px;
+  }
+
+  .relacion-entities {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .entity-card {
+    flex: 1;
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 16px 20px;
+    min-width: 0;
+  }
+  .entity-empresa { border-left: 3px solid hsl(var(--primary)); }
+  .entity-organismo { border-left: 3px solid hsl(var(--info)); }
+  .entity-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: hsl(var(--foreground) / 0.2);
+    margin-bottom: 6px;
+  }
+  .entity-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: hsl(var(--foreground) / 0.9);
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .entity-meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+  .entity-connector {
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    color: hsl(var(--foreground) / 0.15);
+    padding: 0 4px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .stat-card {
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 18px;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 4px;
+  }
+  .stat-lbl {
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: hsl(var(--foreground) / 0.2);
+    margin: 36px 0 16px;
+  }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: hsl(var(--foreground) / 0.06);
+  }
+
+  .card {
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .card-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(var(--foreground) / 0.2);
+    margin-bottom: 14px;
+  }
+  .empty-card {
+    background: hsl(var(--foreground) / 0.01);
+    border: 1px solid hsl(var(--foreground) / 0.05);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.2);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .error-card {
+    background: hsl(var(--destructive) / 0.06);
+    border: 1px solid hsl(var(--destructive) / 0.15);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: hsl(var(--destructive) / 0.9);
+    margin-bottom: 12px;
+  }
+
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .toolbar-count {
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.25);
+  }
+  .toolbar-right {
+    display: flex;
+    gap: 8px;
+  }
+  .sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: hsl(var(--foreground) / 0.03);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.4);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sort-btn:hover { border-color: hsl(var(--foreground) / 0.15); color: hsl(var(--foreground) / 0.6); }
+  .sort-btn.active { border-color: hsl(var(--primary) / 0.4); color: hsl(var(--primary)); }
+  .sort-icon { font-size: 11px; }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .data-table thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--foreground) / 0.15);
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+    white-space: nowrap;
+  }
+  .data-table thead th.th-r { text-align: right; }
+  .data-table thead th.th-bar { width: 120px; }
+  .data-table tbody tr { border-bottom: 1px solid hsl(var(--foreground) / 0.03); }
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table tbody tr:hover { background: hsl(var(--foreground) / 0.02); }
+  .data-table td {
+    padding: 10px 8px;
+    color: hsl(var(--foreground) / 0.7);
+    vertical-align: top;
+  }
+  .td-r { text-align: right; }
+  .td-objeto { max-width: 360px; }
+  .obj-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.65);
+    line-height: 1.4;
+  }
+  .expediente {
+    margin-top: 4px;
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.2);
+  }
+  .td-estado { white-space: nowrap; }
+  .estado-pill {
+    display: inline-flex;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: hsl(var(--foreground) / 0.05);
+    color: hsl(var(--foreground) / 0.45);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    white-space: nowrap;
+  }
+  .td-cpv { white-space: nowrap; }
+  .cpv-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: hsl(var(--primary) / 0.06);
+    border: 1px solid hsl(var(--primary) / 0.12);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+  .cpv-code {
+    font-size: 10px;
+    color: hsl(var(--primary));
+  }
+  .td-fuente {
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.35);
+    white-space: nowrap;
+  }
+  .clickable-row { cursor: pointer; }
+  .clickable-row:hover { background: hsl(var(--primary) / 0.04) !important; }
+
+  .cards-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .contract-card {
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .contract-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .contract-date {
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+  .contract-amount {
+    font-size: 13px;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+  .contract-objeto {
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.7);
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+  .contract-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .contract-fuente {
+    margin-left: auto;
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid hsl(var(--foreground) / 0.05);
+  }
+  .page-btn {
+    background: hsl(var(--foreground) / 0.03);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.55);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .page-btn:hover:not(:disabled) { border-color: hsl(var(--foreground) / 0.15); color: hsl(var(--foreground) / 0.8); }
+  .page-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .page-info {
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+
+  .secondary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .secondary-grid .card { margin-bottom: 0; }
+
+  .evo-table-wrap, .cpv-table-wrap {
+    overflow-x: auto;
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+  .td-bar {
+    width: 120px;
+    min-width: 100px;
+    padding: 10px 8px;
+    vertical-align: middle;
+  }
+  .bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: hsl(var(--foreground) / 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: hsl(var(--info));
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .td-cpv-name {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.6);
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .stats-row { grid-template-columns: repeat(3, 1fr); }
+    .secondary-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .relacion-wrap { padding: 16px; }
+    .relacion-entities {
+      flex-direction: column;
+      gap: 10px;
+    }
+    .entity-connector { display: none; }
+    .entity-name { font-size: 14px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .stat-val { font-size: 15px; }
+    .desktop-only { display: none; }
+    .mobile-only { display: flex; }
+    .table-toolbar { flex-direction: column; align-items: flex-start; }
+    .td-cpv-name { max-width: 160px; }
+  }
+
+  @media (min-width: 641px) {
+    .mobile-only { display: none; }
+    .desktop-only { display: block; }
+  }
+</style>

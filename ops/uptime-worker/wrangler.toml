@@ -1,0 +1,14 @@
+name = "elicita-uptime"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+account_id = "dd1e73c51fb338d89e41946b6ff75a59"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "UPTIME_KV"
+id = "5d4eec783dd543cb9798430dfeb6f4b8"
+
+[vars]
+CHAT_ID = "5804565"

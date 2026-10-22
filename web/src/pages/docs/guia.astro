@@ -1,0 +1,486 @@
+---
+import Layout from '../../layouts/main.astro';
+
+const metadata = {
+  title: "Guía de onboarding — Elicita",
+  description: "Aprende a usar Elicita desde cero: búsquedas, licitaciones, organismos, competidores, Universo, alertas, API y MCP.",
+};
+
+const sections = [
+  { id: 'primeros-pasos', title: 'Primeros pasos' },
+  { id: 'tu-primera-busqueda', title: 'Tu primera búsqueda' },
+  { id: 'entender-una-licitacion', title: 'Entender una licitación' },
+  { id: 'vigilar-organismos', title: 'Vigilar organismos' },
+  { id: 'analizar-competidores', title: 'Analizar competidores' },
+  { id: 'universo', title: 'Universo — grafo de relaciones' },
+  { id: 'configurar-alertas', title: 'Configurar alertas' },
+  { id: 'explorer-proyecciones', title: 'Explorer y proyecciones' },
+  { id: 'api-mcp', title: 'API y MCP' },
+];
+
+const examples = [
+  { sector: 'Software', cpv: '72000000', query: 'desarrollo software hospital', use: 'Empresas tecnológicas que venden a la Sanidad Pública.' },
+  { sector: 'Construcción', cpv: '45230000', query: 'obras de saneamiento', use: 'Contratistas que pujan por infraestructura municipal.' },
+  { sector: 'Sanidad', cpv: '33000000', query: 'material médico', use: 'Distribuidores de productos sanitarios.' },
+  { sector: 'Consultoría', cpv: '79000000', query: 'servicios de consultoría', use: 'Despachos que buscan proyectos de asesoría pública.' },
+];
+
+const statuses = [
+  { name: 'Anuncio', desc: 'El contrato está anunciado, aún se pueden presentar ofertas.' },
+  { name: 'Adjudicada', desc: 'Ya hay un ganador, pero puede no estar formalizado.' },
+  { name: 'Formalizado', desc: 'El contrato se ha firmado y publicado el adjudicatario.' },
+  { name: 'Anulado', desc: 'El expediente se ha anulado o desistido.' },
+];
+
+const metrics = [
+  { metric: 'Volumen total', desc: 'Suma de todos los importes adjudicados a la empresa.' },
+  { metric: 'Media por contrato', desc: 'Volumen dividido por número de contratos.' },
+  { metric: 'Top organismos', desc: 'Clientes públicos a los que más ha vendido la empresa.' },
+  { metric: 'Evolución anual', desc: 'Histórico de contratos y volumen por año.' },
+  { metric: 'CPVs principales', desc: 'Sectores en los que la empresa es más activa.' },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: metadata.title,
+  description: metadata.description,
+  url: 'https://elicita.es/docs/guia',
+  isPartOf: {
+    '@type': 'WebSite',
+    name: 'Elicita',
+    url: 'https://elicita.es',
+  },
+};
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+
+  <div class="container mx-auto px-4 py-12 max-w-7xl">
+    <div class="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-12">
+
+      <!-- Sidebar -->
+      <aside class="hidden lg:block">
+        <nav class="sticky top-24 space-y-1 border-l border-white/10 pl-4">
+          {sections.map((s) => (
+            <a
+              href={`#${s.id}`}
+              class="block text-sm text-white/50 hover:text-emerald-400 transition-colors py-1"
+            >
+              {s.title}
+            </a>
+          ))}
+        </nav>
+      </aside>
+
+      <!-- Content -->
+      <article class="space-y-20">
+
+        <!-- Hero -->
+        <section id="primeros-pasos" class="space-y-6">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase">Guía de onboarding</p>
+          <h1 class="text-3xl md:text-5xl font-light text-white tracking-tight">
+            Saca provecho a <span class="text-emerald-400">Elicita</span>
+          </h1>
+          <p class="text-lg text-white/50 max-w-3xl leading-relaxed">
+            Elicita es un sistema de inteligencia sobre contratación pública española. 63M+ registros oficiales:
+            PLACSP, TED, BORME y los boletines autonómicos. Esta guía te muestra, paso a paso, cómo encontrar
+            oportunidades, entender competidores y automatizar la vigilancia.
+          </p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <a href="/buscar" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-mono px-5 py-2.5 rounded transition-colors">Ir al buscador →</a>
+            <a href="/precios" class="inline-flex items-center border border-white/10 hover:border-white/20 bg-transparent text-white/60 hover:text-white/80 text-sm font-mono px-5 py-2.5 rounded transition-colors">Ver planes</a>
+          </div>
+        </section>
+
+        <!-- Primeros pasos -->
+        <section class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">Primeros pasos</h2>
+          <p class="text-white/50 leading-relaxed">
+            Empieza en <a href="/sign-up" class="text-emerald-400 hover:text-emerald-300">/sign-up</a>. Puedes registrarte gratis.
+            El plan Free incluye 3 búsquedas al día, acceso al monitor de licitaciones activas y al Explorer básico.
+          </p>
+          <p class="text-white/50 leading-relaxed">
+            El plan <strong class="text-white/80">Pro</strong> cuesta 29 €/mes e incluye búsquedas ilimitadas,
+            alertas, Universo (grafo de relaciones), BORME, API y MCP. No requiere tarjeta para registrarte.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="border border-white/5 rounded-xl p-5 bg-white/[0.02]">
+              <div class="font-mono text-emerald-400 text-sm mb-2">Free</div>
+              <ul class="text-sm text-white/50 space-y-2">
+                <li>3 búsquedas/día</li>
+                <li>Monitor de licitaciones</li>
+                <li>Explorer básico</li>
+              </ul>
+            </div>
+            <div class="border border-emerald-500/20 rounded-xl p-5 bg-emerald-500/[0.04]">
+              <div class="font-mono text-emerald-400 text-sm mb-2">Pro — 29 €/mes</div>
+              <ul class="text-sm text-white/50 space-y-2">
+                <li>Buscador ilimitado</li>
+                <li>Alertas ilimitadas</li>
+                <li>Universo, BORME, API, MCP</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="callout tip">
+            <span class="callout-icon">💡</span>
+            <div>
+              <strong>Tip:</strong> empieza con el buscador público antes de registrarte. Si encuentras valor en las primeras 3 búsquedas diarias, sube a Pro para desbloquear todo.
+            </div>
+          </div>
+        </section>
+
+        <!-- Tu primera búsqueda -->
+        <section id="tu-primera-busqueda" class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">Tu primera búsqueda</h2>
+          <p class="text-white/50 leading-relaxed">
+            El buscador vive en <a href="/buscar" class="text-emerald-400 hover:text-emerald-300">/buscar</a>.
+            Escribe un término como <code>consultoría sanitaria</code> o <code>software municipal</code> y pulsa Enter.
+            Elicita busca en el título, organismo y adjudicatario.
+          </p>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">Filtros disponibles</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-white/10">
+                  <th class="text-left py-2 pr-4 font-medium text-white/50">Filtro</th>
+                  <th class="text-left py-2 font-medium text-white/50">Para qué sirve</th>
+                </tr>
+              </thead>
+              <tbody class="text-white/60">
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">q</td><td>Término libre en título, organismo o adjudicatario.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">cpv</td><td>Código o prefijo CPV del objeto del contrato.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">fuente</td><td>PLACE, TED, Galicia, Andalucía, Euskadi, Madrid, Catalunya.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">estado</td><td>Anuncio, Adjudicada, Formalizado, etc.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">importeMin / Max</td><td>Rango de importe de adjudicación.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">nif</td><td>NIF/CIF del adjudicatario.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">desde / hasta</td><td>Rango de años de publicación.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">Ejemplos prácticos</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {examples.map((ex) => (
+              <div class="border border-white/5 rounded-xl p-5 bg-white/[0.02] hover:border-emerald-500/20 transition-colors">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-sm font-medium text-white/80">{ex.sector}</span>
+                  <span class="font-mono text-xs text-emerald-400/70 bg-emerald-400/10 px-2 py-0.5 rounded">CPV {ex.cpv}</span>
+                </div>
+                <div class="font-mono text-sm text-white/40 mb-2">{ex.query}</div>
+                <p class="text-sm text-white/50">{ex.use}</p>
+              </div>
+            ))}
+          </div>
+
+          <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <div>
+              <strong>Límite Free:</strong> en el buscador público tienes 3 consultas diarias por IP. Después de agotarlas, el buscador te invita a registrarte gratis o a subir a Pro.
+            </div>
+          </div>
+        </section>
+
+        <!-- Entender una licitación -->
+        <section id="entender-una-licitacion" class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">Entender una licitación</h2>
+          <p class="text-white/50 leading-relaxed">
+            Cada resultado del buscador muestra el título, organismo, adjudicatario, importe, estado, fecha y fuente.
+            Haz clic en una fila para ver el detalle completo y la URL de publicación oficial.
+          </p>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">Campos principales</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-white/10">
+                  <th class="text-left py-2 pr-4 font-medium text-white/50">Campo</th>
+                  <th class="text-left py-2 font-medium text-white/50">Significado</th>
+                </tr>
+              </thead>
+              <tbody class="text-white/60">
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Objeto</td><td>Descripción del producto o servicio contratado.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Organismo</td><td>Entidad pública que publicita o adjudica.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Adjudicatario</td><td>Empresa o persona ganadora.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">NIF adjudicatario</td><td>Identificador fiscal de la empresa ganadora.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Importe</td><td>Importe de adjudicación con IVA incluido, si se publica.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">CPV</td><td>Código de productos y servicios (Vocabulario Común de Contratos Públicos).</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Estado</td><td>Fase actual del expediente.</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Fuente</td><td>Origen del dato: PLACE, TED, comunidad autónoma, BOE, etc.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">Estados de un contrato</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {statuses.map((st) => (
+              <div class="border border-white/5 rounded-lg p-4 bg-white/[0.02]">
+                <div class="font-mono text-sm text-emerald-400 mb-1">{st.name}</div>
+                <p class="text-sm text-white/50">{st.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div class="callout tip">
+            <span class="callout-icon">💡</span>
+            <div>
+              <strong>¿Qué es el CPV?</strong> Es un código europeo de 8 dígitos que clasifica el objeto del contrato. Por ejemplo, <code>72000000</code> = servicios informáticos. Puedes buscar por prefijo: <code>72</code> incluye todos los servicios TIC.
+            </div>
+          </div>
+        </section>
+
+        <!-- Vigilar organismos -->
+        <section id="vigilar-organismos" class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">Vigilar organismos</h2>
+          <p class="text-white/50 leading-relaxed">
+            Un organismo es cualquier entidad pública que publica contratos. En Elicita puedes encontrar
+            su ficha en <a href="/explorer/organismos" class="text-emerald-400 hover:text-emerald-300">/explorer/organismos</a>.
+            Solo tienes que buscar su nombre exacto tal como aparece en las fuentes oficiales.
+          </p>
+          <p class="text-white/50 leading-relaxed">
+            La ficha de organismo muestra: volumen total contratado, número de contratos, media por contrato,
+            top adjudicatarios, evolución anual y CPVs principales.
+          </p>
+
+          <div class="callout info">
+            <span class="callout-icon">ℹ️</span>
+            <div>
+              La función de “seguir organismos” está en el roadmap. Mientras tanto, configura una alerta por organismo en <a href="/cuenta/alertas" class="text-emerald-400 hover:text-emerald-300">/cuenta/alertas</a>.
+            </div>
+          </div>
+        </section>
+
+        <!-- Analizar competidores -->
+        <section id="analizar-competidores" class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">Analizar competidores</h2>
+          <p class="text-white/50 leading-relaxed">
+            La ficha de competidor vive en <code>/explorer/competidores/&lt;nif&gt;</code>. Puedes llegar desde
+            un resultado de búsqueda haciendo clic en el NIF del adjudicatario o escribiendo directamente la URL.
+          </p>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">Métricas de la ficha</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {metrics.map((m) => (
+              <div class="border border-white/5 rounded-lg p-4 bg-white/[0.02]">
+                <div class="font-mono text-sm text-emerald-400 mb-1">{m.metric}</div>
+                <p class="text-sm text-white/50">{m.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div class="callout tip">
+            <span class="callout-icon">💡</span>
+            <div>
+              <strong>Caso de uso:</strong> si vas a presentarte a un concurso, busca el NIF del ganador anterior en la misma área. Verás a qué organismos vende, en qué importes se mueve y si crece o decrece.
+            </div>
+          </div>
+        </section>
+
+        <!-- Universo -->
+        <section id="universo" class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">Universo — grafo de relaciones</h2>
+          <p class="text-white/50 leading-relaxed">
+            <a href="/explorer/universo" class="text-emerald-400 hover:text-emerald-300">/explorer/universo</a> es el grafo de relaciones de Elicita.
+            Cruza datos de contratos públicos con BORME para revelar conexiones entre empresas: cargos compartidos,
+            administradores comunes, socios y relaciones contractuales.
+          </p>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">Nodos del grafo</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="border border-white/5 rounded-lg p-4 bg-white/[0.02]">
+              <div class="font-mono text-sm text-emerald-400 mb-1">Empresa</div>
+              <p class="text-sm text-white/50">Una sociedad identificada por NIF.</p>
+            </div>
+            <div class="border border-white/5 rounded-lg p-4 bg-white/[0.02]">
+              <div class="font-mono text-sm text-emerald-400 mb-1">Persona</div>
+              <p class="text-sm text-white/50">Administrador, socio o representante.</p>
+            </div>
+            <div class="border border-white/5 rounded-lg p-4 bg-white/[0.02]">
+              <div class="font-mono text-sm text-emerald-400 mb-1">Organismo</div>
+              <p class="text-sm text-white/50">Entidad pública que ha contratado.</p>
+            </div>
+          </div>
+
+          <p class="text-white/50 leading-relaxed">
+            Empieza escribiendo un organismo, empresa o sector. El grafo muestra los nodos más relevantes.
+            Haz clic en un nodo para expandir sus conexiones. Cuanto más expandes, más relaciones indirectas aparecen.
+          </p>
+
+          <div class="callout warning">
+            <span class="callout-icon">🔒</span>
+            <div>
+              Universo requiere plan Pro. En Free puedes explorar el buscador y el Explorer básico, pero el grafo completo con expansión por niveles está desbloqueado en Pro.
+            </div>
+          </div>
+        </section>
+
+        <!-- Configurar alertas -->
+        <section id="configurar-alertas" class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">Configurar alertas</h2>
+          <p class="text-white/50 leading-relaxed">
+            Las alertas te avisan por email cuando aparecen nuevas licitaciones o formalizaciones.
+            Configúralas en <a href="/cuenta/alertas" class="text-emerald-400 hover:text-emerald-300">/cuenta/alertas</a>.
+          </p>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">Tipos de alerta</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-white/10">
+                  <th class="text-left py-2 pr-4 font-medium text-white/50">Tipo</th>
+                  <th class="text-left py-2 font-medium text-white/50">Cómo funciona</th>
+                  <th class="text-left py-2 font-medium text-white/50">Plan</th>
+                </tr>
+              </thead>
+              <tbody class="text-white/60">
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">CPVs</td><td>Cuando se publica un contrato con alguno de los códigos seleccionados.</td><td>Free limitado / Pro ilimitado</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Organismos</td><td>Si el nombre del organismo contiene el texto indicado.</td><td>Free limitado / Pro ilimitado</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Keywords</td><td>Si el título del contrato contiene alguna palabra clave.</td><td>Free limitado / Pro ilimitado</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 pr-4 font-mono text-emerald-400/80">Competidores</td><td>Cuando la empresa gana un contrato del BOE.</td><td>Pro</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout tip">
+            <span class="callout-icon">💡</span>
+            <div>
+              <strong>Combinar filtros:</strong> una alerta con CPV <code>72000000</code> + organismo <code>Ayuntamiento</code> + keyword <code>cloud</code> te enviará solo licitaciones TIC municipales que mencionen cloud.
+            </div>
+          </div>
+        </section>
+
+        <!-- Explorer y proyecciones -->
+        <section id="explorer-proyecciones" class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">Explorer y proyecciones</h2>
+          <p class="text-white/50 leading-relaxed">
+            <a href="/explorer/proyecciones" class="text-emerald-400 hover:text-emerald-300">/explorer/proyecciones</a> muestra contratos que, por su duración e importe histórico,
+            están cerca de renovarse. Es una proyección basada en ciclos históricos, no una garantía.
+          </p>
+          <p class="text-white/50 leading-relaxed">
+            Para personalizar las proyecciones configura tu empresa en <code>/cuenta/onboard</code>.
+            Elicita usará tu historial de adjudicaciones para mostrar renovaciones potenciales.
+          </p>
+
+          <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <div>
+              Las proyecciones requieren plan Pro. En Free verás una pantalla de bloqueo. Además, una proyección no significa que el contrato se vaya a licitar de nuevo: siempre verifica la fuente oficial.
+            </div>
+          </div>
+        </section>
+
+        <!-- API y MCP -->
+        <section id="api-mcp" class="space-y-6">
+          <h2 class="text-2xl md:text-3xl font-light text-white">API y MCP</h2>
+          <p class="text-white/50 leading-relaxed">
+            Para usuarios técnicos, Elicita expone una API REST y un servidor MCP. Consulta siempre el contrato público antes de automatizar un flujo.
+          </p>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">API REST</h3>
+          <ul class="list-disc list-inside text-white/50 space-y-2">
+            <li><code>/api/public/search</code>: búsqueda anónima, 10 consultas/día por IP.</li>
+            <li><code>/api/v1/search</code>: búsqueda autenticada con API key.</li>
+            <li><code>/api/v1/keys</code>: crea, lista y revoca API keys.</li>
+          </ul>
+          <p class="text-white/50">
+            Ver la referencia completa en <a href="/docs/api" class="text-emerald-400 hover:text-emerald-300">/docs/api</a>.
+          </p>
+
+          <h3 class="text-lg font-medium text-white/80 pt-2">MCP Server</h3>
+          <p class="text-white/50 leading-relaxed">
+            El endpoint <code>https://elicita.es/mcp</code> expone tres herramientas públicas y de solo lectura para agentes de IA:
+            estadísticas, cobertura y CPV. La búsqueda de licitaciones requiere una API key personal del plan Pro. Compatible con clientes Streamable HTTP; no hay OAuth público en esta versión.
+          </p>
+
+          <div class="font-mono text-sm bg-white/[0.03] border border-white/10 rounded-lg p-4 text-white/70 overflow-x-auto">
+            <div class="text-emerald-400 mb-2"># curl de ejemplo</div>
+            curl -X GET "https://elicita.es/api/v1/search?q=software&cpv=72000000" \<br/>
+            &nbsp;&nbsp;-H "Authorization: Bearer ELICITA_LIVE_..." \<br/>
+            &nbsp;&nbsp;-H "Accept: application/json"
+          </div>
+
+          <div class="callout info">
+            <span class="callout-icon">ℹ️</span>
+            <div>
+              La API key se genera desde <a href="/cuenta" class="text-emerald-400 hover:text-emerald-300">/cuenta</a>. El secreto completo solo se muestra una vez; guárdalo en un gestor de contraseñas.
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA final -->
+        <section class="border-t border-white/5 pt-12 space-y-6">
+          <h2 class="text-2xl font-light text-white">¿Listo para empezar?</h2>
+          <p class="text-white/50">
+            Empieza con una búsqueda, explora una ficha de competidor o configura tu primera alerta.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a href="/buscar" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-mono px-5 py-2.5 rounded transition-colors">Buscar contratos →</a>
+            <a href="/cuenta/alertas" class="inline-flex items-center border border-white/10 hover:border-white/20 bg-transparent text-white/60 hover:text-white/80 text-sm font-mono px-5 py-2.5 rounded transition-colors">Configurar alertas</a>
+          </div>
+        </section>
+
+      </article>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .callout {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .callout-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .callout.tip {
+    background: hsl(152 60% 40% / 0.08);
+    border: 1px solid hsl(152 60% 40% / 0.2);
+    color: hsl(152 60% 85%);
+  }
+  .callout.warning {
+    background: hsl(38 92% 55% / 0.08);
+    border: 1px solid hsl(38 92% 55% / 0.2);
+    color: hsl(38 92% 85%);
+  }
+  .callout.info {
+    background: hsl(213 94% 70% / 0.08);
+    border: 1px solid hsl(213 94% 70% / 0.2);
+    color: hsl(213 94% 90%);
+  }
+  .callout a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .callout.tip a { color: hsl(152 60% 60%); }
+  .callout.warning a { color: hsl(38 92% 65%); }
+  .callout.info a { color: hsl(213 94% 80%); }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    background: hsl(var(--foreground) / 0.08);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+    color: hsl(var(--foreground) / 0.85);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+</style>

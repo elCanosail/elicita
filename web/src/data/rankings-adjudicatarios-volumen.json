@@ -1,0 +1,302 @@
+[
+  {
+    "nombre": "FISHER SCIENTIFIC, S.L.",
+    "nif": "B84498955",
+    "contratos": 11560,
+    "total": 29178566.77
+  },
+  {
+    "nombre": "MERCK LIFE SCIENCE S.L.U.",
+    "nif": "B79184115",
+    "contratos": 11183,
+    "total": 21349878.33
+  },
+  {
+    "nombre": "EL CORTE INGLES, S.A.",
+    "nif": "A28017895",
+    "contratos": 10413,
+    "total": 205086650.91
+  },
+  {
+    "nombre": "SOCIEDAD ESTATAL CORREOS Y TELEGRAFOS SA SME",
+    "nif": "A83052407",
+    "contratos": 8360,
+    "total": 2795131242.38
+  },
+  {
+    "nombre": "CARBONELL KIOSCO, S.L.",
+    "nif": "B73742116",
+    "contratos": 6754,
+    "total": 943951.09
+  },
+  {
+    "nombre": "AVORIS RETAIL DIVISION SL",
+    "nif": "B07012107",
+    "contratos": 6023,
+    "total": 189409082.55
+  },
+  {
+    "nombre": "IBERDROLA CLIENTES, S.A.U.",
+    "nif": "A95758389",
+    "contratos": 5831,
+    "total": 8061040123.24
+  },
+  {
+    "nombre": "MEDTRONIC IBERICA, S.A.",
+    "nif": "A28389484",
+    "contratos": 5807,
+    "total": 488408555.47
+  },
+  {
+    "nombre": "PALEX MEDICAL, S.A.",
+    "nif": "A58710740",
+    "contratos": 5769,
+    "total": 323828012.17
+  },
+  {
+    "nombre": "EULEN, S.A.",
+    "nif": "A28517308",
+    "contratos": 5667,
+    "total": 951172334.25
+  },
+  {
+    "nombre": "CANON ESPAÑA, S.A.",
+    "nif": "A28122125",
+    "contratos": 5020,
+    "total": 135860574.59
+  },
+  {
+    "nombre": "VIAJES EL CORTE INGLES, S.A.",
+    "nif": "A28229813",
+    "contratos": 4891,
+    "total": 242130767.82
+  },
+  {
+    "nombre": "TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+    "nif": "A78053147",
+    "contratos": 4775,
+    "total": 3308509586.95
+  },
+  {
+    "nombre": "INETUM ESPAÑA, S.A.",
+    "nif": "A28855260",
+    "contratos": 4656,
+    "total": 1562389353.29
+  },
+  {
+    "nombre": "ELECNOR SERVICIOS Y PROYECTOS, S.A.U.",
+    "nif": "A79486833",
+    "contratos": 4607,
+    "total": 869292962.44
+  },
+  {
+    "nombre": "LIFE TECHNOLOGIES, S.A.",
+    "nif": "A28139434",
+    "contratos": 4329,
+    "total": 154748076.06
+  },
+  {
+    "nombre": "ENDESA ENERGIA SAU",
+    "nif": "A81948077",
+    "contratos": 4280,
+    "total": 6862926319.32
+  },
+  {
+    "nombre": "SERVEO SERVICIOS, S.A.U.",
+    "nif": "A80241789",
+    "contratos": 4276,
+    "total": 2348224001.79
+  },
+  {
+    "nombre": "VWR INTERNATIONAL EUROLAB, S.L.",
+    "nif": "B08362089",
+    "contratos": 4255,
+    "total": 14105630.95
+  },
+  {
+    "nombre": "PROQUILAB S.A.",
+    "nif": "A30609044",
+    "contratos": 4246,
+    "total": 6046107.57
+  },
+  {
+    "nombre": "B.BRAUN MEDICAL, S.A.",
+    "nif": "A08092744",
+    "contratos": 4167,
+    "total": 87074053.81
+  },
+  {
+    "nombre": "WERFEN ESPAÑA, S.A.U.",
+    "nif": "A28114742",
+    "contratos": 4159,
+    "total": 225465160.38
+  },
+  {
+    "nombre": "MAPFRE ESPAÑA, COMPAÑÍA DE SEGUROS Y REASEGUROS, S.A.",
+    "nif": "A28141935",
+    "contratos": 4136,
+    "total": 201814911.2
+  },
+  {
+    "nombre": "BECTON DICKINSON, S.A.",
+    "nif": "A50140706",
+    "contratos": 3950,
+    "total": 130632226.79
+  },
+  {
+    "nombre": "SOLRED S.A.",
+    "nif": "A79707345",
+    "contratos": 3915,
+    "total": 1322189519.03
+  },
+  {
+    "nombre": "SCHARLAB, S.L.",
+    "nif": "B63048540",
+    "contratos": 3802,
+    "total": 12154891.2
+  },
+  {
+    "nombre": "GAS NATURAL COMERCIALIZADORA S.A.",
+    "nif": "A61797536",
+    "contratos": 3743,
+    "total": 2373407687.65
+  },
+  {
+    "nombre": "UNIPREX, S.A.U.",
+    "nif": "A28782936",
+    "contratos": 3740,
+    "total": 16266982.68
+  },
+  {
+    "nombre": "TELEFONICA DE ESPAÑA S.A.U.",
+    "nif": "A82018474",
+    "contratos": 3714,
+    "total": 2092867319.68
+  },
+  {
+    "nombre": "Lyreco España, S.A.",
+    "nif": "A79206223",
+    "contratos": 3660,
+    "total": 34104807.88
+  },
+  {
+    "nombre": "QUIRON PREVENCION S.L.U",
+    "nif": "B64076482",
+    "contratos": 3618,
+    "total": 248454671.68
+  },
+  {
+    "nombre": "Empresa de Transformación Agraria S.A.,S.M.E., M.P., (TRAGSA)",
+    "nif": "A28476208",
+    "contratos": 3511,
+    "total": 276344269.07
+  },
+  {
+    "nombre": "PROQUINORTE, S.A.",
+    "nif": "A48202451",
+    "contratos": 3490,
+    "total": 77369247.02
+  },
+  {
+    "nombre": "NORMON, S.L.",
+    "nif": "A28456820",
+    "contratos": 3451,
+    "total": 11831378.51
+  },
+  {
+    "nombre": "PRIM, S.A.",
+    "nif": "A28165587",
+    "contratos": 3387,
+    "total": 64590158.3
+  },
+  {
+    "nombre": "TK Elevadores España,S.L.",
+    "nif": "B46001897",
+    "contratos": 3376,
+    "total": 318911110.4
+  },
+  {
+    "nombre": "S.E. DE CARBUROS METALICOS S.A.",
+    "nif": "A08015646",
+    "contratos": 3358,
+    "total": 75220482.48
+  },
+  {
+    "nombre": "WURTH ESPAÑA, S.A.",
+    "nif": "A08472276",
+    "contratos": 3316,
+    "total": 6870894.13
+  },
+  {
+    "nombre": "GENERAL ELECTRIC HEALTHCARE ESPAÑA SAU",
+    "nif": "A28061737",
+    "contratos": 3307,
+    "total": 699441358.07
+  },
+  {
+    "nombre": "CLECE, S.A.",
+    "nif": "A80364243",
+    "contratos": 3278,
+    "total": 2104365174.22
+  },
+  {
+    "nombre": "GRIFOLS MOVACO, S.A.",
+    "nif": "A58426008",
+    "contratos": 3269,
+    "total": 246600842.31
+  },
+  {
+    "nombre": "RADIO POPULAR S.A. - COPE",
+    "nif": "A28281368",
+    "contratos": 3096,
+    "total": 20854715.12
+  },
+  {
+    "nombre": "AIR LIQUIDE ESPAÑA, S.A.",
+    "nif": "A28016814",
+    "contratos": 3007,
+    "total": 45414033.86
+  },
+  {
+    "nombre": "AGILENT TECHNOLOGIES SPAIN, S.L.",
+    "nif": "B86907128",
+    "contratos": 2980,
+    "total": 146209466.66
+  },
+  {
+    "nombre": "ELECNOR, S.A.",
+    "nif": "A48027056",
+    "contratos": 2931,
+    "total": 629784700.29
+  },
+  {
+    "nombre": "CRUZ ROJA ESPAÑOLA",
+    "nif": "Q2866001G",
+    "contratos": 2926,
+    "total": 310091975.53
+  },
+  {
+    "nombre": "FRESENIUS KABI ESPAÑA, S.A.",
+    "nif": "A08130502",
+    "contratos": 2923,
+    "total": 140568878.75
+  },
+  {
+    "nombre": "WOLTERS KLUWER ESPAÑA, S.A.",
+    "nif": "A58417346",
+    "contratos": 2916,
+    "total": 15723843.92
+  },
+  {
+    "nombre": "VIVA AQUA SERVICE SPAIN, S.A.",
+    "nif": "A41810920",
+    "contratos": 2871,
+    "total": 7669112.45
+  },
+  {
+    "nombre": "PFIZER, S.L.",
+    "nif": "B28089225",
+    "contratos": 2866,
+    "total": 938255006.08
+  }
+]

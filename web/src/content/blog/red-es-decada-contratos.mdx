@@ -1,0 +1,82 @@
+---
+title: "Red.es: Una década de contratos públicos"
+excerpt: "3.318 adjudicaciones, 4.355 M€ en 10 años. Análisis visual de los contratos de Red.es con datos extraídos del dataset de Elicita. Quién se queda con la digitalización del Estado."
+date: "2026-06-26"
+readTime: "5 min"
+category: "Análisis"
+series: "Dossiers de compradores"
+author: "Equipo Elicita"
+tags: ["red.es", "contratación pública", "análisis", "visualización", "digitalización"]
+draft: false
+---
+
+Red.es —la Entidad Pública Empresarial dependiente del Ministerio de Asuntos Económicos y Transformación Digital— es uno de los mayores adjudicadores tecnológicos de España. En la última década ha lanzado programas como **Escuelas Conectadas**, **Kit Digital** y la **Red de Alta Capacidad**. Este análisis extrae de la base de datos de Elicita las 3.318 resoluciones de adjudicación publicadas entre 2016 y 2026.
+
+## Metodología
+
+Los datos provienen de dos fuentes agregadas en Elicita: el Portal de Contratación del Sector Público (plataforma nacional, 740 contratos) y TED — Tenders Electronic Daily de la UE (2.578 anuncios). Se filtraron por organismo contratante con patrones que cubren las distintas grafías de "Red.es" y se excluyeron falsos positivos. Los importes son nominales (con/sin IVA no está uniformemente etiquetado). 2026 está incompleto (hasta junio).
+
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:32px 0;padding:20px;border:1px solid rgba(99,102,241,0.2);border-radius:12px;background:rgba(99,102,241,0.05);">
+<div style="text-align:center;padding:8px"><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">3.318</div><div style="font-size:11px;color:#888;margin-top:4px">Adjudicaciones</div></div>
+<div style="text-align:center;padding:8px"><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">4.355 M€</div><div style="font-size:11px;color:#888;margin-top:4px">Importe total</div></div>
+<div style="text-align:center;padding:8px"><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">740</div><div style="font-size:11px;color:#888;margin-top:4px">Contratos nacionales</div></div>
+<div style="text-align:center;padding:8px"><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">2.578</div><div style="font-size:11px;color:#888;margin-top:4px">Anuncios TED</div></div>
+</div>
+
+## El escenario visual: Universo de contratos
+
+La visualización interactiva de abajo muestra los 20 mayores contratos de Red.es por importe de adjudicación. El tamaño de cada bloque representa el valor del contrato; el color, la categoría: azul para conectividad/telecom, naranja para equipamiento educativo, verde para IT/consultoría.
+
+<div class="blog-artifact-wrap">
+<iframe src="/blog/red-es-decada-contratos/universo.html" style="height:2400px;" loading="lazy" title="Universo de contratos de Red.es"></iframe>
+</div>
+
+*Visualización generada con D3.js sobre datos de Elicita. Pasa el cursor sobre cada elemento para ver el detalle del contrato.*
+
+## El efecto pandemia
+
+La distribución temporal revela un patrón claro. Los años 2020-2021 concentran el pico de actividad con 1.242 contratos y casi 2.000 M€ combinados. No es casualidad: la pandemia forzó al Estado a desplegar conectividad educativa a velocidad récord. El programa **Escuelas Conectadas** llevó internet de banda ancha y equipamiento a 5.500 centros rurales. El **Kit Digital** ayudó a pequeñas empresas y autónomos a digitalizarse.
+
+Antes de 2020, la actividad era moderada —2017 tuvo un pico en número de contratos (414) pero no en importe (248 M€), reflejando contratos de menor cuantía. Después de 2021, los importes descienden progresivamente: de 970 M€ a 442 M€ en 2023 y 148 M€ en 2025.
+
+## Quién se queda el pastel
+
+El análisis de adjudicatarios confirma lo que cualquiera en el sector intuye, pero ahora con números:
+
+- **Telefónica** domina en todas sus formas: Telefónica de España, Telefónica Soluciones, UTEs con filiales. Sumando sus distintas denominaciones, acumula cientos de contratos y cientos de millones en importe.
+- **Orange** es el segundo operador, con fuerte presencia en conectividad educativa.
+- **Vodafone** aparece en contratos de mayor importe pero menor frecuencia.
+- **NTT Data / Oesía / Everis** acaparan los contratos de servicios IT y consultoría de transformación digital.
+- **EY Transforma** se posiciona en consultoría estratégica de programas europeos.
+
+Las UTEs (Uniones Temporales de Empresas) son un patrón frecuente: grandes contratos que requieren capacidades complementarias se adjudican a consorcios. La UTE Telefónica Móviles - Telefónica Soluciones se llevó 53,29 M€ por el suministro de puestos educativos en el hogar, el mayor contrato individual del período.
+
+## Servicios vs. Suministros
+
+Un dato estructural interesante: el 72% de los contratos nacionales son de servicios, pero solo acumulan el 38% del importe. Los suministros —equipamiento, conectividad, infraestructura— siendo solo el 28% de los contratos, concentran el 62% del importe. Esto refleja que el hardware y la infraestructura de red son caros, mientras que los servicios profesionales (consultoría, soporte) tienen ticket medio más bajo pero mayor volumen.
+
+## Procedimiento abierto: el estándar
+
+El 83% de los contratos siguen procedimiento abierto, acumulando el 92% del importe. Red.es no es un adjudicador opaco: la inmensa mayoría de su contratación es pública y competitiva. El procedimiento basado en sistema dinámico (69 contratos) y el negociado con publicidad (50) son residuales.
+
+## Limitaciones del análisis
+
+Es importante señalar las limitaciones para no sobreinterpretar:
+
+- **Duplicados nacional/TED:** muchos expedientes aparecen en ambas fuentes. La suma directa de contratos e importes contiene solapamientos. Para cifras consolidadas sería necesaria una deduplicación por expediente.
+- **Grafías dispersas:** el mismo adjudicatario aparece con distintas grafías ("TELEFÓNICA" vs "TELEFONICA", con/sin acentos), lo que dispersa el agrupamiento.
+- **Importes con/sin IVA:** la base de datos no etiqueta uniformemente si los importes incluyen IVA. Las cifras deben interpretarse como valores nominales.
+- **2026 incompleto:** los datos llegan hasta junio de 2026.
+
+## Conclusiones
+
+1. **Red.es es el brazo ejecutor de la digitalización de España.** Sus 4.355 M€ en una década reflejan el ambicioso programa de modernización del Estado, desde la conectividad educativa hasta la digitalización de pymes.
+2. **Los programas pandémicos marcan un antes y un después.** 2020-2021 suponen un salto cuantitativo y cualitativo. La actividad post-2022 parece un retorno a la normalidad pre-pandemia, con importes decrecientes.
+3. **Oligopolio tecnológico:** un puñado de grandes operadores (Telefónica, Orange, Vodafone) y consultoras (NTT Data, Everis, EY) se reparten el grueso de los contratos. Las UTEs son el mecanismo para combinar capacidades en grandes contratos.
+4. **Suministros = dinero, servicios = volumen:** la estructura de contratación refleja que equipar infraestructura cuesta más que mantener servicios, pero los servicios generan más relaciones recurrentes.
+
+Este análisis es un ejemplo de lo que Elicita puede hacer con cualquier organismo público español. La base de datos contiene 30,9M de licitaciones, 26,3M de registros mercantiles y 8,7M de contratos con indicadores de calidad —todo extraído de fuentes oficiales verificables.
+
+---
+
+*Datos extraídos con [Elicita](https://elicita.es) · 66,4M registros de contratación pública · Junio 2026*

@@ -1,0 +1,866 @@
+---
+import Layout from '../../layouts/main.astro';
+import { query } from '../../lib/duckdb';
+import { titleCase, fmtDate } from '../../lib/format';
+import { corregirImporteAdjudicacion, type MotivoCorreccion } from '../../lib/correcciones';
+import { decodificarParam } from '../../lib/licitacion-url';
+import {
+  bormeMatchKey,
+  buildBormeTimeline,
+  normalizeBormeName,
+  parseBormeFecha,
+  type BormeTimeline,
+} from '../../lib/borme';
+import { rateLimitGuard } from '../../lib/rate-limit';
+import { PERFIL_TTL_MS, perfilCache } from '../../lib/escudo-ssr';
+
+const { nif: nifRaw } = Astro.params;
+// Astro NO decodifica los params (patrón ficha, tarea 39): decodificar SIEMPRE
+// antes de normalizar — así la forma RAW y la encoded del mismo NIF (sitemap
+// perfiles, tarea 42) resuelven la misma fila. La normalización consulta con
+// trim+toUpperCase: valores de BD que cambian bajo ella son inalcanzables y el
+// sitemap los excluye con contabilidad (no se emiten URLs con estado vacío).
+const nif = (decodificarParam(nifRaw || '') || '').trim().toUpperCase();
+
+// Escudo de origen (tarea 40): agregaciones pesadas por petición (los 5 scans
+// de calidad) y solo un header CDN que CF no aplica a HTML — rate limit
+// 120/min por IP ANTES de tocar BD (patrón tarea 29; el ajuste fino de rastreo
+// queda para el operador vía Search Console).
+const rateLimited = rateLimitGuard(Astro.request, { name: 'perfil', limit: 120, windowMs: 60_000 });
+if (rateLimited) return rateLimited;
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+// Importes con separadores de miles (es-ES), formato pleno.
+function fmtEuro(v: number) {
+  return `${Math.round(v || 0).toLocaleString('es-ES', { maximumFractionDigits: 0 })} €`;
+}
+// Importes compactos: 2,3 M€ / 45,9 K€ / 890 €
+function fmtCompacto(v: number) {
+  const n = v || 0;
+  const es = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
+  if (n >= 1e6) return es.format(n / 1e6) + ' M€';
+  if (n >= 1e3) return es.format(n / 1e3) + ' K€';
+  return Math.round(n).toLocaleString('es-ES') + ' €';
+}
+function pct(v: number, dec = 2) {
+  return `${(v * 100).toLocaleString('es-ES', { maximumFractionDigits: dec })} %`;
+}
+
+// Tendencia: creciente / estable / decreciente (últimos 3 años vs anteriores)
+function computeTrend(yearly: Record<number, number>) {
+  const years = Object.keys(yearly).map(Number).sort((a, b) => a - b);
+  if (years.length < 2) return 'estable';
+  const recent = years.slice(-3);
+  const older = years.length > 3 ? years.slice(0, -3) : years.slice(0, -1);
+  if (!older.length) return 'estable';
+  const avgRecent = recent.reduce((s, y) => s + yearly[y], 0) / recent.length;
+  const avgOlder = older.reduce((s, y) => s + yearly[y], 0) / older.length;
+  if (avgRecent === 0) return 'decreciente';
+  const ratio = avgRecent / avgOlder;
+  if (ratio > 1.15) return 'creciente';
+  if (ratio < 0.85) return 'decreciente';
+  return 'estable';
+}
+
+// Índice Herfindahl-Hirschman sobre el mercado resuelto: 0 = disperso, 1 = monopolio.
+// Las cuotas se miden contra el total corregido del proveedor (mercado resuelto,
+// como la metodología upstream), no contra la suma del top 20.
+function computeHhi(volumes: number[], mercado: number) {
+  if (!(mercado > 0)) return 0;
+  return volumes.reduce((s, v) => s + Math.pow((v || 0) / mercado, 2), 0);
+}
+
+function estadoClass(s: string | null | undefined) {
+  if (!s) return 'bg-white/5 text-white/50 border border-white/10';
+  const base = String(s).toLowerCase();
+  if (base.includes('adjudic')) return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+  if (base.includes('abiert') || base.includes('public') || base.includes('anuncio')) return 'bg-blue-500/15 text-blue-400 border border-blue-500/30';
+  if (base.includes('cerr') || base.includes('final') || base.includes('resuel') || base.includes('formaliz')) return 'bg-white/10 text-white/60 border border-white/15';
+  if (base.includes('en curso') || base.includes('evalu')) return 'bg-amber-500/15 text-amber-400 border border-amber-500/30';
+  return 'bg-white/5 text-white/50 border border-white/10';
+}
+
+// Etiqueta explicativa de cada motivo de corrección (issue #22 upstream)
+function motivoTitulo(m: MotivoCorreccion): string {
+  switch (m) {
+    case 'registro': return 'Error de fuente verificado a mano (registro de errores)';
+    case 'escala_x100': return 'Coma decimal perdida en origen: escala ×100';
+    case 'escala_x1000': return 'Coma decimal perdida en origen: escala ×1000';
+    case 'inverosimil': return 'Adjudicación ≥100× el presupuesto, sin corrección fiable';
+    case 'no_comparable': return 'Presupuesto <1.000 €: precio unitario o simbólico';
+  }
+}
+
+// ── Estado de datos ───────────────────────────────────────────────────────
+let found = false;
+let nombre: string = nif;
+let resumen: {
+  total_contratos: number;
+  volumen_total_eur: number;
+  contrato_medio_eur: number;
+  primer_contrato: string | null;
+  ultimo_contrato: string | null;
+  anos_activo: number;
+} = { total_contratos: 0, volumen_total_eur: 0, contrato_medio_eur: 0, primer_contrato: null, ultimo_contrato: null, anos_activo: 0 };
+let distribucion: Record<string, number> = {}; // { year: count }
+let topOrganismos: { organismo: string; contratos: number; volumen: number }[] = [];
+let topCpv: { cpv: string; contratos: number }[] = [];
+let concentracion: { hhi: number; top_3_pct_volumen: number } = { hhi: 0, top_3_pct_volumen: 0 };
+let tendencia: string = 'estable';
+let contratosRecientes: { titulo: string; organismo: string; importe: number; fecha: string | null; estado: string; url: string | null; correccion: MotivoCorreccion | null }[] = [];
+// Timeline BORME (fase 1 del plan BORME 2026-10-14): actos registrales de la
+// empresa resuelta por nif_canonical → empresa_norm. null = sin match → la
+// sección no se pinta.
+let bormeTimeline: BormeTimeline | null = null;
+// Agregado corregido (issue #22): el publicado se enseña tal cual fila a fila;
+// TODOS los agregados (total, contrato medio, organismos, HHI) usan el
+// corregido y una adjudicación no fiable (inverosimil) no suma.
+let volumenCorregido = 0;
+let volumenDifiere = false;
+let correccionesAplicadas = 0;
+
+try {
+  // ── Fase 1: contratación pública (calidad, 8.7M, 2010-2026) ─────────────
+  // Memo de DATOS (no HTML): payload de las 5 queries por NIF normalizado,
+  // LRU 500 · TTL 300s (tarea 40). La corrección de importes y TODOS los
+  // agregados siguen computándose por petición sobre el payload cacheado.
+  // Un NIF sin contratos también se cachea (arrays vacíos → found=false):
+  // mata el re-scan de perfiles inexistentes. Un fallo DuckDB lanza y NO se
+  // cachea (try/catch exterior intacto).
+  const [yearlyRows, orgRows, cpvRows, recentRows, adjRows] = await perfilCache.cached(
+    `perfil-agregados:${nif}`,
+    PERFIL_TTL_MS,
+    () => Promise.all([
+    query(
+      `SELECT EXTRACT(YEAR FROM fecha_publicacion)::INT AS year, COUNT(*) AS count,
+              SUM(COALESCE(importe_adjudicacion, importe_sin_iva, 0)) AS volumen
+       FROM calidad WHERE nif_adjudicatario = ? AND fecha_publicacion IS NOT NULL
+       GROUP BY 1 ORDER BY 1`,
+      [nif]
+    ),
+    query(
+      `SELECT organo_contratante AS organismo, COUNT(*) AS contratos,
+              SUM(COALESCE(importe_adjudicacion, importe_sin_iva, 0)) AS volumen
+       FROM calidad WHERE nif_adjudicatario = ? AND fecha_publicacion IS NOT NULL
+       GROUP BY 1 ORDER BY contratos DESC LIMIT 20`,
+      [nif]
+    ),
+    query(
+      `SELECT CASE WHEN cpv_principal IS NOT NULL
+               THEN TRIM(REPLACE(REPLACE(CAST(cpv_principal AS VARCHAR), '.0', ''), ' ', ''))
+               ELSE COALESCE(SPLIT_PART(cpvs, ',', 1), '') END AS cpv,
+              COUNT(*) AS contratos
+       FROM calidad WHERE nif_adjudicatario = ? AND fecha_publicacion IS NOT NULL
+       GROUP BY 1 ORDER BY contratos DESC LIMIT 20`,
+      [nif]
+    ),
+    query(
+      `SELECT objeto, organo_contratante AS organismo,
+              COALESCE(importe_adjudicacion, importe_sin_iva, 0) AS importe,
+              importe_adjudicacion AS imp_adj, importe_sin_iva AS imp_pres,
+              fecha_publicacion AS fecha, estado, url, adjudicatario
+       FROM calidad WHERE nif_adjudicatario = ? AND fecha_publicacion IS NOT NULL
+       ORDER BY fecha_publicacion DESC NULLS LAST LIMIT 50`,
+      [nif]
+    ),
+    // Filas con adjudicación publicada: entrada de la corrección de importes
+    // (issue #22). Sin prefiltro de salto: el registro de errores verificados
+    // (URDINBERRI, 93,6×) no cumple el umbral de 100×. Mismo filtro de año que
+    // la agregación anual (> 1970) para que ambos totales sean comparables.
+    // El organismo acompaña para repartir la corrección entre agregados.
+    query(
+      `SELECT organo_contratante AS organismo, importe_adjudicacion AS imp_adj,
+              importe_sin_iva AS imp_pres, url AS url_pub
+       FROM calidad
+       WHERE nif_adjudicatario = ? AND fecha_publicacion IS NOT NULL
+         AND importe_adjudicacion IS NOT NULL
+         AND EXTRACT(YEAR FROM fecha_publicacion) > 1970`,
+      [nif]
+    ),
+  ]));
+
+  if (!yearlyRows.length && !recentRows.length) {
+    found = false;
+  } else {
+    found = true;
+
+    // Distribución temporal + resumen
+    const yearly: Record<number, number> = {};
+    let volumenTotal = 0;
+    let totalContratos = 0;
+    for (const r of yearlyRows || []) {
+      const y = Number(r.year);
+      const cnt = Number(r.count) || 0;
+      if (y <= 1970) continue;
+      yearly[y] = cnt;
+      totalContratos += cnt;
+      volumenTotal += Number(r.volumen) || 0;
+    }
+
+    // ── Corrección de importes (issue #22 upstream, espejo de correcciones.py) ──
+    // El publicado se enseña tal cual; TODOS los agregados usan el corregido y
+    // una adjudicación no fiable (inverosimil) no suma. Las filas sin
+    // adjudicación contribuyen igual a ambas sumas: solo se ajustan las
+    // informadas. La corrección se reparte por organismo para que los
+    // agregados secundarios (top organismos, HHI) sumen coherentes.
+    const deltaOrg = new Map<string, number>();
+    volumenCorregido = volumenTotal;
+    for (const r of adjRows || []) {
+      const impAdj = Number(r.imp_adj);
+      if (!Number.isFinite(impAdj)) continue;
+      const corregido = corregirImporteAdjudicacion({
+        importeAdjudicacion: impAdj,
+        presupuesto: r.imp_pres != null && Number.isFinite(Number(r.imp_pres)) ? Number(r.imp_pres) : null,
+        urlPub: r.url_pub,
+      });
+      const delta = (corregido.valor ?? 0) - impAdj;
+      volumenCorregido += delta;
+      if (corregido.motivo) correccionesAplicadas++;
+      if (delta !== 0) {
+        const org = String(r.organismo || '').trim();
+        if (org) deltaOrg.set(org, (deltaOrg.get(org) || 0) + delta);
+      }
+    }
+    volumenDifiere = Math.abs(volumenCorregido - volumenTotal) > 0.005;
+
+    distribucion = yearly;
+
+    const yearsValid = Object.keys(yearly).map(Number).sort((a, b) => a - b);
+    const primer = yearsValid.length ? `${yearsValid[0]}-01-01` : null;
+    const ultimo = yearsValid.length ? `${yearsValid[yearsValid.length - 1]}-12-31` : null;
+    const anosActivo = yearsValid.length ? yearsValid[yearsValid.length - 1] - yearsValid[0] + 1 : 0;
+
+    // Nombre canónico (adjudicatario más repetido en la muestra reciente)
+    const counts = new Map();
+    for (const r of recentRows || []) {
+      const nm = String(r.adjudicatario || '').trim();
+      if (nm) counts.set(nm, (counts.get(nm) || 0) + 1);
+    }
+    if (counts.size) {
+      const topName = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+      nombre = titleCase(topName) || nif;
+    }
+
+    resumen = {
+      total_contratos: totalContratos,
+      volumen_total_eur: volumenTotal,
+      contrato_medio_eur: totalContratos > 0 ? volumenCorregido / totalContratos : 0,
+      primer_contrato: primer,
+      ultimo_contrato: ultimo,
+      anos_activo: anosActivo,
+    };
+
+    // Top organismos (20 para HHI; la tabla muestra 5). Volumen con la
+    // corrección repartida por organismo; el publicado queda fila a fila.
+    topOrganismos = (orgRows || []).map((r) => {
+      const orgRaw = String(r.organismo || '').trim();
+      return {
+        organismo: titleCase(orgRaw) || 'No especificado',
+        contratos: Number(r.contratos) || 0,
+        volumen: (Number(r.volumen) || 0) + (deltaOrg.get(orgRaw) || 0),
+      };
+    });
+    const orgVolumes = [...topOrganismos.map((o) => o.volumen)].sort((a, b) => b - a);
+    const top3 = orgVolumes.slice(0, 3).reduce((a, b) => a + b, 0);
+    concentracion = {
+      // HHI sobre el mercado resuelto del proveedor (total corregido), como la
+      // metodología upstream — no sobre la suma del top 20.
+      hhi: computeHhi(orgVolumes, volumenCorregido),
+      top_3_pct_volumen: volumenCorregido > 0 ? top3 / volumenCorregido : 0,
+    };
+
+    // Top CPV
+    topCpv = (cpvRows || []).filter((r) => r.cpv).map((r) => ({
+      cpv: String(r.cpv).trim(),
+      contratos: Number(r.contratos) || 0,
+    }));
+
+    // Tendencia
+    tendencia = computeTrend(yearly);
+
+    // Últimos 5 contratos (con motivo de corrección si lo hubiera)
+    contratosRecientes = (recentRows || []).slice(0, 5).map((r) => {
+      const impAdj = Number(r.imp_adj);
+      let correccion: MotivoCorreccion | null = null;
+      if (Number.isFinite(impAdj)) {
+        correccion = corregirImporteAdjudicacion({
+          importeAdjudicacion: impAdj,
+          presupuesto: r.imp_pres != null && Number.isFinite(Number(r.imp_pres)) ? Number(r.imp_pres) : null,
+          urlPub: r.url,
+        }).motivo;
+      }
+      return {
+        titulo: String(r.objeto || 'Sin título').slice(0, 200),
+        organismo: String(r.organismo || 'No especificado'),
+        importe: Number(r.importe) || 0,
+        fecha: r.fecha ? String(r.fecha).slice(0, 10) : null,
+        estado: String(r.estado || ''),
+        url: r.url || null,
+        correccion,
+      };
+    });
+
+    // ── Fase 2: BORME (fase 1 del plan BORME 2026-10-14) ─────────────────
+    // Resolución nif → nif_canonical → empresa_norm por IGUALDAD sobre clave
+    // de comparación (sin LIKE a ciegas). Sin match → sección ausente.
+    try {
+      let canonico: string | null = null;
+      try {
+        const cRows = await query(
+          `SELECT nombre FROM nif_canonical WHERE nif = ? LIMIT 1`,
+          [nif]
+        );
+        canonico = cRows?.[0]?.nombre || null;
+      } catch { /* nif_canonical puede no existir en una BD antigua */ }
+      const baseName = canonico || nombre;
+      const norm = normalizeBormeName(baseName);
+      const matchKey = bormeMatchKey(baseName);
+      if (matchKey) {
+        // Memo de DATOS de la fase BORME, clave norm::matchKey (misma LRU/TTL
+        // que los agregados — tarea 40): resolución + cargos + personas son
+        // hasta ~14 queries por petición (el fallback regexp es un scan ~1,1s y
+        // borme_personas ~12,7M). Se cachean las FILAS — buildBormeTimeline no
+        // muta sus inputs (copia antes de ordenar) — y el build sigue por
+        // petición sobre ellas: mismo input → mismo HTML (frío ≡ tibio).
+        // Sin match → null cacheado (mata el re-scan del fallback). Un fallo
+        // DuckDB lanza y NO se cachea (try/catch exterior intacto).
+        const borme = await perfilCache.cached(
+          `perfil-borme:${norm}::${matchKey}`,
+          PERFIL_TTL_MS,
+          async () => {
+        const empSel = `SELECT fecha_borme, num_entrada, empresa, empresa_norm, provincia,
+                actos, domicilio, capital_euros, fecha_constitucion, hoja_registral,
+                tomo, inscripcion, fecha_inscripcion, pdf_filename
+         FROM borme_empresas`;
+        // 1) equality pura sobre empresa_norm (0,05s); 2) fallback: igualdad
+        //    sobre clave sin puntuación (~1,1s de scan — sin LIKE parcial).
+        let empRows: any[] = await query(
+          `${empSel} WHERE empresa_norm = ? ORDER BY fecha_borme DESC LIMIT 200`,
+          [norm]
+        );
+        if (!empRows.length) {
+          empRows = await query(
+            `${empSel} WHERE regexp_replace(empresa_norm, '[^A-Za-z0-9ÑÁÉÍÓÚÜñáéíóúü]', '', 'g') = ?
+             ORDER BY fecha_borme DESC LIMIT 200`,
+            [matchKey]
+          );
+        }
+        if (!empRows.length) return null;
+          const carSel = `SELECT fecha_borme, num_entrada, empresa_norm, tipo_acto, cargo,
+                 persona_hash, pdf_filename
+           FROM borme_cargos`;
+          let carRows: any[] = await query(
+            `${carSel} WHERE empresa_norm = ? ORDER BY fecha_borme DESC LIMIT 1000`,
+            [norm]
+          );
+          if (!carRows.length) {
+            carRows = await query(
+              `${carSel} WHERE regexp_replace(empresa_norm, '[^A-Za-z0-9ÑÁÉÍÓÚÜñáéíóúü]', '', 'g') = ?
+               ORDER BY fecha_borme DESC LIMIT 1000`,
+              [matchKey]
+            );
+          }
+          // Nombres de persona desde borme_personas (ingesta XML diaria;
+          // los hashes históricos upstream son opacos → persona null).
+          const personas = new Map<string, string>();
+          const hashes = [...new Set(
+            carRows.map((r) => r.persona_hash).filter(Boolean).map(String)
+          )] as string[];
+          for (let i = 0; i < hashes.length; i += 100) {
+            const chunk = hashes.slice(i, i + 100);
+            try {
+              const pRows = await query(
+                `SELECT persona_hash, nombre FROM borme_personas
+                 WHERE persona_hash IN (${chunk.map(() => '?').join(',')})`,
+                chunk
+              );
+              for (const p of pRows || []) personas.set(String(p.persona_hash), String(p.nombre));
+            } catch { /* borme_personas aún puede no existir */ }
+          }
+            return { empRows, carRows, personas };
+          }
+        );
+        if (borme) {
+          bormeTimeline = buildBormeTimeline(borme.empRows as any, borme.carRows as any, borme.personas, { maxDias: 100 });
+        }
+      }
+    } catch (e: any) {
+      console.error('[perfil borme]', e?.message);
+    }
+  }
+} catch (e: any) {
+  console.error('[perfil-proveedor]', e?.message);
+  found = false;
+}
+
+// ── Metadata / SEO ────────────────────────────────────────────────────────
+const pageTitle = found ? `${nombre} — Perfil de proveedor | Elicita` : 'Proveedor no encontrado | Elicita';
+const metaDesc = found
+  ? `Perfil de ${nombre} (${nif}): ${resumen.total_contratos.toLocaleString('es-ES')} contratos, ${fmtEuro(volumenCorregido)} adjudicados en contratación pública española. Datos agregados públicos de Elicita.`
+  : 'No hemos encontrado actividad contractual para este NIF. Busca perfiles de proveedores en contratación pública española.';
+
+// Máximo de contratos para escalar el gráfico horizontal
+const maxBars = Object.keys(distribucion).length ? Math.max(...Object.values(distribucion)) : 0;
+
+const jsonLd = found
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: nombre,
+      identifier: nif,
+      additionalProperty: [
+        { '@type': 'PropertyValue', name: 'NIF', value: nif },
+        { '@type': 'PropertyValue', name: 'Contratos adjudicados', value: resumen.total_contratos },
+        { '@type': 'PropertyValue', name: 'Volumen total (EUR)', value: Math.round(volumenCorregido) },
+      ],
+      description: metaDesc,
+    }
+  : null;
+
+if (!found) {
+  Astro.response.status = 404;
+}
+Astro.response.headers.set('Cache-Control', 'public, max-age=1800, stale-while-revalidate=300');
+---
+
+{/* No encontrado — página 404 amigable */}
+{!found && (
+  <Layout title={pageTitle} description={metaDesc}>
+    <section class="py-20 md:py-32 min-h-[60vh] flex items-center">
+      <div class="container mx-auto px-4 max-w-2xl text-center">
+        <p class="font-mono text-xs text-emerald-400/60 tracking-widest uppercase mb-4">404</p>
+        <h1 class="text-3xl md:text-5xl font-light text-white mb-4">Proveedor no encontrado</h1>
+        <p class="text-lg text-white/50 mb-4">
+          No existe actividad registrada en contratación pública para el NIF{' '}
+          <span class="font-mono text-emerald-400">{nif || '—'}</span>.
+        </p>
+        <p class="text-sm text-white/50 mb-8 max-w-lg mx-auto">
+          Elicita analiza 63M+ registros de contratación pública española. Puede que el NIF esté mal escrito o que el proveedor no haya sido adjudicatario en el dataset de calidad (2010–2026).
+        </p>
+        <a href="/buscar" class="inline-block bg-emerald-500 hover:bg-emerald-600 text-black font-mono text-sm px-6 py-3 rounded font-medium">← Volver al buscador de licitaciones</a>
+      </div>
+    </section>
+  </Layout>
+)}
+
+{found && (
+  <Layout title={pageTitle} description={metaDesc}>
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+    <meta property="og:type" content="profile" slot="head" />
+    <meta property="og:title" content={pageTitle} slot="head" />
+    <meta property="og:description" content={metaDesc} slot="head" />
+
+    <section class="py-12 md:py-20">
+      <div class="container mx-auto px-4 max-w-5xl">
+
+        <a href="/buscar" class="font-mono text-xs text-emerald-400/60 hover:text-emerald-400 mb-8 inline-block">← Volver al buscador</a>
+
+        {/* ═══════ Header: nombre, NIF, tendencia ═══════ */}
+        <div class="mb-10">
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="font-mono text-xs text-emerald-400 tracking-widest uppercase">proveedor público</span>
+            <span class="font-mono text-xs text-white/50">· calidad 2010–2026</span>
+            {tendencia === 'creciente' && <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">▲ Creciente</span>}
+            {tendencia === 'estable' && <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded font-mono bg-blue-500/15 text-blue-400 border border-blue-500/30">▬ Estable</span>}
+            {tendencia === 'decreciente' && <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded font-mono bg-red-500/15 text-red-400 border border-red-500/30">▼ Decreciente</span>}
+          </div>
+          <h1 class="text-2xl md:text-4xl font-light text-white leading-tight">{nombre}</h1>
+          <p class="font-mono text-sm text-white/50 mt-2">NIF {nif}</p>
+          {bormeTimeline?.ficha.domicilio && <p class="text-white/50 text-sm">{bormeTimeline.ficha.domicilio}{bormeTimeline.ficha.provincia ? ` · ${titleCase(bormeTimeline.ficha.provincia)}` : ''}</p>}
+
+          {/* ═══════ CTA seguir proveedor (F1.2) ═══════
+              Anónimo: enlace a /sign-up?redirect=/perfil/<nif>.
+              Autenticado: el script inline lo convierte en botón Seguir/
+              Dejar de seguir contra /api/follows (type=proveedor). */}
+          <div class="mt-5">
+            <a
+              id="follow-cta"
+              href={`/sign-up?redirect=${encodeURIComponent(`/perfil/${nif}`)}`}
+              data-nif={nif}
+              data-nombre={nombre}
+              class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-black font-mono text-sm px-5 py-2.5 rounded font-medium transition-colors"
+            >
+              <span class="follow-icon" aria-hidden="true">☆</span>
+              <span class="follow-text">Avísame cuando participe o gane</span>
+            </a>
+            <p id="follow-msg" class="hidden mt-2.5 text-xs leading-relaxed text-white/70" role="alert" aria-live="polite"></p>
+          </div>
+        </div>
+
+        {/* ═══════ Resumen: 4 cards ═══════ */}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5">
+            <p class="font-mono text-xs text-white/50 uppercase mb-1">Total contratos</p>
+            <p class="text-2xl font-light text-white">{resumen.total_contratos.toLocaleString('es-ES')}</p>
+          </div>
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5">
+            <p class="font-mono text-xs text-white/50 uppercase mb-1">Volumen total</p>
+            <p class="text-2xl font-light text-emerald-400 tabular-nums">{fmtCompacto(volumenCorregido)}</p>
+            {volumenDifiere && (
+              <p class="font-mono text-xs text-white/50 mt-1 leading-snug">
+                publicado: {fmtCompacto(resumen.volumen_total_eur)} ·{' '}
+                <a href="https://github.com/BquantFinance/licitaciones-espana/issues/22" target="_blank" rel="noopener noreferrer" class="text-amber-400/80 hover:text-amber-400 underline decoration-amber-500/30" title="Importes corregidos por errores de fuente verificados (issue #22 upstream)">importe corregido (issue #22{correccionesAplicadas ? `, ${correccionesAplicadas.toLocaleString('es-ES')} ${correccionesAplicadas === 1 ? 'contrato' : 'contratos'}` : ''})</a>
+              </p>
+            )}
+          </div>
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5">
+            <p class="font-mono text-xs text-white/50 uppercase mb-1">Contrato medio</p>
+            <p class="text-2xl font-light text-white">{fmtCompacto(resumen.contrato_medio_eur)}</p>
+          </div>
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5">
+            <p class="font-mono text-xs text-white/50 uppercase mb-1">Años activo</p>
+            <p class="text-2xl font-light text-white">{resumen.anos_activo}{resumen.primer_contrato ? <span class="text-white/50 text-sm"> · desde {resumen.primer_contrato.slice(0, 4)}</span> : ''}</p>
+          </div>
+        </div>
+
+        {/* ═══════ Distribución temporal horizontal ═══════ */}
+        {Object.keys(distribucion).length > 0 && (
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5 mb-4">
+            <h2 class="font-mono text-xs text-white/50 uppercase tracking-widest mb-4">Distribución temporal</h2>
+            <div class="space-y-2">
+              {Object.entries(distribucion).map(([year, count]) => (
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-xs text-white/50 w-12">{year}</span>
+                  <div class="flex-1 h-2.5 bg-white/5 rounded overflow-hidden">
+                    <div class="h-full bg-emerald-500/80 rounded" style={`width:${maxBars ? Math.max(1, (count / maxBars) * 100) : 0}%`}></div>
+                  </div>
+                  <span class="font-mono text-xs text-white/60 w-16 text-right">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════ Top 5 organismos ═══════ */}
+        {topOrganismos.length > 0 && (
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5 mb-4">
+            <h2 class="font-mono text-xs text-white/50 uppercase tracking-widest mb-4">Top organismos contratantes{volumenDifiere && <span class="text-white/50 normal-case tracking-normal"> · importes corregidos (issue #22)</span>}</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-white/5">
+                    <th class="text-left text-xs text-white/50 py-2 px-3">#</th>
+                    <th class="text-left text-xs text-white/50 py-2 px-3">Organismo</th>
+                    <th class="text-right text-xs text-white/50 py-2 px-3">Contratos</th>
+                    <th class="text-right text-xs text-white/50 py-2 px-3">Volumen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topOrganismos.slice(0, 5).map((o, i) => (
+                    <tr class="border-b border-white/5">
+                      <td class="text-white/50 py-2.5 px-3">{i + 1}</td>
+                      <td class="text-white/80 py-2.5 px-3" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{o.organismo}</td>
+                      <td class="text-right font-mono text-white/70 py-2.5 px-3">{o.contratos.toLocaleString('es-ES')}</td>
+                      <td class="text-right font-mono text-emerald-400 py-2.5 px-3">{fmtCompacto(o.volumen)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════ Top 5 CPV ═══════ */}
+        {topCpv.length > 0 && (
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5 mb-4">
+            <h2 class="font-mono text-xs text-white/50 uppercase tracking-widest mb-4">Códigos CPV principales</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-white/5">
+                    <th class="text-left text-xs text-white/50 py-2 px-3">#</th>
+                    <th class="text-left text-xs text-white/50 py-2 px-3">Código CPV</th>
+                    <th class="text-right text-xs text-white/50 py-2 px-3">Contratos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topCpv.slice(0, 5).map((c, i) => (
+                    <tr class="border-b border-white/5">
+                      <td class="text-white/50 py-2.5 px-3">{i + 1}</td>
+                      <td class="font-mono text-white/80 py-2.5 px-3">{c.cpv}</td>
+                      <td class="text-right font-mono text-white/70 py-2.5 px-3">{c.contratos.toLocaleString('es-ES')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════ Concentración ═══════ */}
+        <div class="border border-white/10 bg-white/5 rounded-lg p-5 mb-4">
+          <h2 class="font-mono text-xs text-white/50 uppercase tracking-widest mb-4">Concentración{volumenDifiere && <span class="text-white/50 normal-case tracking-normal"> · sobre mercado resuelto corregido (issue #22)</span>}</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-lg p-4">
+              <p class="font-mono text-xs text-white/50 uppercase mb-2">Top 3 organismos · % volumen</p>
+              <p class="text-2xl font-light text-emerald-400">{pct(concentracion.top_3_pct_volumen)}</p>
+              <div class="h-2.5 bg-white/5 rounded mt-3 overflow-hidden">
+                <div class="h-full bg-emerald-500/80 rounded" style={`width:${Math.min(100, concentracion.top_3_pct_volumen * 100)}%`}></div>
+              </div>
+            </div>
+            <div class="rounded-lg p-4">
+              <p class="font-mono text-xs text-white/50 uppercase mb-2">HHI (diversificación)</p>
+              <p class="text-2xl font-light text-white">{concentracion.hhi.toLocaleString('es-ES', { maximumFractionDigits: 3 })}</p>
+              <p class="text-xs text-white/50 mt-2">0 = disperso · 1 = monopolio</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════ BORME — Registro mercantil (fase 1 plan BORME 2026-10-14) ═══════ */}
+        {bormeTimeline && (
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5 mb-4">
+            <h2 class="font-mono text-xs text-white/50 uppercase tracking-widest mb-4">Registro mercantil · BORME</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {bormeTimeline.ficha.empresa && (
+                <div>
+                  <p class="font-mono text-xs text-white/50 uppercase mb-1">Empresa</p>
+                  <p class="text-white/80 text-sm">{bormeTimeline.ficha.empresa}</p>
+                </div>
+              )}
+              {bormeTimeline.ficha.domicilio && (
+                <div>
+                  <p class="font-mono text-xs text-white/50 uppercase mb-1">Domicilio</p>
+                  <p class="text-white/80 text-sm">{bormeTimeline.ficha.domicilio}</p>
+                </div>
+              )}
+              {bormeTimeline.ficha.capital_euros != null && (
+                <div>
+                  <p class="font-mono text-xs text-white/50 uppercase mb-1">Capital social</p>
+                  <p class="font-mono text-white/80 text-sm">{Math.round(bormeTimeline.ficha.capital_euros).toLocaleString('es-ES')} €</p>
+                </div>
+              )}
+              {bormeTimeline.ficha.fecha_constitucion && (
+                <div>
+                  <p class="font-mono text-xs text-white/50 uppercase mb-1">Constitución</p>
+                  <p class="text-white/80 text-sm">{fmtDate(parseBormeFecha(bormeTimeline.ficha.fecha_constitucion))}</p>
+                </div>
+              )}
+              {bormeTimeline.ficha.provincia && (
+                <div>
+                  <p class="font-mono text-xs text-white/50 uppercase mb-1">Provincia</p>
+                  <p class="text-white/80 text-sm">{titleCase(bormeTimeline.ficha.provincia)}</p>
+                </div>
+              )}
+              {(bormeTimeline.ficha.hoja_registral || bormeTimeline.ficha.tomo) && (
+                <div>
+                  <p class="font-mono text-xs text-white/50 uppercase mb-1">Registro</p>
+                  <p class="text-white/80 text-sm">
+                    {bormeTimeline.ficha.hoja_registral && <span>Hoja {bormeTimeline.ficha.hoja_registral}</span>}
+                    {bormeTimeline.ficha.hoja_registral && bormeTimeline.ficha.tomo && <span class="text-white/50"> · </span>}
+                    {bormeTimeline.ficha.tomo && <span>Tomo {bormeTimeline.ficha.tomo}</span>}
+                  </p>
+                </div>
+              )}
+            </div>
+            {bormeTimeline.dias.length > 0 && (
+              <div class="mt-5 border-t border-white/5 pt-4">
+                <p class="font-mono text-xs text-white/50 uppercase mb-3">Actos inscritos · últimos {Math.min(25, bormeTimeline.dias.length)} boletines</p>
+                <ul class="space-y-3">
+                  {bormeTimeline.dias.slice(0, 25).map((d) => (
+                    <li class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                      <span class="font-mono text-xs text-white/50 tabular-nums shrink-0 sm:w-24">{d.fecha}</span>
+                      <div class="flex-1 text-sm text-white/80 leading-relaxed min-w-0">
+                        {d.cargos.map((c) => (
+                          <p>
+                            <span class="text-white/50">{c.tipo}</span>
+                            {c.cargo && <span>: {c.cargo}</span>}
+                            {c.persona && <span class="text-white/50"> — {c.persona}</span>}
+                          </p>
+                        ))}
+                        {d.otros.map((o) => <p class="text-white/50">{o}</p>)}
+                      </div>
+                      {d.pdfUrl && (
+                        <a href={d.pdfUrl} target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-emerald-400/70 hover:text-emerald-400 shrink-0 self-start sm:self-center" title="Boletín oficial en BOE (PDF)">PDF ↗</a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {bormeTimeline.dias.length > 25 && (
+                  <details class="mt-3">
+                    <summary class="font-mono text-xs text-emerald-400/70 hover:text-emerald-400 cursor-pointer select-none">
+                      Ver {bormeTimeline.dias.length - 25} boletines anteriores
+                    </summary>
+                    <ul class="space-y-3 mt-3">
+                      {bormeTimeline.dias.slice(25).map((d) => (
+                        <li class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                          <span class="font-mono text-xs text-white/50 tabular-nums shrink-0 sm:w-24">{d.fecha}</span>
+                          <div class="flex-1 text-sm text-white/80 leading-relaxed min-w-0">
+                            {d.cargos.map((c) => (
+                              <p>
+                                <span class="text-white/50">{c.tipo}</span>
+                                {c.cargo && <span>: {c.cargo}</span>}
+                                {c.persona && <span class="text-white/50"> — {c.persona}</span>}
+                              </p>
+                            ))}
+                            {d.otros.map((o) => <p class="text-white/50">{o}</p>)}
+                          </div>
+                          {d.pdfUrl && (
+                            <a href={d.pdfUrl} target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-emerald-400/70 hover:text-emerald-400 shrink-0 self-start sm:self-center" title="Boletín oficial en BOE (PDF)">PDF ↗</a>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+                <p class="font-mono text-xs text-white/50 mt-4">Fuente: BORME (BOE) · resuelto por NIF → denominación registral</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════ Últimos 5 contratos ═══════ */}
+        {contratosRecientes.length > 0 && (
+          <div class="border border-white/10 bg-white/5 rounded-lg p-5 mb-4">
+            <h2 class="font-mono text-xs text-white/50 uppercase tracking-widest mb-4">Últimos contratos adjudicados</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-white/5">
+                    <th class="text-left text-xs text-white/50 py-2 px-3">Título</th>
+                    <th class="text-left text-xs text-white/50 py-2 px-3">Organismo</th>
+                    <th class="text-right text-xs text-white/50 py-2 px-3">Importe</th>
+                    <th class="text-left text-xs text-white/50 py-2 px-3">Fecha</th>
+                    <th class="text-left text-xs text-white/50 py-2 px-3">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contratosRecientes.map((c) => (
+                    <tr class="border-b border-white/5">
+                      <td class="text-white/80 py-2.5 px-3">
+                        {c.url
+                          ? <a href={c.url} target="_blank" rel="noopener noreferrer" class="text-emerald-400/80 hover:text-emerald-400 underline decoration-line">{c.titulo.slice(0, 80)}{c.titulo.length > 80 ? '…' : ''}</a>
+                          : <span class="text-white/80">{c.titulo.slice(0, 80)}{c.titulo.length > 80 ? '…' : ''}</span>
+                        }
+                      </td>
+                      <td class="text-white/50 text-xs px-3 py-2.5">{c.organismo.slice(0, 60)}{c.organismo.length > 60 ? '…' : ''}</td>
+                      <td class="text-right font-mono text-white/70 py-2.5 px-3 tabular-nums">
+                        {fmtCompacto(c.importe)}
+                        {c.correccion && (
+                          <span class="ml-1.5 inline-block align-middle text-xs px-1.5 py-0.5 rounded font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30" title={motivoTitulo(c.correccion)}>{c.correccion}</span>
+                        )}
+                      </td>
+                      <td class="text-white/50 text-xs font-mono py-2.5 px-3">{c.fecha ? fmtDate(c.fecha) : '—'}</td>
+                      <td><span class={`inline-flex text-xs px-2.5 py-0.5 rounded font-mono ${estadoClass(c.estado)}`}>{c.estado || '—'}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        <p class="text-xs text-white/50 mt-6 border-t border-white/5 pt-4">
+          Datos públicos de contratación de España (dataset de calidad, 2010–2026) y registro mercantil BORME. Elicita es un sistema de inteligencia sobre contratación pública. Cualquier dato puede contener errores de origen.
+        </p>
+      </div>
+    </section>
+
+    <script is:inline>
+    (function () {
+      var el = document.getElementById('follow-cta');
+      if (!el) return;
+      var msg = document.getElementById('follow-msg');
+      var nif = el.dataset.nif;
+      var nombre = el.dataset.nombre;
+      var isAuth = false;
+      var following = false;
+      var BASE = 'inline-flex items-center gap-2 font-mono text-sm px-5 py-2.5 rounded font-medium transition-colors ';
+      var OFF = BASE + 'bg-emerald-500 hover:bg-emerald-600 text-black';
+      var ON = BASE + 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20';
+
+      function showMsg(text, href) {
+        if (!msg) return;
+        msg.textContent = '';
+        msg.appendChild(document.createTextNode(text + ' '));
+        if (href) {
+          var a = document.createElement('a');
+          a.href = href;
+          a.className = 'text-emerald-400 underline decoration-emerald-500/30 hover:text-emerald-300';
+          a.textContent = 'Gestionar seguimientos →';
+          msg.appendChild(a);
+        }
+        msg.classList.remove('hidden');
+      }
+
+      function hideMsg() {
+        if (msg) msg.classList.add('hidden');
+      }
+
+      function render() {
+        el.className = following ? ON : OFF;
+        var icon = el.querySelector('.follow-icon');
+        var text = el.querySelector('.follow-text');
+        if (icon) icon.textContent = following ? '★' : '☆';
+        if (text) text.textContent = following ? 'Dejar de seguir' : 'Seguir';
+        el.setAttribute('aria-pressed', following ? 'true' : 'false');
+        el.disabled = false;
+      }
+
+      function asButton() {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = 'follow-cta';
+        btn.className = el.className;
+        btn.innerHTML = el.innerHTML;
+        el.replaceWith(btn);
+        el = btn;
+        btn.addEventListener('click', toggle);
+      }
+
+      async function toggle() {
+        el.disabled = true;
+        try {
+          var res;
+          if (following) {
+            res = await fetch('/api/follows?type=proveedor&id=' + encodeURIComponent(nif), { method: 'DELETE' });
+            if (res.ok) {
+              following = false;
+              hideMsg();
+              render();
+            } else {
+              showMsg('No hemos podido actualizar tu seguimiento. Inténtalo de nuevo.');
+            }
+          } else {
+            res = await fetch('/api/follows', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type: 'proveedor', id: nif, nombre: nombre }),
+            });
+            if (res.ok) {
+              following = true;
+              hideMsg();
+              render();
+            } else if (res.status === 403) {
+              var data = await res.json().catch(function () { return {}; });
+              showMsg(data.error || 'Límite de seguimientos alcanzado', data.manageUrl || '/cuenta/alertas');
+            } else {
+              showMsg('No hemos podido actualizar tu seguimiento. Inténtalo de nuevo.');
+            }
+          }
+        } catch (e) {
+          console.error('[follows]', e);
+          showMsg('No hemos podido actualizar tu seguimiento. Inténtalo de nuevo.');
+        } finally {
+          if (el.tagName === 'BUTTON') el.disabled = false;
+        }
+      }
+
+      (async function load() {
+        try {
+          var res = await fetch('/api/follows');
+          if (res.status === 401) return; // anónimo: el enlace a /sign-up se queda tal cual
+          if (!res.ok) return;
+          isAuth = true;
+          var data = await res.json();
+          var list = (data.follows && data.follows.proveedores) || [];
+          following = list.some(function (f) { return f.id === nif; });
+          asButton();
+          render();
+        } catch (e) {
+          console.error('[follows] load', e);
+        }
+      })();
+    })();
+    </script>
+  </Layout>
+)}

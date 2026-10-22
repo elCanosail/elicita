@@ -1,0 +1,157 @@
+---
+title: "Tasa de incumbencia: cuánto se renuevan los contratos públicos con el mismo adjudicatario"
+excerpt: "El 47% de las renovaciones de contratos públicos en España se adjudican al mismo proveedor. Analizamos 6,8 millones de contratos para medir la competencia real —no la teórica— en contratación pública."
+date: "2026-06-26"
+readTime: "15 min"
+category: "Metodología"
+series: "Radiografía"
+author: "Equipo Elicita"
+tags: ["incumbencia", "renovación", "análisis competitivo", "metodología", "visualización"]
+draft: false
+---
+
+El procedimiento abierto es la norma en España. El 83% de los contratos públicos siguen un proceso competitivo. Pero ¿cuántas veces el mismo proveedor se lleva la renovación? La competencia real —la que ocurre después del primer contrato— es distinta de la competencia teórica que se diseña en el pliego.
+
+Elicita ha analizado **6,8 millones de contratos** adjudicados entre 2019 y 2025 para calcular la **tasa de incumbencia**: el porcentaje de contratos que se adjudican al mismo proveedor que ya tenía un contrato con el mismo organismo el año anterior. Es una métrica que nadie más calcula en España, y que revela las barreras de entrada reales en contratación pública.
+
+## Qué es la tasa de incumbencia
+
+La incumbencia mide la persistencia de un proveedor en un organismo. Cuando un Ayuntamiento contrata a una empresa para mantenimiento de semáforos y, al año siguiente, vuelve a adjudicar el mismo servicio a la misma empresa, hay incumbencia. No es necesariamente malo —puede reflejar calidad— pero un mercado con alta incumbencia es un mercado donde es difícil que entren nuevos competidores.
+
+**Definición operativa:** para cada contrato adjudicado en el año N, comprobamos si el mismo adjudicatario (por NIF) tenía un contrato con el mismo órgano contratante en el año N-1. Si sí, es un contrato "con previo". La tasa de incumbencia = contratos con previo / total de contratos × 100.
+
+## Metodología
+
+- **Fuente**: Base de datos Elicita (`licitaciones.duckdb`), tabla `nacional`.
+- **Período**: 2019-2025 (se necesita un año previo para calcular incumbencia, por lo que las cifras empiezan en 2020).
+- **Matching**: Por NIF de adjudicatario + NIF de órgano contratante. Si un proveedor tenía cualquier contrato con el mismo órgano en el año anterior, se cuenta como incumbente.
+- **Cobertura**: 6.780.308 contratos con datos válidos de NIF de adjudicatario y órgano.
+- **Limitaciones**: No distingue entre renovación del mismo expediente vs. nuevo contrato independiente; los contratos menores (menos de 15.000€) pueden inflar la tasa al ser adjudicaciones recurrentes sin competencia formal.
+
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:32px 0;padding:20px;border:1px solid rgba(99,102,241,0.2);border-radius:12px;background:rgba(99,102,241,0.05);">
+<div style="text-align:center;padding:8px"><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">47%</div><div style="font-size:11px;color:#888;margin-top:4px">Tasa de incumbencia global</div></div>
+<div style="text-align:center;padding:8px"><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">6,8M</div><div style="font-size:11px;color:#888;margin-top:4px">Contratos analizados</div></div>
+<div style="text-align:center;padding:8px"><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">57,6%</div><div style="font-size:11px;color:#888;margin-top:4px">Tasa en 2025 (en aumento)</div></div>
+<div style="text-align:center;padding:8px"><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">50,1%</div><div style="font-size:11px;color:#888;margin-top:4px">Suministros (la más alta)</div></div>
+</div>
+
+## El universo de la incumbencia
+
+La visualización interactiva de abajo muestra la tasa de incumbencia por tipo de contrato, por rango de importe, su evolución temporal, los adjudicatarios más persistentes y los organismos más "fieles" a sus proveedores.
+
+<div class="blog-artifact-wrap">
+<iframe src="/blog/tasa-incumbencia/universo.html" style="height:2800px;" loading="lazy" title="Tasa de incumbencia en contratación pública"></iframe>
+</div>
+
+*Visualización generada con D3.js sobre datos de Elicita. Pasa el cursor sobre cada elemento para ver el detalle.*
+
+## El dato global: 47%
+
+Casi la mitad de los contratos públicos que se adjudican en España van al mismo proveedor que ya estaba trabajando con ese organismo. Es la cifra agregada, pero el detalle es más interesante.
+
+## Incumbencia por tipo de contrato
+
+| Tipo | Tasa de incumbencia |
+|------|---------------------|
+| **Suministros** | **50,1%** |
+| **Servicios** | **40,7%** |
+| **Obras** | **37,2%** |
+
+Los suministros lideran la incumbencia. Tiene sentido: cuando un organismo compra consumibles, papelería, combustible o material de oficina, tiende a quedarse con el mismo proveedor. El coste de cambiar proveedor —evaluar muestras, validar calidad, adaptar procesos— supera el beneficio de una ligera mejora de precio.
+
+Los servicios tienen una incumbencia moderada (40,7%). Los contratos de servicios son más visibles y competitivos, pero la relación de confianza y el conocimiento del organismo generan inercia.
+
+Las obras son las menos incumbentes (37,2%). Cada obra es un proyecto distinto con su propio pliego, lo que facilita la entrada de nuevos competidores. Sin embargo, las UTEs recurrentes en grandes infraestructuras (ADIF, por ejemplo) muestran que incluso en obras hay patrones de repetición.
+
+## Incumbencia por importe: los pequeños son más "fieles"
+
+| Rango de importe | Tasa de incumbencia |
+|------------------|---------------------|
+| Menos de 10K€ | **48,2%** |
+| 10K-50K€ | 28,8% |
+| 50K-200K€ | 23,6% |
+| 200K-1M€ | 22,5% |
+| Más de 1M€ | **19,0%** |
+
+El patrón es claro: **cuanto más pequeño el contrato, más alta la incumbencia**. Los contratos menores de 10.000€ tienen una tasa del 48% —el proveedor local que hace mantenimiento del edificio del Ayuntamiento tiende a seguir indefinidamente. Los contratos de más de 1M€ tienen solo 19% de incumbencia: los grandes contratos son más visibles, más competitivos y más difíciles de retener.
+
+Esto tiene una implicación directa para empresas que quieren entrar en contratación pública: **los contratos grandes son más accesibles de lo que parece**, pero los pequeños son fortalezas casi impenetrables.
+
+## Los reyes de la incumbencia
+
+Los adjudicatarios más persistentes —aquellos que más organismos mantienen año tras año— revelan el perfil del incumbente ideal:
+
+| # | Adjudicatario | Órganos | Contratos | Años activo |
+|---|---------------|---------|-----------|-------------|
+| 1 | TRAGSA (Transformación Agraria) | 191 | 6.680 | 5 |
+| 2 | TEGSA (Tecnologías y Servicios Agrarios) | 225 | 5.386 | 6 |
+| 3 | LIFE TECHNOLOGIES | 54 | 4.543 | 7 |
+| 4 | EULEN | 292 | 4.103 | 7 |
+| 5 | SOLRED | 262 | 4.052 | 7 |
+
+TRAGSA y TEGSA —ambas empresas públicas del Ministerio de Agricultura— son los incumbentes absolutos. Su naturaleza de SME estatal les da acceso preferente a contratos de organismos agrarios, medioambientales y de administración local. EULEN, con 292 organismos y 7 años activo, es el incumbente privado más extendido: limpieza, seguridad y mantenimiento general en administraciones de todo el país.
+
+## Los organismos más "fieles"
+
+| # | Órgano contratante | Incumbencia | Proveedor dominante |
+|---|-------------------|------------|---------------------|
+| 1 | Dirección General del Catastro | **56,2%** | Consejo de Administración SME |
+| 2 | Centro de Recuperación de Especies | 52,2% | EKYPO Formación |
+| 3 | Mancomunidad de Servicios (varias) | 51,6% | Contratos directos |
+| 4 | Consejería Servicios Informáticos AGE | 46,1% | Infotelecom Networks |
+| 5 | Gerencia de Salud de Burgos | 45,7% | Hospital Recoletas |
+
+El Catastro, con un 56,2% de incumbencia, es el organismo más "fiel" a sus proveedores. Esto puede reflejar la especialización técnica requerida (cartografía, SIG, bases de datos catastrales) que crea barreras de entrada naturales.
+
+## Evolución temporal: la incumbencia está aumentando
+
+| Año | Tasa de incumbencia |
+|-----|---------------------|
+| 2020 | 26,4% |
+| 2021 | 18,1% |
+| 2022 | 50,5% |
+| 2023 | 55,1% |
+| 2024 | 56,7% |
+| 2025 | **57,6%** |
+
+La tendencia es inquietante. De un 26% en 2020 (parcialmente distorsionado por la pandemia y el despliegue de contratos COVID) a un 57,6% en 2025. La incumbencia ha aumentado **31 puntos porcentuales en cinco años**.
+
+Varias explicaciones posibles:
+- **Post-pandemia**: los organismos priorizaron proveedores conocidos para minimizar riesgo.
+- **Crecimiento del contrato menor**: los contratos menores de 15.000€ (adjudicación directa) han crecido, y estos tienen mayor incumbencia.
+- **Inercia administrativa**: cambiar de proveedor requiere esfuerzo burocrático que muchos organismos no quieren asumir.
+
+Sea cual sea la causa, el mercado de contratación pública española está **cerrándose progresivamente**. Si la tendencia continúa, en 2027 más del 60% de los contratos se adjudicarán al mismo proveedor del año anterior.
+
+## Implicaciones
+
+### Para empresas que quieren entrar
+
+1. **Ataca los contratos grandes**: la incumbencia en contratos >1M€ es solo del 19%. Es donde hay menos barreras.
+2. **Los pequeños son fortalezas**: un proveedor local con contratos menores de 10K€ en un Ayuntamiento tiene casi un 50% de probabilidad de retenerlos. Desplazarlo requiere una propuesta radicalmente mejor.
+3. **Suministros vs. servicios vs. obras**: los suministros (50% incumbencia) son el mercado más difícil de penetrar. Las obras (37%) son las más abiertas.
+
+### Para licitadores y política pública
+
+- La **tendencia ascendente** de la incumbencia debería ser una señal de alerta. Un mercado donde el mismo proveedor se lleva la renovación el 57% de las veces no es un mercado plenamente competitivo.
+- La **lotificación** de grandes contratos en lotes más pequeños accesibles para PYMES podría ayudar, pero los datos muestran que los contratos pequeños son *más* incumbentes.
+- La **transparencia sobre renovaciones** —publicar no solo la adjudicación nueva sino si es una renovación del contrato anterior con el mismo proveedor— sería un primer paso para hacer visible este fenómeno.
+
+## Limitaciones
+
+1. **Definición amplia**: contamos como incumbente cualquier proveedor con *cualquier* contrato con el mismo órgano el año anterior, no necesariamente el mismo expediente. Esto puede sobreestimar la incumbencia real.
+2. **Contratos menores**: los contratos menores de 15.000€ se adjudican por procedimiento simplificado y son más propensos a repetir proveedor. Su peso en el total puede inflar la tasa.
+3. **NIF matching**: algunas empresas pueden cambiar de NIF (fusiones, escisiones), lo que subestima la incumbencia real.
+4. **2020-2021 distorsionados**: los años pandémicos tuvieron contratos COVID atípicos que distorsionan la base.
+
+## Conclusiones
+
+La tasa de incumbencia es una métrica que ningún licitador debería ignorar. Mide la competencia real —no la teórica— y revela dónde es posible entrar y dónde el incumbente es casi imbatible.
+
+**El dato clave**: 47% de los contratos públicos españoles se adjudican al mismo proveedor del año anterior. Y esta cifra está aumentando: ya está en el 57,6% en 2025.
+
+Elicita calcula esta métrica para cualquier organismo, sector o rango de importe. Si quieres saber cuál es la tasa de incumbencia en tu mercado —y dónde tienes oportunidades reales de entrar— puedes consultarlo en la plataforma.
+
+---
+
+*Análisis elaborado por el Equipo Elicita. Metodología: matching por NIF de adjudicatario + órgano contratante, año N vs. año N-1. Datos: tabla nacional, 2020-2025, 6,8M contratos. Métrica propietaria de Elicita.*

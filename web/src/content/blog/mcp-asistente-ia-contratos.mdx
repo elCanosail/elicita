@@ -1,0 +1,176 @@
+---
+title: "MCP: tu asistente de IA conectado a 66,4M de contratos públicos"
+excerpt: "Model Context Protocol permite que Claude, Cursor o cualquier agente de IA busque, analice y explore contratación pública española en tiempo real. Sin scrapers, sin integraciones custom. Una sola conexión a 66,4M de registros."
+date: "2026-06-29"
+readTime: "9 min"
+category: "Producto"
+series: "Guías y producto"
+author: "Equipo Elicita"
+tags: ["MCP", "API", "agentes IA", "automatización", "producto", "Claude", "Cursor"]
+draft: false
+---
+
+Si trabajas en contratación pública, ya sabes el ritual: abrir cinco plataformas distintas, buscar por palabra clave, filtrar por fecha, exportar a Excel, cruzar con datos de BORME, preparar un informe, enviarlo al equipo. Un proceso que debería tardar minutos, tarda horas. Y se repite cada día.
+
+El **Model Context Protocol (MCP)** cambia esto de raíz. En lugar de adaptar tu flujo de trabajo a cada plataforma, conectas un asistente de IA directamente a los datos. Le pides lo que necesitas en lenguaje natural, y el asistente ejecuta la búsqueda, filtra, cruza y te entrega el resultado.
+
+## Qué es MCP
+
+MCP es un protocolo abierto, estandarizado por Anthropic en 2024, que permite que cualquier modelo de IA interactúe con servicios externos de forma nativa. Piensa en ello como un conector universal: cualquier agente que hable MCP puede usar cualquier servidor que exponga MCP.
+
+No es una API tradicional. Una API te da endpoints y parámetros. MCP le da al agente **tools** —funciones con nombre, descripción y esquema— que el modelo decide cuándo y cómo usar. El agente razona sobre qué tool invocar, con qué parámetros, y cómo combinar resultados.
+
+En junio de 2026, Anthropic abrió el **directorio de conectores MCP** dentro de Claude.ai. Los servidores listados son verificables, con OAuth 2.0 y documentación pública. Elicita está ahí.
+
+## Elicita + MCP
+
+Elicita expone un servidor MCP en `https://elicita.es/mcp` con transporte **Streamable HTTP**. Cuatro herramientas read-only: tres de descubrimiento público y una de búsqueda autenticada:
+
+| Tool | Qué hace | Auth |
+|------|----------|------|
+| `search_licitaciones` | Busca licitaciones por texto libre, CPV, importe, estado, fuente, NIF, fechas | API key Pro |
+| `get_stats` | Estadísticas globales: 66,4M registros, 9 fuentes, última actualización | Gratuito |
+| `get_cobertura` | Cobertura de fuentes dinámicas: fuentes activas y periodicidad | Gratuito |
+| `search_cpv` | Busca códigos CPV por texto en español (9.454 códigos) | Gratuito |
+
+**66,4M de registros.** 30,9M de licitaciones de 9 fuentes oficiales (PLACE nacional, TED Europeo, Catalunya, Andalucía, Euskadi, Galicia, Valencia, Aragón, Madrid). 26,3M de cargos de BORME. 8,7M de contratos con indicadores de calidad. Actualización cada 4 horas.
+
+### Autenticación OAuth 2.0
+
+El servidor soporta **OAuth 2.0 con Dynamic Client Registration** (RFC 7591), usando **Clerk** como proveedor de identidad. Esto significa que cualquier cliente MCP —Claude Desktop, Cursor, Windsurf, un agente custom— puede registrarse dinámicamente y solicitar acceso a la cuenta del usuario. El usuario se autentica con su cuenta de Elicita a través de Clerk, sin necesidad de copiar API keys manualmente.
+
+El flujo es estándar: el cliente se registra en `/register`, redirige al usuario a `/authorize` que delega a Clerk para la autenticación. El usuario inicia sesión con su cuenta de Elicita en Clerk, que redirige de vuelta al MCP server. Este intercambia el código con Clerk, obtiene la identidad del usuario, genera un código MCP, y el cliente lo intercambia por un access token en `/token`. Los tokens viven en memoria del servidor con TTL de 1 hora. No se persisten en disco.
+
+El modo gratuito —sin autenticación— da acceso a 4 tools públicas con un límite de 20 búsquedas por hora por IP. Suficiente para probar y para uso ocasional. Con OAuth (login vía Clerk), se desbloquean las 7 tools completas y los límites pasan a los del plan del usuario.
+
+## Cómo se usa
+
+### Con Claude Desktop
+
+Añade Elicita como servidor MCP en tu configuración de Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "elicita": {
+      "url": "https://elicita.es/mcp",
+      "transport": "http"
+    }
+  }
+}
+```
+
+A partir de ese momento, Claude puede buscar contratos, consultar estadísticas, explorar códigos CPV y analizar relaciones contractuales directamente en la conversación. Sin abandonar el chat.
+
+### Con Cursor
+
+Settings → MCP → Add Server. URL `https://elicita.es/mcp`, transporte Streamable HTTP. Puedes pedirle al asistente del IDE: "busca licitaciones de ciberseguridad en Madrid por encima de 500K€" y obtendrás resultados reales de Elicita sin abandonar el editor.
+
+### Con cualquier cliente MCP
+
+El servidor acepta peticiones POST con JSON-RPC 2.0 sobre Streamable HTTP. Cualquier implementación que siga la spec MCP puede conectarse:
+
+```bash
+curl -X POST https://elicita.es/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize",
+       "params":{"protocolVersion":"2025-06-18",
+                 "capabilities":{},
+                 "clientInfo":{"name":"my-app","version":"1.0"}}}'
+```
+
+Documentación completa en [elicita.es/docs/mcp](https://elicita.es/docs/mcp).
+
+## Ejemplos reales
+
+### 1. Búsqueda oportunista
+
+> "Busca contratos de mantenimiento de HVAC en Andalucía adjudicados en los últimos 2 años. ¿Quién se los lleva?"
+
+El agente invoca `search_licitaciones` con los filtros apropiados —fuente: ANDALUCIA, CPV: 39700000, estado: adjudicada, fecha_desde: 2024-01-01— recibe los resultados, los agrupa por adjudicatario y te da un resumen con cuotas de mercado. En segundos.
+
+### 2. Inteligencia de organismo
+
+> "Dime todo lo que sabe Elicita del Ministerio de Defensa. ¿Cuánto contrata? ¿En qué sectores?"
+
+
+### 3. Grafo de relaciones
+
+> "¿Quién contrata con el Ayuntamiento de Madrid? ¿Hay empresas que aparecen repetidamente?"
+
+
+### 4. Oportunidades similares
+
+> "Encontramos este contrato de software para banca. ¿Hay otros similares activos?"
+
+
+### 5. Exploración de CPV
+
+> "¿Qué códigos CPV debería monitorizar para oportunidades de ciberseguridad?"
+
+`search_cpv` con "ciberseguridad" devuelve todos los códigos relevantes: 48750000 (Servicios de seguridad), 48610000 (Servicios de seguridad de TI), 72620000 (Servicios de seguridad informática). El agente puede usar esos códigos para crear búsquedas y alertas precisas.
+
+## Por qué importa
+
+**Sin MCP:** Cada fuente de datos es una isla. Buscar en PLACE, cruzar con BORME, consultar BOE, revisar plataformas autonómicas. Un analista invierte 2-3 horas al día solo en recopilación.
+
+**Con MCP:** Un asistente de IA hace todo eso en segundos. Tú preguntas en lenguaje natural, el agente ejecuta contra 66,4M de registros y te entrega inteligencia activable.
+
+La diferencia no es de eficiencia. Es de **modelo de trabajo**. Pasas de reaccionar a oportunidades publicadas a operar con inteligencia continua, conversacional, integrada en tu flujo diario.
+
+Y no es solo para analistas. Si eres desarrollador, MCP te da una interfaz programática estandarizada. Si eres consultor, te deja construir informes en minutos que antes requerían días. Si eres empresa, te permite conectar tu CRM o tu pipeline de ventas a datos reales de contratación sin construir integraciones a medida.
+
+## Seguridad y privacidad
+
+- **API key personal para búsqueda:** La herramienta `search_licitaciones` requiere una clave del plan Pro. No hay OAuth público en esta versión.
+- **Tools read-only:** Las cuatro herramientas son de lectura. Ninguna puede modificar, crear o eliminar datos.
+- **Acceso público limitado:** Estadísticas, cobertura y CPV se pueden consultar sin cuenta; la búsqueda de contratos no.
+- **Privacidad:** La política de privacidad en [elicita.es/privacy](https://elicita.es/privacy) detalla qué datos se procesan a través del MCP.
+
+## Disponibilidad
+
+**Acceso público:** 3 tools de descubrimiento — `get_stats`, `get_cobertura` y `search_cpv`— sin registro.
+
+**Plan Pro:** `search_licitaciones` con API key personal, además de la plataforma web, alertas y API.
+
+---
+
+*¿Usas agentes de IA en tu día a día? El MCP de Elicita está diseñado para ti. Conecta tu cliente MCP a `https://elicita.es/mcp` y empieza a preguntar.*
+
+## Empieza en 30 segundos
+
+Conecta Elicita a tu agente de IA favorito. Sin API keys, sin scrapers, sin integraciones custom.
+
+### Claude Desktop / Claude Code
+
+Añade Elicita como servidor MCP en tu configuración:
+
+```json
+{
+  "mcpServers": {
+    "elicita": {
+      "url": "https://elicita.es/mcp",
+      "transport": "http"
+    }
+  }
+}
+```
+
+### Cursor
+
+`Settings` → `MCP` → `Add Server` · URL `https://elicita.es/mcp` · Transport: Streamable HTTP
+
+### Cualquier cliente MCP
+
+```bash
+curl -X POST https://elicita.es/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"my-app","version":"1.0"}}}'
+```
+
+**Modo gratuito:** 4 tools públicas, 20 búsquedas/hora. Sin registro.
+**Modo OAuth:** 7 tools completas. Login vía Clerk con tu cuenta de Elicita.
+
+→ [Documentación completa](/docs/mcp) · [Empezar gratis](/sign-up)

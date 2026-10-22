@@ -1,0 +1,24 @@
+---
+import MonitorTable from '../../components/MonitorTable.astro';
+import DashboardLayout from '../../layouts/dashboard.astro';
+---
+
+<DashboardLayout title="Terminales — elicita_">
+  <MonitorTable
+    pageMode="terminales"
+    title="Licitaciones Terminales"
+    placeholder="Buscar licitación, organismo o CPV…"
+    estadosDefault={['adjudicada','resuelta','formalizada','desierta','anulada']}
+    estadoLabels={{
+      'adjudicada':'Adjudicada','resuelta':'Resuelta','formalizada':'Formalizada',
+      'desierta':'Desierta','anulada':'Anulada','borrador':'Borrador',
+      'abierta':'Abierta','publicada':'Publicada','evaluacion':'Evaluación',
+    }}
+    showAdjudicatario={true}
+    showFuente={false}
+    showRelevance={false}
+    sortByAdjudicatario={true}
+    filterActivas={false}
+    helpContext="terminal"
+  />
+</DashboardLayout>

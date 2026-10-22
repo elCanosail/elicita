@@ -1,0 +1,8 @@
+metric,numerator,denominator,coverage_pct,unknown_count,definition
+cpv_resolved_pct,8,8,100,0,CPV resuelto por taxonomía versionada.
+amount_valid_pct,950000,1000000,95,1,Importe finito y no negativo del universo publicado.
+supplier_nif_valid_pct,6,8,75,2,NIF con forma válida entre contratos analíticos.
+supplier_resolved_pct,5,8,62.5,3,Adjudicatario resuelto con evidencia suficiente.
+business_group_resolved_pct,4,8,50,4,Grupo curado y vigente para la sociedad.
+buyer_resolved_pct,7,8,87.5,1,Comprador con identificador canónico versionado.
+ute_unresolved_amount_pct,100000,1000000,10,1,Importe retenido en UTE sin reparto oficial.

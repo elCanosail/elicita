@@ -1,0 +1,679 @@
+---
+import DashboardLayout from '../../layouts/dashboard.astro';
+import { clerkClient } from '@clerk/astro/server';
+import { titleCase } from '../../lib/format';
+import fs from 'node:fs';
+import path from 'node:path';
+import { query } from '../../lib/duckdb';
+
+const PROFILES_DIR = path.resolve(process.cwd(), '..', 'ingesta', 'data', 'profiles');
+
+let cif = '';
+let profile: Record<string, any> | null = null;
+let cpvDict: Record<string, string> = {};
+
+try {
+  const auth = (Astro.locals as any).auth?.();
+  const userId = auth?.userId;
+  if (userId) {
+    const client = clerkClient({ secretKey: import.meta.env.CLERK_SECRET_KEY });
+    const user = await client.users.getUser(userId);
+    cif = (user.publicMetadata as any)?.cif || '';
+  }
+} catch {}
+
+// No CIF redirect — show setup CTA instead of blocking the page
+// const hasNoCif = !cif;
+
+// Load profile
+try {
+  const profilePath = path.join(PROFILES_DIR, `${cif}.json`);
+  if (fs.existsSync(profilePath)) {
+    profile = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
+  }
+} catch {}
+
+// Load CPV dict
+try {
+  const cpvModule = await import('../../data/cpv_es.json');
+  cpvDict = cpvModule.default || cpvModule;
+} catch {}
+
+// --- Quality score from calidad table ---
+const CALIDAD_INDICATORS = [
+  'INT-VAL-01','INT-VAL-02','INT-VAL-03','INT-VAL-04','INT-VAL-05',
+  'INT-VAL-06','INT-VAL-07','INT-VAL-09','INT-VAL-10','INT-VAL-12','INT-VAL-14',
+  'INT-CONS-01','INT-CONS-08','INT-CONS-18','INT-CONS-20',
+  'INT-FIA-01','INT-FIA-04','INT-FIA-08','INT-FIA-09','INT-FIA-11',
+];
+const INDICATOR_LABELS: Record<string, string> = {
+  'INT-VAL-01': 'Publicación en plazo',
+  'INT-VAL-02': 'Tipo de procedimiento informado',
+  'INT-VAL-03': 'Criterios de adjudicación publicados',
+  'INT-VAL-04': 'Plazo de presentación adecuado',
+  'INT-VAL-05': 'Objeto del contrato descriptivo',
+  'INT-VAL-06': 'CPV informado',
+  'INT-VAL-07': 'Valor estimado publicado',
+  'INT-VAL-09': 'Nº de ofertas recibidas informado',
+  'INT-VAL-10': 'Adjudicatario identificado',
+  'INT-VAL-12': 'Importe de adjudicación publicado',
+  'INT-VAL-14': 'Fecha de adjudicación informada',
+  'INT-CONS-01': 'Coherencia tipo contrato - CPV',
+  'INT-CONS-08': 'Coherencia importe licitación - adjudicación',
+  'INT-CONS-18': 'Coherencia procedimiento - nº ofertas',
+  'INT-CONS-20': 'Coherencia plazos',
+  'INT-FIA-01': 'NIF adjudicatario válido',
+  'INT-FIA-04': 'Importe adjudicación > 0',
+  'INT-FIA-08': 'Adjudicatario no es el propio órgano',
+  'INT-FIA-09': 'Duración del contrato informada',
+  'INT-FIA-11': 'Condiciones de ejecución informadas',
+};
+
+let calidadScore: number | null = null;
+let calidadTotal = 0;
+let calidadIndicators: Record<string, number | null> = {};
+
+interface Adjudicacion {
+  id: string;
+  objeto: string;
+  organismo: string;
+  importe: number;
+  fecha: string;
+  estado: string;
+}
+let adjudicaciones: Adjudicacion[] = [];
+
+if (cif) {
+  try {
+    // Use shared DuckDB singleton from lib/duckdb.ts (with memory_limit=2GB)
+
+    const indicatorSelects = CALIDAD_INDICATORS.map(ind =>
+      `SUM(CASE WHEN "${ind}" THEN 1 ELSE 0 END) * 100.0 / NULLIF(SUM(CASE WHEN "${ind}" IS NOT NULL THEN 1 ELSE 0 END), 0) AS "${ind}_pct"`
+    ).join(', ');
+
+    const calidadSql = `
+      SELECT AVG(score_calidad) AS score, CAST(COUNT(*) AS INTEGER) AS total, ${indicatorSelects}
+      FROM calidad WHERE nif_adjudicatario = ?
+    `;
+
+    const [calidadRows, adjRows] = await Promise.all([
+      query(calidadSql, [cif]),
+      query(`SELECT objeto, organismo, importe_adjudicacion, fecha_publicacion, estado, id
+        FROM contratos_vivos WHERE nif_adjudicatario = ? ORDER BY fecha_publicacion DESC LIMIT 30`, [cif]),
+    ]);
+    
+
+    if (calidadRows && calidadRows.length > 0 && calidadRows[0].score !== null) {
+      calidadScore = Math.round(calidadRows[0].score * 10) / 10;
+      calidadTotal = calidadRows[0].total || 0;
+      for (const ind of CALIDAD_INDICATORS) {
+        const v = calidadRows[0][`${ind}_pct`];
+        calidadIndicators[ind] = v !== null && v !== undefined ? Math.round(v) : null;
+      }
+    }
+
+    adjudicaciones = (adjRows || []).map((r: any) => ({
+      id: r.id ? String(r.id) : '',
+      objeto: r.objeto || '—',
+      organismo: titleCase(r.organismo) || r.organismo || '—',
+      importe: Number(r.importe_adjudicacion) || 0,
+      fecha: r.fecha_publicacion ? String(r.fecha_publicacion).slice(0, 10) : '—',
+      estado: r.estado || '—',
+    }));
+  } catch (e: any) {
+    console.error('[empresa] calidad/adj query error:', e?.message);
+  }
+}
+
+function fmtVolumen(v: number): string {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M €';
+  if (v >= 1_000) return Math.round(v / 1_000) + 'K €';
+  return v.toFixed(0) + ' €';
+}
+
+function scoreColor(s: number | null): string {
+  if (s === null) return 'hsl(var(--muted-foreground))';
+  if (s > 85) return 'hsl(var(--primary))';
+  if (s > 70) return 'hsl(var(--warning))';
+  return 'hsl(var(--destructive))';
+}
+
+const empresa = titleCase(profile?.empresa) || profile?.empresa || cif;
+const adjTotal = profile?.adjudicaciones_total || 0;
+const volTotal = profile?.volumen_total_eur || 0;
+const cpvsSeleccionadosRaw: string[] = profile?.cpvs_seleccionados || [];
+const cpvsActivos: any[] = profile?.cpvs_activos || [];
+// Use selected CPVs if available, otherwise top active CPVs from profiler
+const cpvsSeleccionados: string[] = cpvsSeleccionadosRaw.length > 0
+  ? cpvsSeleccionadosRaw
+  : cpvsActivos.slice(0, 20).map((c: any) => typeof c === 'string' ? c : c.cpv?.replace('.0', '') || '');
+const competidores: any[] = (profile?.competidores || []).slice(0, 10);
+const source = profile?.source || 'profiler';
+const generado = profile?.generado || '';
+---
+
+<DashboardLayout title="Empresa — elicita_">
+
+<div class="empresa-wrap">
+{cif ? (
+  <>
+  <div class="empresa-header">
+    <div>
+      <h1 class="empresa-name">{empresa}</h1>
+      <div class="empresa-cif">{cif}</div>
+    </div>
+    <a href="/cuenta/onboard" class="btn-edit">Editar empresa →</a>
+  </div>
+
+  {adjTotal > 0 ? (
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">{adjTotal.toLocaleString('es-ES')}</div>
+        <div class="stat-label">Adjudicaciones</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{(volTotal / 1_000_000).toFixed(1)}M €</div>
+        <div class="stat-label">Volumen histórico</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{cpvsActivos.length || cpvsSeleccionados.length}</div>
+        <div class="stat-label">CPVs detectados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{competidores.length}</div>
+        <div class="stat-label">Competidores</div>
+      </div>
+    </div>
+  ) : (
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">{cpvsSeleccionados.length}</div>
+        <div class="stat-label">CPVs monitorizados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">Manual</div>
+        <div class="stat-label">Configuración</div>
+      </div>
+    </div>
+  )}
+
+  <!-- Quality Score (collapsible) -->
+  {calidadScore !== null && (
+    <details class="calidad-section">
+      <summary class="calidad-summary">
+        <div class="calidad-badge-small" style={`border-color: ${scoreColor(calidadScore)}; box-shadow: 0 0 12px ${scoreColor(calidadScore)}22`}>
+          <span class="calidad-score-small" style={`color: ${scoreColor(calidadScore)}`}>{calidadScore}</span>
+          <span class="calidad-label-small">/100</span>
+        </div>
+        <div class="calidad-summary-text">
+          Índice de calidad documental · {calidadTotal.toLocaleString('es-ES')} contratos
+        </div>
+        <span class="calidad-chevron">▸</span>
+      </summary>
+
+      <div class="indicators-grid">
+        <div class="ind-group">
+          <div class="ind-group-label">VAL — Transparencia</div>
+          <div class="ind-pills">
+            {(['INT-VAL-01','INT-VAL-02','INT-VAL-03','INT-VAL-04','INT-VAL-05','INT-VAL-06','INT-VAL-07','INT-VAL-09','INT-VAL-10','INT-VAL-12','INT-VAL-14'] as const).map(ind => {
+              const pct = calidadIndicators[ind];
+              const ok = pct !== null && pct >= 80;
+              const partial = pct !== null && pct >= 50 && pct < 80;
+              return (
+                <span class={`ind-pill ${ok ? 'ok' : partial ? 'partial' : pct !== null ? 'nok' : 'null'}`}
+                      title={`${INDICATOR_LABELS[ind]} — ${pct !== null ? pct + '%' : 'sin datos'}`}>
+                  {ok ? '✓' : pct !== null ? '✗' : '·'} {INDICATOR_LABELS[ind]}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        <div class="ind-group">
+          <div class="ind-group-label">CONS — Consistencia</div>
+          <div class="ind-pills">
+            {(['INT-CONS-01','INT-CONS-08','INT-CONS-18','INT-CONS-20'] as const).map(ind => {
+              const pct = calidadIndicators[ind];
+              const ok = pct !== null && pct >= 80;
+              const partial = pct !== null && pct >= 50 && pct < 80;
+              return (
+                <span class={`ind-pill ${ok ? 'ok' : partial ? 'partial' : pct !== null ? 'nok' : 'null'}`}
+                      title={`${INDICATOR_LABELS[ind]} — ${pct !== null ? pct + '%' : 'sin datos'}`}>
+                  {ok ? '✓' : pct !== null ? '✗' : '·'} {INDICATOR_LABELS[ind]}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        <div class="ind-group">
+          <div class="ind-group-label">FIA — Fiabilidad</div>
+          <div class="ind-pills">
+            {(['INT-FIA-01','INT-FIA-04','INT-FIA-08','INT-FIA-09','INT-FIA-11'] as const).map(ind => {
+              const pct = calidadIndicators[ind];
+              const ok = pct !== null && pct >= 80;
+              const partial = pct !== null && pct >= 50 && pct < 80;
+              return (
+                <span class={`ind-pill ${ok ? 'ok' : partial ? 'partial' : pct !== null ? 'nok' : 'null'}`}
+                      title={`${INDICATOR_LABELS[ind]} — ${pct !== null ? pct + '%' : 'sin datos'}`}>
+                  {ok ? '✓' : pct !== null ? '✗' : '·'} {INDICATOR_LABELS[ind]}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </details>
+  )}
+
+  <!-- CPVs seleccionados -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Sectores monitorizados</h2>
+    </div>
+    {cpvsSeleccionados.length > 0 ? (
+      <div class="cpv-tags">
+        {cpvsSeleccionados.map(code => {
+          const clean = code.replace('.0', '');
+          return (
+            <span class="cpv-tag" title={clean}>
+              {cpvDict[clean]?.replace(/\.$/, '') || clean}
+            </span>
+          );
+        })}
+        {cpvsActivos.length > 20 && cpvsSeleccionadosRaw.length === 0 && (
+          <span class="cpv-tag cpv-more">+{cpvsActivos.length - 20} más</span>
+        )}
+      </div>
+    ) : (
+      <p class="empty-note">No hay CPVs seleccionados. <a href="/cuenta/onboard">Configura tus sectores →</a></p>
+    )}
+  </div>
+
+  <!-- Últimas adjudicaciones -->
+  {adjudicaciones.length > 0 && (
+    <div class="section">
+      <h2>Últimas adjudicaciones</h2>
+      <div class="adj-scroll">
+        <table class="adj-table">
+          <thead>
+            <tr>
+              <th>Objeto</th>
+              <th>Organismo</th>
+              <th class="th-r">Importe</th>
+              <th class="th-r">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {adjudicaciones.map(a => (
+              <tr class={a.id ? 'adj-clickable' : ''} data-href={a.id ? `/monitor/licitacion/${a.id}` : undefined}>
+                <td class="adj-objeto">
+                  <div class="adj-clamp" title={a.objeto}>{a.objeto}</div>
+                </td>
+                <td class="adj-org">{a.organismo}</td>
+                <td class="adj-imp">{fmtVolumen(a.importe)}</td>
+                <td class="adj-fecha">{a.fecha}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
+
+    <div class="empresa-meta">
+    {generado && <span>Perfil generado: {new Date(generado).toLocaleDateString('es-ES')}</span>}
+    <span>Fuente: {source === 'manual' ? 'Configuración manual' : `Análisis automático (${adjTotal > 0 ? adjTotal.toLocaleString('es-ES') + ' adjudicaciones' : '65M registros'})`}</span>
+  </div>
+  </>
+) : (
+  <div class="setup-cta-card">
+    <div class="setup-icon">🏛</div>
+    <h1 class="setup-title">Configura tu empresa</h1>
+    <p class="setup-desc">
+      Vincula tu CIF o NIF para desbloquear competidores, proyecciones y datos personalizados de tu sector.
+      Si no tienes historial de licitaciones, podrás elegir tus sectores manualmente.
+    </p>
+    <a href="/cuenta/onboard" class="btn">Analizar mi empresa →</a>
+    <p class="setup-hint">Puedes explorar el dashboard sin configurar tu empresa, pero los datos serán genéricos.</p>
+  </div>
+)}
+</div>
+
+</DashboardLayout>
+
+<style is:global>
+  .empresa-wrap {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .empresa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    gap: 16px;
+  }
+  .empresa-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+  }
+  .empresa-cif {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: hsl(var(--muted-foreground) / 0.7);
+    margin-top: 4px;
+  }
+  .btn-edit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--primary));
+    border: 1px solid hsl(var(--primary) / 0.25);
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-edit:hover { border-color: hsl(var(--primary) / 0.5); background: hsl(var(--primary) / 0.05); }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.05);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    color: hsl(var(--foreground));
+    font-weight: 500;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .section {
+    margin-bottom: 28px;
+  }
+  .section h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 400;
+    color: hsl(var(--muted-foreground));
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  .cpv-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cpv-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.6);
+    background: hsl(var(--primary) / 0.06);
+    border: 1px solid hsl(var(--primary) / 0.12);
+    padding: 6px 12px;
+    border-radius: 4px;
+  }
+  .empty-note {
+    font-size: 13px;
+    color: hsl(var(--muted-foreground) / 0.5);
+  }
+  .empty-note a { color: hsl(var(--primary)); text-decoration: none; }
+
+  .comp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .comp-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: hsl(var(--card));
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  a.comp-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  a.comp-link:hover {
+    background: hsl(var(--primary) / 0.08);
+  }
+  a.comp-link:hover .comp-name {
+    color: hsl(var(--primary));
+  }
+  .comp-name { color: hsl(var(--foreground) / 0.6); }
+  .comp-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .empresa-meta {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid hsl(var(--border) / 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Quality score section (collapsible) ── */
+  .calidad-section {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.06);
+    border-radius: 10px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+  .calidad-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.15s;
+  }
+  .calidad-summary::-webkit-details-marker { display: none; }
+  .calidad-summary:hover { background: hsl(var(--card)); }
+  .calidad-badge-small {
+    flex-shrink: 0;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 2px solid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: hsl(var(--background) / 0.3);
+  }
+  .calidad-score-small {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .calidad-label-small {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: hsl(var(--muted-foreground) / 0.5);
+  }
+  .calidad-summary-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--muted-foreground));
+    flex: 1;
+  }
+  .calidad-chevron {
+    font-size: 14px;
+    color: hsl(var(--muted-foreground) / 0.4);
+    transition: transform 0.2s;
+  }
+  details[open] .calidad-chevron { transform: rotate(90deg); }
+  details[open] .calidad-summary { border-bottom: 1px solid hsl(var(--border) / 0.04); }
+  .calidad-section .indicators-grid { padding: 16px 20px; }
+  .calidad-legend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    padding: 0 20px 12px;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .indicators-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ind-group-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: hsl(var(--muted-foreground) / 0.5);
+    margin-bottom: 8px;
+  }
+  .ind-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ind-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    border: 1px solid;
+    cursor: default;
+  }
+  .ind-pill.ok    { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.25); background: hsl(var(--primary) / 0.06); }
+  .ind-pill.nok   { color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / 0.2);   background: hsl(var(--destructive) / 0.04); }
+  .ind-pill.partial { color: hsl(var(--warning)); border-color: hsl(var(--warning) / 0.25); background: hsl(var(--warning) / 0.05); }
+  .ind-pill.null  { color: hsl(var(--muted-foreground) / 0.5); border-color: hsl(var(--border) / 0.07); background: transparent; }
+
+  /* ── Adjudicaciones table ── */
+  .adj-scroll { max-height: 500px; overflow-y: auto; }
+  .adj-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .adj-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--muted-foreground) / 0.5);
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid hsl(var(--border) / 0.06);
+  }
+  .adj-table th.th-r { text-align: right; }
+  .adj-table td {
+    padding: 10px 10px;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.65);
+    border-bottom: 1px solid hsl(var(--border) / 0.03);
+    vertical-align: top;
+  }
+  .adj-table tbody tr:hover { background: hsl(var(--card)); }
+  .adj-clickable { cursor: pointer; }
+  .adj-clickable:hover { background: hsl(var(--primary) / 0.04) !important; }
+  .adj-objeto { width: 40%; }
+  .adj-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+  }
+  .adj-org { width: 28%; font-size: 11px; color: hsl(var(--muted-foreground) / 0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .adj-imp { width: 16%; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: hsl(var(--foreground) / 0.5); white-space: nowrap; }
+  .adj-fecha { width: 16%; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: hsl(var(--muted-foreground) / 0.5); white-space: nowrap; }
+
+  .setup-cta-card {
+    max-width: 420px;
+    margin: 80px auto;
+    text-align: center;
+  }
+  .setup-icon { font-size: 36px; margin-bottom: 16px; }
+  .setup-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    margin-bottom: 8px;
+  }
+  .setup-desc {
+    font-size: 13px;
+    color: hsl(var(--muted-foreground) / 0.8);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .setup-hint {
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    margin-top: 16px;
+  }
+  .setup-cta-card .btn {
+    display: inline-block;
+    width: auto;
+    padding: 12px 28px;
+  }
+
+  @media (max-width: 640px) {
+    .empresa-header { flex-direction: column; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .calidad-summary { flex-wrap: wrap; }
+    .calidad-legend { justify-content: center; flex-wrap: wrap; }
+    .adj-org { display: none; }
+    .adj-objeto { width: 55%; }
+    .adj-imp { width: 22%; }
+    .adj-fecha { width: 23%; }
+  }
+</style>
+
+<script is:inline>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.adj-clickable[data-href]').forEach(row => {
+    row.addEventListener('click', () => {
+      const href = row.getAttribute('data-href');
+      if (href) window.location.href = href;
+    });
+  });
+});
+</script>

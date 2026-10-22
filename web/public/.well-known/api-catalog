@@ -1,0 +1,158 @@
+{
+  "name": "elicita",
+  "description": "Sistema de inteligencia sobre contratación pública española. 66.4M+ registros de licitaciones, adjudicaciones, BORME y calidad de contratos.",
+  "apiUrl": "https://api.elicita.es/v1",
+  "docsUrl": "https://elicita.es",
+  "auth": "mixed",
+  "formats": [
+    "json"
+  ],
+  "capabilities": [
+    "contratacion-publica",
+    "busqueda-licitaciones",
+    "perfil-empresas",
+    "prediccion-renovaciones",
+    "alertas-personalizadas",
+    "analytics-mercado",
+    "borme-empresas",
+    "calidad-contratos",
+    "mcp-server"
+  ],
+  "endpoints": [
+    {
+      "path": "/api/search",
+      "method": "GET",
+      "description": "Búsqueda unificada en todas las fuentes (30.9M licitaciones)",
+      "params": [
+        "q",
+        "fuente",
+        "cpv",
+        "nif",
+        "sort",
+        "year",
+        "page",
+        "limit"
+      ],
+      "auth": true
+    },
+    {
+      "path": "/api/data",
+      "method": "GET",
+      "description": "Detalle de contrato por ID",
+      "params": [
+        "id"
+      ],
+      "auth": true
+    },
+    {
+      "path": "/api/borme-info",
+      "method": "GET",
+      "description": "Perfil BORME de empresa por NIF (9.3M empresas, 17.1M cargos)",
+      "params": [
+        "nif"
+      ],
+      "auth": true
+    },
+    {
+      "path": "/api/calidad",
+      "method": "GET",
+      "description": "Indicadores de calidad de contratos por NIF (8.7M contratos, 20 KPIs)",
+      "params": [
+        "nif",
+        "cpv",
+        "organo",
+        "expediente"
+      ],
+      "auth": true
+    },
+    {
+      "path": "/api/conflictos",
+      "method": "GET",
+      "description": "Detección de conflictos de interés por NIF (cross-referencing BORME)",
+      "params": [
+        "nif"
+      ],
+      "auth": true
+    },
+    {
+      "path": "/api/cobertura",
+      "method": "GET",
+      "description": "Cobertura del dataset por fuente y comunidad autónoma",
+      "auth": false
+    },
+    {
+      "path": "/api/stats",
+      "method": "GET",
+      "description": "Estadísticas agregadas del dataset (volumen por año, tipo, CPV, fuente)",
+      "auth": false
+    },
+    {
+      "path": "/api/graph",
+      "method": "GET",
+      "description": "Grafo de relaciones empresa-organismo-contrato",
+      "params": [
+        "q",
+        "type",
+        "cpv",
+        "expand",
+        "level"
+      ],
+      "auth": true
+    },
+    {
+      "path": "/api/graph-search",
+      "method": "GET",
+      "description": "Búsqueda rápida para autocompletar en grafo de relaciones",
+      "params": [
+        "q"
+      ],
+      "auth": true
+    },
+    {
+      "path": "/api/organismos",
+      "method": "GET",
+      "description": "Ranking de organismos contratantes por volumen",
+      "params": [
+        "mode"
+      ],
+      "auth": true
+    },
+    {
+      "path": "/api/cpv",
+      "method": "GET",
+      "description": "Diccionario de códigos CPV (Common Procurement Vocabulary) en español",
+      "auth": false
+    },
+    {
+      "path": "/api/health",
+      "method": "GET",
+      "description": "Estado del sistema: conectores, caché, última ejecución",
+      "auth": false
+    },
+    {
+      "path": "/api/v1/org/{nif}",
+      "method": "GET",
+      "description": "API v1 — perfil de empresa (API key auth)",
+      "auth": "api-key"
+    },
+    {
+      "path": "/mcp",
+      "method": "POST",
+      "description": "Servidor MCP Streamable HTTP: estadísticas, cobertura y CPV públicos. La búsqueda de contratos requiere API key Pro.",
+      "auth": false,
+      "transport": "streamable-http",
+      "protocol_version": "2025-06-18",
+      "tools": [
+        "get_stats",
+        "get_cobertura",
+        "search_cpv"
+      ]
+    }
+  ],
+  "contact": {
+    "email": "hola@elicita.es",
+    "url": "https://elicita.es/contacto"
+  },
+  "version": "1.3.0",
+  "updated": "2026-09-10"
+}

@@ -1,0 +1,282 @@
+---
+import AuthLayout from '../layouts/auth.astro';
+import { SignIn } from '@clerk/astro/components';
+import { sanitizeInternalRedirect } from '../lib/redirect';
+
+// F1.2: /sign-in?redirect=/perfil/<nif> devuelve al perfil tras acceder.
+const rawRedirect = Astro.url.searchParams.get('redirect');
+const redirectUrl = sanitizeInternalRedirect(rawRedirect, '/monitor/activas');
+const carryRedirect = rawRedirect && sanitizeInternalRedirect(rawRedirect, '') ? redirectUrl : null;
+---
+
+<AuthLayout title="Acceder — elicita_" description="Accede a tu cuenta. 63M+ registros oficiales, BORME, predicciones y alertas.">
+  <style is:global>
+    .auth-grid {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .auth-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      border-right: 1px solid hsl(var(--border) / 0.05);
+      background: hsl(var(--background));
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .auth-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      color: hsl(var(--foreground));
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .auth-logo span { color: hsl(var(--primary)); }
+    .auth-content {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+    }
+    .auth-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: hsl(var(--primary));
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+    .auth-content h1 {
+      font-size: 36px;
+      font-weight: 300;
+      color: hsl(var(--foreground));
+      line-height: 1.2;
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+    .auth-content h1 em {
+      font-style: normal;
+      color: hsl(var(--muted-foreground) / 0.7);
+    }
+    .auth-content p {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground) / 0.7);
+      line-height: 1.7;
+    }
+    .auth-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 40px;
+    }
+    .auth-stat {
+      border: 1px solid hsl(var(--border) / 0.06);
+      border-radius: 12px;
+      padding: 16px;
+      background: hsl(var(--card));
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .auth-stat:hover {
+      border-color: hsl(var(--primary) / 0.2);
+      background: hsl(var(--primary) / 0.03);
+    }
+    .auth-stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+    }
+    .auth-stat-value em { font-style: normal; color: hsl(var(--primary)); }
+    .auth-stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: hsl(var(--muted-foreground) / 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .auth-footer {
+      position: relative;
+      z-index: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: hsl(var(--muted-foreground) / 0.3);
+    }
+    .auth-form-wrap {
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-form-wrap h2 {
+      font-size: 22px;
+      font-weight: 400;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+    }
+    .auth-form-wrap .auth-sub {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground) / 0.7);
+      margin-bottom: 28px;
+    }
+    .auth-form-wrap .auth-sub a {
+      color: hsl(var(--primary));
+      text-decoration: none;
+    }
+    .auth-form-wrap .auth-sub a:hover { color: hsl(var(--primary) / 0.7); }
+
+    /* Clerk overrides */
+    .cl-rootBox { width: 100% !important; }
+    .cl-card {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+    .cl-headerTitle,
+    .cl-headerSubtitle { display: none !important; }
+    .cl-formFieldInput {
+      background: hsl(var(--background) / 0.04) !important;
+      border: 1px solid hsl(var(--border) / 0.08) !important;
+      color: hsl(var(--foreground)) !important;
+      border-radius: 8px !important;
+      font-family: 'Instrument Sans', sans-serif !important;
+      min-height: 44px !important;
+    }
+    .cl-formFieldInput:focus {
+      border-color: hsl(var(--primary) / 0.5) !important;
+      outline: none !important;
+      box-shadow: 0 0 0 1px hsl(var(--primary) / 0.2) !important;
+    }
+    .cl-formButtonPrimary {
+      background: hsl(var(--primary)) !important;
+      color: hsl(var(--background)) !important;
+      border-radius: 8px !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 13px !important;
+      letter-spacing: 0.02em !important;
+      min-height: 44px !important;
+      font-weight: 500 !important;
+      transition: background 0.2s !important;
+    }
+    .cl-formButtonPrimary:hover { background: hsl(var(--primary) / 0.8) !important; }
+    .cl-footerAction {
+      margin-top: 16px !important;
+      text-align: center !important;
+    }
+    .cl-footerAction a, .cl-footerActionLink {
+      color: hsl(var(--primary)) !important;
+      font-family: 'Instrument Sans', sans-serif !important;
+      font-size: 13px !important;
+      text-decoration: none !important;
+    }
+    .cl-footerAction a:hover, .cl-footerActionLink:hover {
+      color: hsl(var(--primary) / 0.7) !important;
+      text-decoration: underline !important;
+    }
+    .cl-formFieldLabel { color: hsl(var(--muted-foreground)) !important; font-size: 12px !important; }
+    .cl-dividerLine { background: hsl(var(--border) / 0.06) !important; }
+    .cl-dividerText { color: hsl(var(--muted-foreground) / 0.5) !important; font-size: 11px !important; }
+    .cl-socialButtonsBlockButton {
+      background: hsl(var(--background) / 0.04) !important;
+      border: 1px solid hsl(var(--border) / 0.08) !important;
+      color: hsl(var(--foreground) / 0.7) !important;
+      border-radius: 8px !important;
+      min-height: 40px !important;
+    }
+    .cl-socialButtonsBlockButton:hover { background: hsl(var(--background) / 0.08) !important; }
+    .cl-identityPreviewText { color: hsl(var(--foreground) / 0.6) !important; }
+    .cl-formResendCodeLink { color: hsl(var(--primary)) !important; }
+    .cl-internal-b3fm6y { background: hsl(var(--background)) !important; }
+
+    @media (max-width: 900px) {
+      .auth-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .auth-left {
+        border-right: none;
+        border-bottom: 1px solid hsl(var(--border) / 0.05);
+        padding: 32px 24px 24px;
+      }
+      .auth-content h1 { font-size: 26px; }
+      .auth-content p { font-size: 13px; }
+      .auth-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 24px; }
+      .auth-stat { padding: 12px; }
+      .auth-stat-value { font-size: 18px; }
+      .auth-stat-label { font-size: 8px; }
+      .auth-footer { display: none; }
+      .auth-right { padding: 24px; }
+      .auth-form-wrap h2 { font-size: 18px; }
+    }
+  </style>
+
+  <div class="auth-grid">
+    <div class="auth-left">
+      <div class="bg-grid"></div>
+      <a href="/" class="auth-logo">elicita<span>_</span></a>
+
+      <div class="auth-content">
+        <p class="auth-eyebrow">Datos públicos · Inteligencia propietaria</p>
+        <h1>Accede a <em>tu cuenta</em></h1>
+        <p>
+          Busca sin límites, vigila a tu competencia y recibe alertas — si estás en Pro.
+        </p>
+
+        <div class="auth-stats">
+          <div class="auth-stat">
+            <div class="auth-stat-value">63.4<em>M</em></div>
+            <div class="auth-stat-label">registros oficiales</div>
+          </div>
+          <div class="auth-stat">
+            <div class="auth-stat-value">24</div>
+            <div class="auth-stat-label">años de histórico</div>
+          </div>
+          <div class="auth-stat">
+            <div class="auth-stat-value">16</div>
+            <div class="auth-stat-label">fuentes oficiales</div>
+          </div>
+          <div class="auth-stat">
+            <div class="auth-stat-value">6–9<em>m</em></div>
+            <div class="auth-stat-label">de anticipación</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        Dataset · PLACSP · BOE · Plataformas autonómicas · TED
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="bg-grid opacity-30"></div>
+      <div class="auth-form-wrap">
+        <h2>Acceder</h2>
+        <p class="auth-sub">¿No tienes cuenta? <a href={carryRedirect ? `/sign-up?redirect=${encodeURIComponent(carryRedirect)}` : '/sign-up'}>Crear cuenta gratis</a></p>
+        <SignIn forceRedirectUrl={redirectUrl} />
+      </div>
+    </div>
+  </div>
+</AuthLayout>

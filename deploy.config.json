@@ -1,0 +1,13 @@
+{
+  "pm2_process": "elicita",
+  "build_command": "npm run build",
+  "build_dir": "web",
+  "smoke_urls": [
+    "https://elicita.es",
+    "https://elicita.es/buscador",
+    "https://elicita.es/cobertura"
+  ],
+  "main_branch": "main",
+  "remote": "origin",
+  "estado_file": "ESTADO.md"
+}

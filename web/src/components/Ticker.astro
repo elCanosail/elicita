@@ -1,0 +1,112 @@
+---
+/**
+ * Ticker de licitaciones adjudicadas recientes — la señal de frescura del sistema.
+ * Los datos: /api/public/ticker (cache 10 min, sin auth, limit 20).
+ * La animación respeta prefers-reduced-motion (tarea 26).
+ * Los items: órgano → importe (corregido) → "hace Xd" — clicable al buscador.
+ */
+---
+
+<div class="ticker-bar" aria-label="Licitaciones adjudicadas más recientes">
+  <div class="ticker-track" id="ticker-track">
+    <span class="ticker-loading">Cargando licitaciones recientes…</span>
+  </div>
+  <span class="ticker-updated" id="ticker-updated" aria-hidden="true"></span>
+</div>
+
+<script>
+  function formatImporte(n: number): string {
+    if (n >= 1e6) {
+      return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(n / 1e6) + ' M€';
+    }
+    return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(n) + ' €';
+  }
+  function formatRelative(iso: string | null): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const days = Math.floor((Date.now() - d.getTime()) / 86_400_000);
+    if (days <= 0) return 'hoy';
+    if (days === 1) return 'ayer';
+    return `hace ${days} días`;
+  }
+  async function loadTicker() {
+    try {
+      const res = await fetch('/api/public/ticker');
+      if (!res.ok) return;
+      const d = await res.json();
+      const track = document.getElementById('ticker-track');
+      const updated = document.getElementById('ticker-updated');
+      if (!track || !d.data || !d.data.length) {
+        if (track) track.textContent = '';
+        return;
+      }
+      // Duplicar los items para el loop continuo del marquee
+      const items = d.data.map((item: any) => {
+        const org = (item.organo || '').slice(0, 60);
+        const imp = formatImporte(item.importe || 0);
+        const date = formatRelative(item.fecha_publicacion);
+        const q = encodeURIComponent(item.expediente || item.organo || '');
+        return `<a class="ticker-item" href="/buscar?q=${q}"><span class="ticker-org">${org}</span><span class="ticker-imp">${imp}</span><span class="ticker-date">${date}</span></a>`;
+      }).join('');
+      track.innerHTML = items + items;
+      if (updated && d.last_updated) {
+        const lu = new Date(d.last_updated);
+        const hours = Math.floor((Date.now() - lu.getTime()) / 3_600_000);
+        updated.textContent = hours <= 0 ? 'Actualizado hace menos de 1h' : `Actualizado hace ${hours}h`;
+      }
+    } catch {
+      // Silencioso: el ticker es best-effort
+    }
+  }
+  loadTicker();
+</script>
+
+<style>
+  .ticker-bar {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border-top: 1px solid var(--border, oklch(0.15 0.01 260));
+    border-bottom: 1px solid var(--border, oklch(0.15 0.01 260));
+    padding-block: 0.625rem;
+    background: var(--surface, oklch(0.97 0.005 260));
+  }
+  .ticker-track {
+    display: flex;
+    gap: 3rem;
+    white-space: nowrap;
+    animation: ticker-scroll 90s linear infinite;
+    padding-inline-start: 1rem;
+    flex: 1;
+    min-width: max-content;
+  }
+  .ticker-item {
+    display: inline-flex;
+    gap: 0.625rem;
+    align-items: baseline;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+  .ticker-item:hover .ticker-org { text-decoration: underline; }
+  .ticker-org { font-weight: 600; }
+  .ticker-imp { font-variant-numeric: tabular-nums; }
+  .ticker-date { opacity: 0.65; }
+  .ticker-updated {
+    font-size: 0.75rem;
+    opacity: 0.65;
+    flex-shrink: 0;
+    padding-inline-end: 1rem;
+    white-space: nowrap;
+  }
+  .ticker-loading { font-size: 0.8125rem; opacity: 0.5; }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track { animation: none; overflow-x: auto; }
+  }
+</style>

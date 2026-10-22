@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/main.astro';
+import { CodeBlock } from '@/components/CodeBlock';
+import { MCP_ENDPOINT, MCP_PROTOCOL_VERSION, MCP_TOOLS } from '@/lib/mcp-catalog';
+
+const metadata = {
+  title: 'Conectar Elicita MCP',
+  description: 'Conecta tu agente MCP a fuentes verificables de contratación pública española con Elicita.',
+};
+
+const sections = [
+  { id: 'conectar', title: 'Conectar' },
+  { id: 'primeros-pasos', title: 'Primeros pasos' },
+  { id: 'tools', title: 'Capacidades' },
+  { id: 'evidencia', title: 'Cobertura y evidencia' },
+  { id: 'v2', title: 'MCP v2 — Plan Pro' },
+  { id: 'tecnico', title: 'Referencia técnica' },
+];
+
+const claudeConfig = `{
+  "mcpServers": {
+    "elicita": {
+      "url": "${MCP_ENDPOINT}",
+      "transport": "http"
+    }
+  }
+}`;
+
+const initializeRequest = `curl -X POST ${MCP_ENDPOINT} \\
+  -H "Content-Type: application/json" \\
+  -H "Accept: application/json, text/event-stream" \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"${MCP_PROTOCOL_VERSION}","capabilities":{},"clientInfo":{"name":"mi-cliente","version":"1.0"}}}'`;
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+  <div class="container mx-auto px-4 py-10 md:py-14 max-w-7xl">
+    <div class="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-10 lg:gap-14">
+      <aside class="hidden lg:block">
+        <nav class="sticky top-24 space-y-1 border-l border-border pl-4">
+          {sections.map((section) => <a href={`#${section.id}`} class="block py-1 text-sm text-muted-foreground hover:text-emerald-400 transition-colors">{section.title}</a>)}
+        </nav>
+      </aside>
+
+      <main class="max-w-3xl space-y-14">
+        <header>
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">Vía principal de Elicita</p>
+          <h1 class="text-4xl md:text-5xl font-light text-foreground tracking-tight mb-5">Conecta Elicita a tu agente.</h1>
+          <p class="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+            Convierte preguntas de negocio en inteligencia de contratación pública española: descubre mercados, valida cobertura, encuentra CPV y consulta contratos desde Claude, Cursor o cualquier cliente MCP.
+          </p>
+          <div class="mt-7 border border-emerald-500/20 bg-emerald-500/5 rounded-lg p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span class="font-mono text-sm text-emerald-300 break-all">{MCP_ENDPOINT}</span>
+            <span class="font-mono text-[10px] uppercase tracking-wider text-emerald-400/70">Streamable HTTP</span>
+          </div>
+        </header>
+
+        <section id="conectar">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">01 · conectar</p>
+          <h2 class="text-2xl font-light text-foreground mb-4">Dos minutos para la primera consulta.</h2>
+          <ol class="space-y-4 text-muted-foreground leading-relaxed">
+            <li><span class="font-mono text-emerald-400 mr-3">1.</span>Añade el endpoint de Elicita a tu cliente MCP.</li>
+            <li><span class="font-mono text-emerald-400 mr-3">2.</span>Pide a tu agente que consulte cobertura antes de investigar.</li>
+            <li><span class="font-mono text-emerald-400 mr-3">3.</span>Explora el universo público o añade tu API key Pro para investigar contratos con detalle.</li>
+          </ol>
+          <h3 class="text-lg font-light text-foreground mt-7 mb-3">Claude Desktop</h3>
+          <CodeBlock client:only="react" language="json" code={claudeConfig} />
+          <h3 class="text-lg font-light text-foreground mt-7 mb-3">Cursor y otros clientes</h3>
+          <p class="text-muted-foreground leading-relaxed">Usa <code class="font-mono text-foreground">{MCP_ENDPOINT}</code> como URL de un servidor Streamable HTTP. La configuración exacta cambia según el cliente.</p>
+        </section>
+
+        <section id="primeros-pasos">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">02 · primera investigación</p>
+          <h2 class="text-2xl font-light text-foreground mb-5">Empieza por el alcance, no por la conclusión.</h2>
+          <div class="space-y-4">
+            {MCP_TOOLS.map((tool, index) => (
+              <article class="border border-border rounded-lg p-5">
+                <div class="flex items-center gap-3 mb-3"><span class="font-mono text-emerald-400">0{index + 1}</span><code class="font-mono text-sm text-foreground">{tool.name}</code></div>
+                <p class="text-sm text-muted-foreground mb-4">{tool.summary}</p>
+                <p class="font-mono text-sm leading-relaxed text-foreground/85 bg-muted/40 border border-border rounded p-4">{tool.prompt}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="tools">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">03 · capacidades</p>
+          <h2 class="text-2xl font-light text-foreground mb-4">Del descubrimiento a la investigación de mercado.</h2>
+          <p class="text-muted-foreground leading-relaxed">Conecta sin registro para conocer el universo de datos, su cobertura y el vocabulario CPV. Con una API key Pro, activa la búsqueda de licitaciones y contratos con filtros por texto, CPV, importe, estado, fuente, NIF y año.</p>
+          <div class="mt-6 overflow-x-auto"><table class="w-full text-sm border-collapse"><thead><tr class="border-b border-border"><th class="text-left py-3 pr-4 font-mono text-xs text-muted-foreground">TOOL</th><th class="text-left py-3 font-mono text-xs text-muted-foreground">PARA QUÉ</th></tr></thead><tbody>{MCP_TOOLS.map((tool) => <tr class="border-b border-border/50"><td class="py-4 pr-4 font-mono text-emerald-400">{tool.name}</td><td class="py-4 text-muted-foreground">{tool.summary}</td></tr>)}</tbody></table></div>
+        </section>
+
+        <section id="evidencia" class="border border-emerald-500/20 bg-emerald-500/5 rounded-lg p-6">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">Regla de trabajo</p>
+          <h2 class="text-2xl font-light text-foreground mb-4">La cobertura condiciona la respuesta.</h2>
+          <p class="text-muted-foreground leading-relaxed">Consulta <code class="font-mono text-foreground">get_cobertura</code> cuando el alcance importe. Una fecha de ejecución global no equivale a la frescura de cada fuente. Para cada hallazgo relevante, conserva el enlace a la fuente y separa hechos, límites e interpretación.</p>
+        </section>
+
+        <section id="v2" class="border border-border rounded-lg p-6">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">MCP v2 · incluido en el plan Pro</p>
+          <h2 class="text-2xl font-light text-foreground mb-4">Market Intelligence para tu agente.</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">El servidor MCP v2 añade a las herramientas públicas las de Market Intelligence: snapshots de mercado deterministas de 7 sectores (Tecnología, Construcción, Salud, Energía, Limpieza, Defensa, Transporte) con rankings de empresas, análisis de compradores y trazabilidad de métricas. Requiere autenticación por API key de plan Pro.</p>
+          <div class="font-mono text-sm bg-muted/50 border border-border rounded-lg p-4 text-foreground mb-4">POST https://elicita.es/mcp · protocolo 2026-07-28 · Authorization: Bearer &lt;API key&gt;</div>
+          <p class="text-muted-foreground leading-relaxed mb-4">Herramientas añadidas: <code class="font-mono text-foreground">market_snapshot</code> (ficha completa de un sector), <code class="font-mono text-foreground">rank_companies</code>, <code class="font-mono text-foreground">analyze_buyer</code> y <code class="font-mono text-foreground">trace_metric</code>. Cada respuesta referencia el snapshot publicado y su checksum SHA-256.</p>
+          <p class="text-muted-foreground leading-relaxed mb-4">También disponible como <a href="https://github.com/elCanosail/elicita-marketplace" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300">plugin de Claude Marketplace</a> — instalación en un paso desde Claude Code.</p>
+          <CodeBlock client:only="react" language="json" code={`{\n  \"mcpServers\": {\n    \"elicita\": {\n      \"type\": \"http\",\n      \"url\": \"https://elicita.es/mcp\",\n      \"headers\": { \"Authorization\": \"Bearer ELICITA_LIVE_...\" }\n    }\n  }\n}`} />
+        </section>
+
+        <section id="tecnico">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">04 · referencia técnica</p>
+          <h2 class="text-2xl font-light text-foreground mb-4">Protocolo y prueba manual.</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">Elicita implementa Streamable HTTP con JSON-RPC 2.0 y protocolo MCP <code class="font-mono text-foreground">{MCP_PROTOCOL_VERSION}</code>.</p>
+          <CodeBlock client:only="react" language="bash" code={initializeRequest} />
+          <p class="text-muted-foreground leading-relaxed mt-6">El acceso público te permite descubrir el dataset desde el primer minuto. Para búsquedas de contratos, añade una API key Pro de Elicita a la configuración de tu cliente MCP.</p>
+        </section>
+
+        <footer class="pt-8 border-t border-border flex flex-col sm:flex-row gap-4 sm:justify-between text-sm"><a href="/explorer" class="text-muted-foreground hover:text-emerald-400 transition-colors">Abrir workspace técnico →</a><a href="/docs/metodologia" class="text-muted-foreground hover:text-emerald-400 transition-colors">Metodología y cobertura →</a></footer>
+      </main>
+    </div>
+  </div>
+</Layout>

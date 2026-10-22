@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Universo de contratos de ADIF — Elicita</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>
+:root { --bg:#0a0a14; --card:#12121f; --accent:#00d4ff; --accent2:#7c3aed; --text:#e2e8f0; --muted:#94a3b8; --border:#1e293b; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height:1.5; padding:1.5rem; }
+h1 { font-size:1.6rem; font-weight:700; margin-bottom:0.3rem; color:#fff; }
+.subtitle { color:var(--muted); font-size:0.95rem; margin-bottom:1.5rem; }
+.section { margin-bottom:2.5rem; }
+.section h2 { font-size:1.1rem; color:var(--accent); margin-bottom:1rem; font-weight:600; }
+
+/* KPI strip */
+.kpi-strip { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; margin-bottom:2rem; }
+.kpi-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.2rem; text-align:center; transition:transform .2s; }
+.kpi-card:hover { transform:translateY(-3px); border-color:var(--accent); }
+.kpi-value { font-size:1.8rem; font-weight:700; color:var(--accent); }
+.kpi-label { font-size:0.85rem; color:var(--muted); margin-top:0.3rem; }
+.kpi-note { font-size:0.75rem; color:var(--muted); margin-top:0.2rem; }
+
+/* Tooltip */
+.tooltip { position:absolute; background:rgba(10,10,20,0.95); border:1px solid var(--border); border-radius:8px; padding:0.7rem 1rem; pointer-events:none; opacity:0; transition:opacity .2s; z-index:1000; font-size:0.85rem; max-width:320px; }
+.tooltip strong { color:var(--accent); display:block; margin-bottom:0.3rem; }
+.tooltip .tt-row { display:flex; justify-content:space-between; gap:1rem; margin:0.15rem 0; }
+
+/* Treemap */
+.treemap-container { width:100%; height:500px; background:var(--card); border-radius:12px; border:1px solid var(--border); overflow:hidden; }
+
+/* Timeline */
+.timeline-container { width:100%; height:320px; background:var(--card); border-radius:12px; border:1px solid var(--border); }
+
+/* Bubble chart */
+.bubble-container { width:100%; height:420px; background:var(--card); border-radius:12px; border:1px solid var(--border); }
+
+/* Table */
+.table-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--border); }
+table { width:100%; border-collapse:collapse; font-size:0.85rem; background:var(--card); }
+th { background:#0f0f1a; color:var(--accent); padding:0.7rem 1rem; text-align:left; font-weight:600; position:sticky; top:0; }
+td { padding:0.6rem 1rem; border-bottom:1px solid var(--border); color:var(--text); }
+tr:hover td { background:rgba(0,212,255,0.05); }
+.importe { text-align:right; font-variant-numeric:tabular-nums; color:var(--accent); }
+.ano { text-align:center; }
+
+/* Legend */
+.legend { display:flex; flex-wrap:wrap; gap:0.8rem; margin-top:0.5rem; font-size:0.8rem; }
+.legend-item { display:flex; align-items:center; gap:0.4rem; }
+.legend-dot { width:12px; height:12px; border-radius:3px; }
+
+@media (max-width:600px) {
+  body { padding:1rem; }
+  .kpi-strip { grid-template-columns:1fr 1fr; }
+  .kpi-value { font-size:1.3rem; }
+  h1 { font-size:1.3rem; }
+  .section { padding:1rem; border-radius:12px; }
+  .chart-container svg { width:100% !important; }
+}
+@media (max-width:400px) {
+  body { padding:.75rem .5rem; }
+  .kpi-value { font-size:1.1rem; }
+  h1 { font-size:1.1rem; }
+  .kpi-card { padding:.75rem; }
+  table { font-size:.7rem; }
+  td, th { padding:.3rem .25rem; }
+}
+</style>
+</head>
+<body>
+<h1>🚂 ADIF: Universo de contratos públicos</h1>
+<p class="subtitle">Radiografía de la contratación del Administrador de Infraestructuras Ferroviarias (2016–2026)</p>
+
+<div class="tooltip" id="tooltip"></div>
+
+<!-- KPI Strip -->
+<div class="section">
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-value">6,573</div>
+      <div class="kpi-label">Contratos adjudicados</div>
+      <div class="kpi-note">2016–2026</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">€20.0B</div>
+      <div class="kpi-label">Importe total adjudicado</div>
+      <div class="kpi-note">Sin IVA</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">€3.0M</div>
+      <div class="kpi-label">Importe medio por contrato</div>
+      <div class="kpi-note">Mediana: €348K</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">20+</div>
+      <div class="kpi-label">Grandes adjudicatarios</div>
+      <div class="kpi-note">Top 20 por importe</div>
+    </div>
+  </div>
+</div>
+
+<!-- Treemap -->
+<div class="section">
+  <h2>🏗️ Top 20 contratos por importe</h2>
+  <div class="treemap-container" id="treemap"></div>
+  <div class="legend" id="treemap-legend"></div>
+</div>
+
+<!-- Timeline -->
+<div class="section">
+  <h2>📅 Evolución temporal (2016–2026)</h2>
+  <div class="timeline-container" id="timeline"></div>
+</div>
+
+<!-- Bubble Chart -->
+<div class="section">
+  <h2>💼 Top 15 adjudicatarios por volumen</h2>
+  <div class="bubble-container" id="bubbles"></div>
+</div>
+
+<!-- Table -->
+<div class="section">
+  <h2>📋 Top 15 contratos con mayor importe</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Expediente</th><th>Año</th><th>Objeto</th><th>Adjudicatario</th><th>Importe (€)</th><th>Tipo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>3.22/06110.0199</td><td class="ano">2022</td><td>Ejecución de las obras de los Proyectos de Construcción del soterramiento de la Línea R2 de cercanías de Barcelona a su ...</td><td>UTE FERROVIAL-COMSA-FCC</td><td class="importe">€446.6M</td><td>Obras</td></tr>
+        <tr><td>3.23/20830.0127</td><td class="ano">2023</td><td>Ejecución de las obras del Proyecto "Nuevo complejo ferroviario de la Estación de Atocha (Madrid). Proyecto constructivo...</td><td>UTE DRAGADOS-TECSA-SAN JOSE-PUENTES</td><td class="importe">€373.2M</td><td>Obras</td></tr>
+        <tr><td>4.22/20830.0195</td><td class="ano">2022</td><td>Proyectos de construcción del nuevo canal de acceso para la integración de la Alta Velocidad en la ciudad de Valencia, d...</td><td>UTE DRAGADOS-TECSA-ROVER-ROVER RAIL</td><td class="importe">€366.4M</td><td>Obras</td></tr>
+        <tr><td>3.25/20830.0015</td><td class="ano">2025</td><td>Obras de ejecución del proyecto de construcción de la plataforma de la Línea de Alta Velocidad de la conexión Madrid-Paí...</td><td>UTE Ferrovial-fcc-convensa</td><td class="importe">€323.1M</td><td>Obras</td></tr>
+        <tr><td>3.23/20830.0091</td><td class="ano">2023</td><td>Obras de ejecución del proyecto de construcción del corredor mediterráneo de Alta Velocidad. Tramo: Integración del ferr...</td><td>UTE OHL-SANDO-HORMIGONES AA</td><td class="importe">€271.0M</td><td>Obras</td></tr>
+        <tr><td>3.25/20830.0030</td><td class="ano">2025</td><td>Obras de ejecución del proyecto de construcción de plataforma de la línea de Alta Velocidad Antequera-Granada. Tramo: va...</td><td>UTE Puentes-rover-geotunel</td><td class="importe">€234.1M</td><td>Obras</td></tr>
+        <tr><td>3.23/20830.0116</td><td class="ano">2023</td><td>Obras de ejecución del proyecto de construcción de plataforma del Corredor Cantábrico Mediterráneo de Alta Velocidad. Tr...</td><td>UTE COPASA-PUENTES-SAN JOSE-LURPELA</td><td class="importe">€196.9M</td><td>Obras</td></tr>
+        <tr><td>3.25/20830.0017</td><td class="ano">2025</td><td>Obras de ejecución del proyecto de construcción de la remodelación de la Estación de Valladolid Campo Grande. Término mu...</td><td>UTE Ferrovial-vias-zarzuela</td><td class="importe">€178.4M</td><td>Obras</td></tr>
+        <tr><td>4.23/20830.0209</td><td class="ano">2024</td><td>Redacción de los proyectos básicos y constructivos, ejecución de las obras, conservación y mantenimiento de las instalac...</td><td>UTE CAF FCC REVENGA</td><td class="importe">€176.8M</td><td>Obras</td></tr>
+        <tr><td>3.21/20830.0034</td><td class="ano">2021</td><td>Ejecución de las obras del proyecto de construcción de plataforma del Corredor Mediterráneo de Alta Velocidad Murcia-Alm...</td><td>UTE FERROVIAL-ACCIONA</td><td class="importe">€171.4M</td><td>Obras</td></tr>
+        <tr><td>3.21/20830.0142</td><td class="ano">2021</td><td>Ejecución de las Obras del: Proyecto de Construcción de ampliación y remodelación de la playa de vía y andenes de alta v...</td><td>UTE VIAS-COMSA-AZVI-SAN JOSE</td><td class="importe">€171.0M</td><td>Obras</td></tr>
+        <tr><td>3.22/20830.0016</td><td class="ano">2022</td><td>Obras de ejecución del Proyecto de construcción de plataforma del Corredor Mediterráneo de Alta Velocidad Murcia-Almería...</td><td>UTE CONVENSA-SANDO</td><td class="importe">€152.5M</td><td>Obras</td></tr>
+        <tr><td>4.23/20830.0059</td><td class="ano">2023</td><td>Obras de Ejecución del Proyecto de Construcción de la Integración del Ferrocarril en Almería. Fase 2.</td><td>SACYR CONSTRUCCION SAU</td><td class="importe">€137.0M</td><td>Obras</td></tr>
+        <tr><td>3.24/20830.0061</td><td class="ano">2024</td><td>Obras de ejecución de los proyectos de construcción para la reordenación y transformación del edificio de viajeros de la...</td><td>UTE ACCIONA CONSTRUCCION-COPCISA</td><td class="importe">€126.7M</td><td>Obras</td></tr>
+        <tr><td>3.24/20830.0150</td><td class="ano">2024</td><td>Obras de ejecución del proyecto de construcción de plataforma de la línea de alta velocidad Antequera- Granada. Tramo: V...</td><td>UTE COPISA-COPASA-CHM-TUNELAN</td><td class="importe">€122.9M</td><td>Obras</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const data = {"kpis": {"total_contratos": 6573, "total_importe": 20025961024.61, "media_importe": 3046700.29, "adjudicatarios_unicos": 20}, "timeline": [{"ano": 2016, "num_contratos": 345, "total_adj": 286105358.15}, {"ano": 2017, "num_contratos": 451, "total_adj": 469670020.73}, {"ano": 2018, "num_contratos": 10, "total_adj": 35430463.73}, {"ano": 2019, "num_contratos": 118, "total_adj": 666368684.28}, {"ano": 2020, "num_contratos": 673, "total_adj": 870946406.66}, {"ano": 2021, "num_contratos": 1181, "total_adj": 3553027047.98}, {"ano": 2022, "num_contratos": 982, "total_adj": 4203944786.65}, {"ano": 2023, "num_contratos": 913, "total_adj": 4025580161.41}, {"ano": 2024, "num_contratos": 1025, "total_adj": 3218936045.55}, {"ano": 2025, "num_contratos": 856, "total_adj": 2682059385.29}, {"ano": 2026, "num_contratos": 19, "total_adj": 13892664.18}], "treemap": [{"expediente": "3.22/06110.0199", "objeto": "Ejecución de las obras de los Proyectos de Construcción del soterramiento de la Línea R2 de cercanía...", "adjudicatario": "UTE FERROVIAL-COMSA-FCC", "importe": 446614679.32, "importe_millones": 446.61, "ano": 2022, "tipo": "Obras", "categoria": "obras-via"}, {"expediente": "3.23/20830.0127", "objeto": "Ejecución de las obras del Proyecto \"Nuevo complejo ferroviario de la Estación de Atocha (Madrid). P...", "adjudicatario": "UTE DRAGADOS-TECSA-SAN JOSE-PUENTES", "importe": 373205864.06, "importe_millones": 373.21, "ano": 2023, "tipo": "Obras", "categoria": "obras-via"}, {"expediente": "4.22/20830.0195", "objeto": "Proyectos de construcción del nuevo canal de acceso para la integración de la Alta Velocidad en la c...", "adjudicatario": "UTE DRAGADOS-TECSA-ROVER-ROVER RAIL", "importe": 366440482.4, "importe_millones": 366.44, "ano": 2022, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.25/20830.0015", "objeto": "Obras de ejecución del proyecto de construcción de la plataforma de la Línea de Alta Velocidad de la...", "adjudicatario": "UTE Ferrovial-fcc-convensa", "importe": 323053000.0, "importe_millones": 323.05, "ano": 2025, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.23/20830.0091", "objeto": "Obras de ejecución del proyecto de construcción del corredor mediterráneo de Alta Velocidad. Tramo: ...", "adjudicatario": "UTE OHL-SANDO-HORMIGONES AA", "importe": 271001160.1, "importe_millones": 271.0, "ano": 2023, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.25/20830.0030", "objeto": "Obras de ejecución del proyecto de construcción de plataforma de la línea de Alta Velocidad Antequer...", "adjudicatario": "UTE Puentes-rover-geotunel", "importe": 234121871.2, "importe_millones": 234.12, "ano": 2025, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.23/20830.0116", "objeto": "Obras de ejecución del proyecto de construcción de plataforma del Corredor Cantábrico Mediterráneo d...", "adjudicatario": "UTE COPASA-PUENTES-SAN JOSE-LURPELA", "importe": 196905170.1, "importe_millones": 196.91, "ano": 2023, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.25/20830.0017", "objeto": "Obras de ejecución del proyecto de construcción de la remodelación de la Estación de Valladolid Camp...", "adjudicatario": "UTE Ferrovial-vias-zarzuela", "importe": 178364580.0, "importe_millones": 178.36, "ano": 2025, "tipo": "Obras", "categoria": "obras-tierras"}, {"expediente": "4.23/20830.0209", "objeto": "Redacción de los proyectos básicos y constructivos, ejecución de las obras, conservación y mantenimi...", "adjudicatario": "UTE CAF FCC REVENGA", "importe": 176831813.4, "importe_millones": 176.83, "ano": 2024, "tipo": "Obras", "categoria": "obras-via"}, {"expediente": "3.21/20830.0034", "objeto": "Ejecución de las obras del proyecto de construcción de plataforma del Corredor Mediterráneo de Alta ...", "adjudicatario": "UTE FERROVIAL-ACCIONA", "importe": 171441775.0, "importe_millones": 171.44, "ano": 2021, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.21/20830.0142", "objeto": "Ejecución de las Obras del: Proyecto de Construcción de ampliación y remodelación de la playa de vía...", "adjudicatario": "UTE VIAS-COMSA-AZVI-SAN JOSE", "importe": 171045942.51, "importe_millones": 171.05, "ano": 2021, "tipo": "Obras", "categoria": "obras-via"}, {"expediente": "3.22/20830.0016", "objeto": "Obras de ejecución del Proyecto de construcción de plataforma del Corredor Mediterráneo de Alta Velo...", "adjudicatario": "UTE CONVENSA-SANDO", "importe": 152475000.0, "importe_millones": 152.47, "ano": 2022, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "4.23/20830.0059", "objeto": "Obras de Ejecución del Proyecto de Construcción de la Integración del Ferrocarril en Almería. Fase 2...", "adjudicatario": "SACYR CONSTRUCCION SAU", "importe": 136973690.81, "importe_millones": 136.97, "ano": 2023, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.24/20830.0061", "objeto": "Obras de ejecución de los proyectos de construcción para la reordenación y transformación del edific...", "adjudicatario": "UTE ACCIONA CONSTRUCCION-COPCISA", "importe": 126715623.74, "importe_millones": 126.72, "ano": 2024, "tipo": "Obras", "categoria": "obras-tierras"}, {"expediente": "3.24/20830.0150", "objeto": "Obras de ejecución del proyecto de construcción de plataforma de la línea de alta velocidad Antequer...", "adjudicatario": "UTE COPISA-COPASA-CHM-TUNELAN", "importe": 122877180.83, "importe_millones": 122.88, "ano": 2024, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.23/06110.0066", "objeto": "Ejecución de las obras de los proyectos de construcción del soterramiento de la Línea R2 de Cercanía...", "adjudicatario": "UTE ROVER-ROVER RAIL-GAIMAZ", "importe": 119585157.69, "importe_millones": 119.59, "ano": 2023, "tipo": "Obras", "categoria": "obras-via"}, {"expediente": "3.23/20810.0077", "objeto": "Acuerdo marco para el suministro y transporte de carril para nuevas líneas en construcción y duplica...", "adjudicatario": "JSW STEEL ITALY PIOMBINO SPA", "importe": 110734752.44, "importe_millones": 110.73, "ano": 2024, "tipo": "Suministros", "categoria": "suministros-otros"}, {"expediente": "3.22/20830.0167", "objeto": "Obras de ejecución del proyecto de construcción de plataforma. Conexión Murcia-Cartagena.Tramo: Riqu...", "adjudicatario": "UTE ACCIONA-AZVI", "importe": 109981605.59, "importe_millones": 109.98, "ano": 2022, "tipo": "Obras", "categoria": "obras-civiles"}, {"expediente": "3.24/27507.0161", "objeto": "Ejecución de las obras del proyecto de construcción para la implantación del ancho estándar en el Co...", "adjudicatario": "UTE Syneox-rover R-rover I", "importe": 106979325.71, "importe_millones": 106.98, "ano": 2024, "tipo": "Obras", "categoria": "obras-via"}, {"expediente": "3.23/20830.0246", "objeto": "Proyecto de construcción de plataforma de Alta Velocidad. Conexión Murcia-Cartagena. Tramo: Torre Pa...", "adjudicatario": "UTE San Jose-acsa-trade", "importe": 106096545.77, "importe_millones": 106.1, "ano": 2024, "tipo": "Obras", "categoria": "obras-civiles"}], "bubbles": [{"adjudicatario": "ARCELORMITTAL ESPAÑA SA", "num_contratos": 84, "total_adj": 515147465.32, "total_millones": 515.15}, {"adjudicatario": "UTE FERROVIAL-COMSA-FCC", "num_contratos": 1, "total_adj": 446614679.32, "total_millones": 446.61}, {"adjudicatario": "UTE DRAGADOS-TECSA-SAN JOSE-PUENTES", "num_contratos": 1, "total_adj": 373205864.06, "total_millones": 373.21}, {"adjudicatario": "UTE DRAGADOS-TECSA-ROVER-ROVER RAIL", "num_contratos": 1, "total_adj": 366440482.4, "total_millones": 366.44}, {"adjudicatario": "UTE Ferrovial-fcc-convensa", "num_contratos": 1, "total_adj": 323053000.0, "total_millones": 323.05}, {"adjudicatario": "UTE OHL-SANDO-HORMIGONES AA", "num_contratos": 1, "total_adj": 271001160.1, "total_millones": 271.0}, {"adjudicatario": "SIEMENS RAIL AUTOMATION SA", "num_contratos": 49, "total_adj": 263589233.77, "total_millones": 263.59}, {"adjudicatario": "SACYR CONSTRUCCION SAU", "num_contratos": 3, "total_adj": 241326408.35, "total_millones": 241.33}, {"adjudicatario": "UTE Puentes-rover-geotunel", "num_contratos": 1, "total_adj": 234121871.2, "total_millones": 234.12}, {"adjudicatario": "VIAS Y CONSTRUCCIONES SA", "num_contratos": 25, "total_adj": 225296604.62, "total_millones": 225.3}, {"adjudicatario": "THALES ESPAÑA GRP SAU", "num_contratos": 43, "total_adj": 213340464.28, "total_millones": 213.34}, {"adjudicatario": "FERROVIAL CONSTRUCCION SA", "num_contratos": 12, "total_adj": 210158497.98, "total_millones": 210.16}, {"adjudicatario": "UTE COPASA-PUENTES-SAN JOSE-LURPELA", "num_contratos": 1, "total_adj": 196905170.1, "total_millones": 196.91}, {"adjudicatario": "UTE FERROVIAL-ACCIONA", "num_contratos": 4, "total_adj": 194777564.45, "total_millones": 194.78}, {"adjudicatario": "ENCLAVAMIENTOS SEÑALIZA FERROVIARIA", "num_contratos": 42, "total_adj": 184003189.04, "total_millones": 184.0}], "tabla": [{"expediente": "3.22/06110.0199", "ano": 2022, "objeto": "Ejecución de las obras de los Proyectos de Construcción del soterramiento de la Línea R2 de cercanías de Barcelona a su ...", "adjudicatario": "UTE FERROVIAL-COMSA-FCC", "importe": 446614679.32, "tipo": "Obras"}, {"expediente": "3.23/20830.0127", "ano": 2023, "objeto": "Ejecución de las obras del Proyecto \"Nuevo complejo ferroviario de la Estación de Atocha (Madrid). Proyecto constructivo...", "adjudicatario": "UTE DRAGADOS-TECSA-SAN JOSE-PUENTES", "importe": 373205864.06, "tipo": "Obras"}, {"expediente": "4.22/20830.0195", "ano": 2022, "objeto": "Proyectos de construcción del nuevo canal de acceso para la integración de la Alta Velocidad en la ciudad de Valencia, d...", "adjudicatario": "UTE DRAGADOS-TECSA-ROVER-ROVER RAIL", "importe": 366440482.4, "tipo": "Obras"}, {"expediente": "3.25/20830.0015", "ano": 2025, "objeto": "Obras de ejecución del proyecto de construcción de la plataforma de la Línea de Alta Velocidad de la conexión Madrid-Paí...", "adjudicatario": "UTE Ferrovial-fcc-convensa", "importe": 323053000.0, "tipo": "Obras"}, {"expediente": "3.23/20830.0091", "ano": 2023, "objeto": "Obras de ejecución del proyecto de construcción del corredor mediterráneo de Alta Velocidad. Tramo: Integración del ferr...", "adjudicatario": "UTE OHL-SANDO-HORMIGONES AA", "importe": 271001160.1, "tipo": "Obras"}, {"expediente": "3.25/20830.0030", "ano": 2025, "objeto": "Obras de ejecución del proyecto de construcción de plataforma de la línea de Alta Velocidad Antequera-Granada. Tramo: va...", "adjudicatario": "UTE Puentes-rover-geotunel", "importe": 234121871.2, "tipo": "Obras"}, {"expediente": "3.23/20830.0116", "ano": 2023, "objeto": "Obras de ejecución del proyecto de construcción de plataforma del Corredor Cantábrico Mediterráneo de Alta Velocidad. Tr...", "adjudicatario": "UTE COPASA-PUENTES-SAN JOSE-LURPELA", "importe": 196905170.1, "tipo": "Obras"}, {"expediente": "3.25/20830.0017", "ano": 2025, "objeto": "Obras de ejecución del proyecto de construcción de la remodelación de la Estación de Valladolid Campo Grande. Término mu...", "adjudicatario": "UTE Ferrovial-vias-zarzuela", "importe": 178364580.0, "tipo": "Obras"}, {"expediente": "4.23/20830.0209", "ano": 2024, "objeto": "Redacción de los proyectos básicos y constructivos, ejecución de las obras, conservación y mantenimiento de las instalac...", "adjudicatario": "UTE CAF FCC REVENGA", "importe": 176831813.4, "tipo": "Obras"}, {"expediente": "3.21/20830.0034", "ano": 2021, "objeto": "Ejecución de las obras del proyecto de construcción de plataforma del Corredor Mediterráneo de Alta Velocidad Murcia-Alm...", "adjudicatario": "UTE FERROVIAL-ACCIONA", "importe": 171441775.0, "tipo": "Obras"}, {"expediente": "3.21/20830.0142", "ano": 2021, "objeto": "Ejecución de las Obras del: Proyecto de Construcción de ampliación y remodelación de la playa de vía y andenes de alta v...", "adjudicatario": "UTE VIAS-COMSA-AZVI-SAN JOSE", "importe": 171045942.51, "tipo": "Obras"}, {"expediente": "3.22/20830.0016", "ano": 2022, "objeto": "Obras de ejecución del Proyecto de construcción de plataforma del Corredor Mediterráneo de Alta Velocidad Murcia-Almería...", "adjudicatario": "UTE CONVENSA-SANDO", "importe": 152475000.0, "tipo": "Obras"}, {"expediente": "4.23/20830.0059", "ano": 2023, "objeto": "Obras de Ejecución del Proyecto de Construcción de la Integración del Ferrocarril en Almería. Fase 2.", "adjudicatario": "SACYR CONSTRUCCION SAU", "importe": 136973690.81, "tipo": "Obras"}, {"expediente": "3.24/20830.0061", "ano": 2024, "objeto": "Obras de ejecución de los proyectos de construcción para la reordenación y transformación del edificio de viajeros de la...", "adjudicatario": "UTE ACCIONA CONSTRUCCION-COPCISA", "importe": 126715623.74, "tipo": "Obras"}, {"expediente": "3.24/20830.0150", "ano": 2024, "objeto": "Obras de ejecución del proyecto de construcción de plataforma de la línea de alta velocidad Antequera- Granada. Tramo: V...", "adjudicatario": "UTE COPISA-COPASA-CHM-TUNELAN", "importe": 122877180.83, "tipo": "Obras"}], "tipos": [{"tipo_contrato": "Obras", "num": 2111, "total": 13697105942.23}, {"tipo_contrato": "Servicios", "num": 3192, "total": 3519182957.93}, {"tipo_contrato": "Suministros", "num": 1270, "total": 2809672124.45}], "procedimientos": [{"procedimiento": "Abierto", "num": 3287, "total": 17144463047.66}, {"procedimiento": "Negociado con publicidad", "num": 1068, "total": 1676673269.5}, {"procedimiento": "Contrato menor", "num": 1493, "total": 666724190.99}, {"procedimiento": "13", "num": 5, "total": 261563115.54}, {"procedimiento": "Negociado sin publicidad", "num": 39, "total": 143995504.93}, {"procedimiento": "Basado en sistema dinámico", "num": 678, "total": 115410263.51}, {"procedimiento": "Restringido", "num": 3, "total": 17131632.48}], "cpv": [{"codigo": "45111200", "descripcion": "Obras de construcción", "num": 224, "total": 3670909631.81}, {"codigo": "45234110", "descripcion": "Obras de carreteras", "num": 235, "total": 1990979717.37}, {"codigo": "45234115", "descripcion": "Obras de autopistas", "num": 191, "total": 1925997795.46}, {"codigo": "45221242", "descripcion": "Obras ferroviarias", "num": 52, "total": 852567858.73}, {"codigo": "50220000", "descripcion": "Mantenimiento edificios", "num": 221, "total": 838620390.98}, {"codigo": "45234100", "descripcion": "Obras vía", "num": 210, "total": 764109799.55}, {"codigo": "50225000", "descripcion": "Mantenimiento vía", "num": 392, "total": 759640798.34}, {"codigo": "45234116", "descripcion": "Obras de puentes", "num": 40, "total": 720845699.08}, {"codigo": "34946110", "descripcion": "Mantenimiento señales", "num": 97, "total": 679309613.25}, {"codigo": "45213321", "descripcion": "Movimiento tierras", "num": 35, "total": 526284587.46}], "duraciones": [{"duracion": "12.0", "duracion_unidad": "MON", "num": 887, "total": 1387477431.24}, {"duracion": "24.0", "duracion_unidad": "MON", "num": 598, "total": 1933871764.99}, {"duracion": "4.0", "duracion_unidad": "MON", "num": 525, "total": 215073865.36}, {"duracion": "6.0", "duracion_unidad": "MON", "num": 460, "total": 323570827.09}, {"duracion": "3.0", "duracion_unidad": "MON", "num": 370, "total": 91138202.48}, {"duracion": "36.0", "duracion_unidad": "MON", "num": 266, "total": 1369380928.22}, {"duracion": "2.0", "duracion_unidad": "MON", "num": 265, "total": 38828150.9}, {"duracion": "48.0", "duracion_unidad": "MON", "num": 254, "total": 1582292928.33}, {"duracion": "0.0", "duracion_unidad": "DAY", "num": 247, "total": 603699153.74}, {"duracion": "8.0", "duracion_unidad": "MON", "num": 209, "total": 355034564.96}, {"duracion": "18.0", "duracion_unidad": "MON", "num": 184, "total": 634710531.95}, {"duracion": "5.0", "duracion_unidad": "MON", "num": 180, "total": 73865071.45}, {"duracion": "10.0", "duracion_unidad": "MON", "num": 177, "total": 428956678.46}, {"duracion": "9.0", "duracion_unidad": "MON", "num": 174, "total": 304011070.0}, {"duracion": "7.0", "duracion_unidad": "MON", "num": 135, "total": 100135660.08}]};
+const tooltip = d3.select("#tooltip");
+
+function showTooltip(event, html) {
+  tooltip.html(html)
+    .style("opacity", 1)
+    .style("left", (event.pageX + 12) + "px")
+    .style("top", (event.pageY - 10) + "px");
+}
+function hideTooltip() { tooltip.style("opacity", 0); }
+
+/* ── Color scheme ── */
+const catColors = {
+  "Obras": "#f59e0b",
+  "Servicios": "#3b82f6",
+  "Suministros": "#10b981"
+};
+
+/* ── Treemap ── */
+(function() {
+  const container = d3.select("#treemap");
+  const w = container.node().clientWidth;
+  const h = 500;
+  container.selectAll("*").remove();
+  const svg = container.append("svg").attr("width", w).attr("height", h);
+  
+  const root = d3.hierarchy({children: data.treemap})
+    .sum(d => d.importe)
+    .sort((a,b) => b.value - a.value);
+  
+  d3.treemap().size([w, h]).padding(2).round(true)(root);
+  
+  const leaf = svg.selectAll("g").data(root.leaves()).enter().append("g")
+    .attr("transform", d => `translate(${d.x0},${d.y0})`);
+  
+  leaf.append("rect")
+    .attr("width", d => d.x1 - d.x0)
+    .attr("height", d => d.y1 - d.y0)
+    .attr("fill", d => catColors[d.data.tipo] || "#64748b")
+    .attr("rx", 4)
+    .attr("stroke", "#0a0a14")
+    .attr("stroke-width", 1)
+    .on("mousemove", function(event, d) {
+      showTooltip(event, `<strong>${d.data.expediente}</strong><span style="color:#94a3b8">${d.data.adjudicatario}</span><br/>Importe: <span style="color:#00d4ff">€${(d.data.importe/1e6).toFixed(1)}M</span><br/>Año: ${d.data.ano} · ${d.data.tipo}`);
+      d3.select(this).attr("stroke", "#00d4ff").attr("stroke-width", 2);
+    })
+    .on("mouseout", function() {
+      hideTooltip();
+      d3.select(this).attr("stroke", "#0a0a14").attr("stroke-width", 1);
+    });
+  
+  leaf.append("text")
+    .attr("x", 4).attr("y", 14)
+    .text(d => {
+      const area = (d.x1-d.x0)*(d.y1-d.y0);
+      if(area < 2000) return "";
+      return d.data.expediente;
+    })
+    .attr("fill", "#fff").attr("font-size", "11px").attr("font-weight", 600)
+    .style("pointer-events", "none");
+  
+  leaf.append("text")
+    .attr("x", 4).attr("y", 28)
+    .text(d => {
+      const area = (d.x1-d.x0)*(d.y1-d.y0);
+      if(area < 3500) return "";
+      return "€" + (d.data.importe/1e6).toFixed(1) + "M";
+    })
+    .attr("fill", "rgba(255,255,255,0.7)").attr("font-size", "10px")
+    .style("pointer-events", "none");
+  
+  const legend = d3.select("#treemap-legend");
+  Object.entries(catColors).forEach(([label, color]) => {
+    legend.append("div").attr("class", "legend-item")
+      .html(`<div class="legend-dot" style="background:${color}"></div>${label}`);
+  });
+})();
+
+/* ── Timeline (dual axis) ── */
+(function() {
+  const container = d3.select("#timeline");
+  const w = container.node().clientWidth;
+  const h = 320;
+  const margin = {top:20, right:60, bottom:40, left:50};
+  const innerW = w - margin.left - margin.right;
+  const innerH = h - margin.top - margin.bottom;
+  
+  container.selectAll("*").remove();
+  const svg = container.append("svg").attr("width", w).attr("height", h);
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+  
+  const years = data.timeline.map(d => d.ano);
+  const x = d3.scaleBand().domain(years).range([0, innerW]).padding(0.3);
+  const y1 = d3.scaleLinear().domain([0, d3.max(data.timeline, d => d.num_contratos)]).nice().range([innerH, 0]);
+  const y2 = d3.scaleLinear().domain([0, d3.max(data.timeline, d => d.total_adj)]).nice().range([innerH, 0]);
+  
+  // Bars (num contratos)
+  g.selectAll(".bar").data(data.timeline).enter().append("rect")
+    .attr("class", "bar")
+    .attr("x", d => x(d.ano))
+    .attr("y", d => y1(d.num_contratos))
+    .attr("width", x.bandwidth() * 0.45)
+    .attr("height", d => innerH - y1(d.num_contratos))
+    .attr("fill", "#3b82f6")
+    .attr("rx", 3)
+    .on("mousemove", function(event, d) {
+      const imp = (d.total_adj/1e9).toFixed(2);
+      showTooltip(event, `<strong>${d.ano}</strong>Contratos: ${d.num_contratos.toLocaleString()}<br/>Importe: <span style="color:#00d4ff">€${imp}M</span>`);
+      d3.select(this).attr("fill", "#60a5fa");
+    })
+    .on("mouseout", function() { hideTooltip(); d3.select(this).attr("fill", "#3b82f6"); });
+  
+  // Line (importe)
+  const line = d3.line().x(d => x(d.ano) + x.bandwidth()/2).y(d => y2(d.total_adj)).curve(d3.curveMonotoneX);
+  
+  g.append("path").datum(data.timeline).attr("fill", "none")
+    .attr("stroke", "#f59e0b").attr("stroke-width", 3)
+    .attr("d", line);
+  
+  g.selectAll(".dot").data(data.timeline).enter().append("circle")
+    .attr("cx", d => x(d.ano) + x.bandwidth()/2)
+    .attr("cy", d => y2(d.total_adj))
+    .attr("r", 5)
+    .attr("fill", "#f59e0b")
+    .attr("stroke", "#0a0a14").attr("stroke-width", 2)
+    .on("mousemove", function(event, d) {
+      const imp = (d.total_adj/1e9).toFixed(2);
+      showTooltip(event, `<strong>${d.ano}</strong>Importe: <span style="color:#f59e0b">€${imp}M</span><br/>Contratos: ${d.num_contratos.toLocaleString()}`);
+      d3.select(this).attr("r", 7).attr("fill", "#fbbf24");
+    })
+    .on("mouseout", function() { hideTooltip(); d3.select(this).attr("r", 5).attr("fill", "#f59e0b"); });
+  
+  // Axes
+  g.append("g").attr("transform", `translate(0,${innerH})`).call(d3.axisBottom(x)).selectAll("text").attr("fill", "#94a3b8");
+  g.append("g").call(d3.axisLeft(y1).ticks(5)).selectAll("text").attr("fill", "#3b82f6");
+  g.append("g").attr("transform", `translate(${innerW},0)`).call(d3.axisRight(y2).ticks(5).tickFormat(d => "€"+(d/1e9).toFixed(1)+"B")).selectAll("text").attr("fill", "#f59e0b");
+  
+  // Labels
+  g.append("text").attr("x", -10).attr("y", -5).attr("fill", "#3b82f6").attr("font-size", "11px").text("Contratos");
+  g.append("text").attr("x", innerW+10).attr("y", -5).attr("fill", "#f59e0b").attr("font-size", "11px").text("Importe");
+  
+  // Grid
+  g.append("g").attr("class", "grid").call(d3.axisLeft(y1).tickSize(-innerW).tickFormat("")).selectAll("line").attr("stroke", "#1e293b").attr("stroke-dasharray", "2,2");
+  g.selectAll(".domain").attr("stroke", "#334155");
+})();
+
+/* ── Bubble Chart ── */
+(function() {
+  const container = d3.select("#bubbles");
+  const w = container.node().clientWidth;
+  const h = 420;
+  const margin = {top:20, right:20, bottom:80, left:20};
+  const innerW = w - margin.left - margin.right;
+  const innerH = h - margin.top - margin.bottom;
+  
+  container.selectAll("*").remove();
+  const svg = container.append("svg").attr("width", w).attr("height", h);
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+  
+  const maxR = Math.min(innerW, innerH) / 7;
+  const rScale = d3.scaleSqrt().domain([0, d3.max(data.bubbles, d => d.total_adj)]).range([4, maxR]);
+  const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+  
+  // Force simulation
+  const simulation = d3.forceSimulation(data.bubbles)
+    .force("x", d3.forceX(innerW/2).strength(0.05))
+    .force("y", d3.forceY(innerH/2).strength(0.05))
+    .force("collide", d3.forceCollide().radius(d => rScale(d.total_adj) + 2).strength(0.7))
+    .force("charge", d3.forceManyBody().strength(-30));
+  
+  const circles = g.selectAll("circle").data(data.bubbles).enter().append("circle")
+    .attr("r", d => rScale(d.total_adj))
+    .attr("fill", (d,i) => colorScale(i))
+    .attr("fill-opacity", 0.7)
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1.5)
+    .attr("stroke-opacity", 0.3)
+    .on("mousemove", function(event, d) {
+      showTooltip(event, `<strong>${d.adjudicatario}</strong>Contratos: ${d.num_contratos}<br/>Total: <span style="color:#00d4ff">€${(d.total_adj/1e6).toFixed(1)}M</span>`);
+      d3.select(this).attr("stroke-opacity", 1).attr("fill-opacity", 0.9);
+    })
+    .on("mouseout", function() { hideTooltip(); d3.select(this).attr("stroke-opacity", 0.3).attr("fill-opacity", 0.7); });
+  
+  const labels = g.selectAll("text").data(data.bubbles).enter().append("text")
+    .text(d => d.adjudicatario.length > 20 ? d.adjudicatario.slice(0,18)+"…" : d.adjudicatario)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#fff")
+    .attr("font-size", d => Math.min(13, rScale(d.total_adj)/2.5) + "px")
+    .style("pointer-events", "none");
+  
+  simulation.on("tick", () => {
+    circles.attr("cx", d => d.x).attr("cy", d => d.y);
+    labels.attr("x", d => d.x).attr("y", d => d.y + 4);
+  });
+  
+  // Legend at bottom
+  const legendY = h - 25;
+  data.bubbles.forEach((d, i) => {
+    if(i >= 8) return; // Only show first 8
+    const lx = 10 + i * (innerW / 8);
+    svg.append("circle").attr("cx", lx).attr("cy", legendY).attr("r", 6).attr("fill", colorScale(i)).attr("fill-opacity", 0.7);
+    svg.append("text").attr("x", lx + 10).attr("y", legendY + 4).attr("fill", "#94a3b8").attr("font-size", "10px")
+      .text(d.adjudicatario.length > 15 ? d.adjudicatario.slice(0,12)+"…" : d.adjudicatario);
+  });
+})();
+</script>
+</body>
+</html>

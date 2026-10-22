@@ -1,0 +1,2 @@
+web/src/pages/docs/api.astro:curl-auth-header:209
+# Falso positivo intencional: ejemplo curl del endpoint público (sin credenciales) en la documentación de la API.

@@ -1,0 +1,32 @@
+---
+export const prerender = true;
+
+import { getCollection, render } from 'astro:content';
+import BlogPost from '../../layouts/blog-post.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BlogPost
+  title={post.data.title}
+  excerpt={post.data.excerpt}
+  date={post.data.date}
+  readTime={post.data.readTime}
+  category={post.data.category}
+  series={post.data.series}
+  author={post.data.author}
+  tags={post.data.tags}
+  slug={post.id}
+  url={`https://elicita.es/blog/${post.id}`}
+>
+  <Content />
+</BlogPost>

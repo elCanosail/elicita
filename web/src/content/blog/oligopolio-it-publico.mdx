@@ -1,0 +1,94 @@
+---
+title: "Quién lidera el mercado del IT público español"
+excerpt: "70.851 adjudicaciones con importe positivo, 16.637 M€ observados y un HHI de 160 entre 2022 y enero de 2026. Un mapa reproducible del liderazgo tecnológico público."
+date: "2026-09-14"
+readTime: "10 min"
+category: "Análisis"
+series: "Market Intelligence"
+author: "Equipo Elicita"
+tags: ["IT", "concentración", "CPV 72", "CPV 48", "Market Intelligence", "Open Data"]
+draft: false
+---
+
+import DataTransparency from '../../components/DataTransparency.astro';
+
+# Quién lidera el mercado del IT público español
+
+Entre enero de 2022 y enero de 2026, el universo reproducible de Elicita reúne **79.681 candidatos sectoriales** clasificados bajo las divisiones CPV 48 y 72. De ellos, **70.851 adjudicaciones** tienen un importe positivo utilizable y suman **16.637 millones de euros observados**.
+
+No es una estimación ni una cifra reconstruida en el navegador. Esta edición está ligada al snapshot **`technology-20260914-235411Z`**, con taxonomía, consulta, exclusiones, hashes y recibo de generación descargables.
+
+<DataTransparency heading="Evidencia reproducible de este análisis" />
+
+## Qué mercado medimos
+
+La versión 1 delimita tecnología con dos divisiones CPV explícitas:
+
+- **48** — paquetes de software y sistemas de información;
+- **72** — servicios TI, consultoría, desarrollo, Internet y soporte.
+
+El periodo comienza el 1 de enero de 2022. Para cada identificador de origen conservamos la última revisión administrativa observada. No incorporamos contratos por búsqueda textual ni atribuimos sociedades por similitud de nombre.
+
+| Métrica | Resultado |
+|---|---:|
+| Candidatos sectoriales | 79.681 |
+| Adjudicaciones con importe positivo | 70.851 |
+| Importe observado | 16.637 M€ |
+| Sociedades con NIF resuelto | 10.579 |
+| Compradores observados | 5.576 |
+| HHI por importe | 160,1 |
+| Cobertura de importe válido | 88,92% |
+| Cobertura de proveedor resuelto | 95,40% |
+| Importe retenido en UTE sin reparto | 6,35% |
+
+## Liderazgo por sociedad
+
+La cuota usa como denominador todo el importe observado del mercado publicado, también la parte sin sociedad resoluble o retenida en UTE. Por eso las cuotas visibles no fuerzan artificialmente una suma del 100%.
+
+| # | Sociedad | Contratos | Importe | Cuota |
+|---:|---|---:|---:|---:|
+| 1 | Telefónica Soluciones de Informática y Comunicaciones de España | 1.306 | 1.221,0 M€ | 7,34% |
+| 2 | Indra Soluciones Tecnologías de la Información | 999 | 997,3 M€ | 5,99% |
+| 3 | Inetum España | 1.247 | 710,2 M€ | 4,27% |
+| 4 | Indra Sistemas | 138 | 524,4 M€ | 3,15% |
+| 5 | Oracle Ibérica | 499 | 435,8 M€ | 2,62% |
+| 6 | Seidor Solutions | 558 | 381,2 M€ | 2,29% |
+| 7 | NTT Data Spain | 386 | 363,6 M€ | 2,19% |
+| 8 | IBM España | 77 | 355,8 M€ | 2,14% |
+| 9 | T-Systems ITC Iberia | 569 | 272,3 M€ | 1,64% |
+| 10 | Fujitsu Technology Solutions | 301 | 228,0 M€ | 1,37% |
+
+El **HHI de 160,1** no describe un mercado concentrado en sentido antitrust. Sí muestra liderazgo persistente: Telefónica Soluciones, las dos sociedades de Indra e Inetum suman una fracción relevante del importe, pero el resto se distribuye entre miles de adjudicatarios.
+
+No publicamos todavía una clasificación por grupo empresarial. La cobertura de grupos es **0%** en esta versión: agrupar Indra, Telefónica u otras filiales sin un registro corporativo temporal y evidenciado daría una precisión falsa.
+
+## Los principales compradores
+
+| # | Comprador | Contratos | Importe |
+|---:|---|---:|---:|
+| 1 | Junta de Contratación Centralizada | 3.924 | 1.881,3 M€ |
+| 2 | Subdirección General de Adquisiciones de Armamento y Material | 14 | 486,1 M€ |
+| 3 | CTTI de la Generalitat de Catalunya | 285 | 458,7 M€ |
+| 4 | Agencia Digital de Andalucía | 134 | 398,0 M€ |
+| 5 | Banco de España | 227 | 322,8 M€ |
+
+La contratación centralizada domina por volumen y frecuencia. Defensa, las agencias digitales autonómicas y los grandes operadores públicos forman un segundo bloque de demanda tecnológica de alto valor.
+
+## Lo que no sabemos — y lo que puede distorsionar
+
+1. **CPV incorrecto en origen.** Conservamos la clasificación administrativa publicada. Dos contratos de FCC Medio Ambiente, por 113,2 M€, aparecen bajo CPV 72/48 aunque su objeto principal es limpieza y residuos. Se mantienen como outliers trazables; no los ocultamos mediante una corrección textual ad hoc.
+2. **Revisiones y lotes.** La unidad v1 conserva la última revisión por identificador de origen. Un identificador con varios lotes o adjudicatarios puede quedar representado por una sola revisión.
+3. **UTE.** El 6,35% del importe permanece en uniones temporales sin reparto oficial. No atribuimos el 100% a cada partícipe.
+4. **Grupos empresariales.** No agregamos matrices y filiales hasta disponer de evidencia versionada y vigencia temporal.
+5. **Frescura histórica.** La última adjudicación completa del universo es del 26 de enero de 2026; la fecha de generación no se presenta como frescura de la fuente.
+6. **Importe observado.** Es importe de adjudicación publicado, no gasto ejecutado ni facturación cobrada.
+
+## Reutiliza y verifica
+
+El catálogo de [Datos Abiertos](/datos-abiertos) ofrece el snapshot JSON, rankings CSV, evolución, concentración, cobertura, exclusiones, metodología, recibo y checksums SHA-256. Los agregados Elicita se publican bajo **CC BY 4.0**; los registros administrativos conservan sus condiciones de reutilización.
+
+Las futuras herramientas MCP `market_snapshot`, `rank_companies`, `analyze_buyer` y `trace_metric` leen exactamente este snapshot aprobado. No recalculan rankings con SQL paralelo.
+
+---
+
+*Snapshot: `technology-20260914-235411Z`. Fuente: tabla histórica `calidad`, última revisión por identificador. Mercado: CPV 48 + 72. Periodo: 2022-01-01 a 2026-01-26.*

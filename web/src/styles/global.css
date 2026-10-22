@@ -1,0 +1,441 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   Elicita — Design System v2.0 (xAI console-inspired)
+   Dark-canvas only. Mono-driven. Hairline borders. No shadows.
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer base {
+  /* ── LIGHT (default) ───────────────────────────────────── */
+  :root {
+    /* Brand accent — verde Elicita (WCAG AA compliant) */
+    --accent: 152 60% 35%;
+    --accent-hover: 152 60% 30%;
+    --accent-light: 152 60% 95%;
+    --accent-dark: 152 60% 22%;
+
+    /* Page & surfaces */
+    --background: 0 0% 98%;        /* oklch(98% 0.005 158) */
+    --foreground: 155 5% 10%;      /* oklch(18% 0.01 158) */
+    --card: 155 5% 96%;            /* oklch(96% 0.007 158) */
+    --card-foreground: 155 5% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 155 5% 10%;
+
+    /* Primary action — emerald (WCAG AA: 4.5:1 on white) */
+    --primary: 152 60% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary / muted */
+    --secondary: 155 5% 93%;
+    --secondary-foreground: 155 5% 35%;
+    --muted: 155 5% 93%;
+    --muted-foreground: 155 5% 45%;
+
+    /* Accent (decorative) */
+    --accent-decorative: 155 5% 93%;
+    --accent-decorative-foreground: 155 5% 10%;
+
+    /* Semantic */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 35%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 213 94% 68%;
+    --info-foreground: 0 0% 100%;
+
+    /* Borders & inputs */
+    --border: 155 5% 88%;
+    --input: 155 5% 88%;
+    --ring: 152 60% 35%;
+    --radius: 0.5rem;
+
+    /* Scrollbar */
+    --scrollbar-track: transparent;
+    --scrollbar-thumb: 155 5% 75%;
+    --scrollbar-thumb-hover: 155 5% 65%;
+  }
+
+  /* ── DARK ──────────────────────────────────────────────── */
+  .dark {
+    --background: 155 5% 5%;
+    --foreground: 155 5% 96%;
+    --card: 155 5% 8%;
+    --card-foreground: 155 5% 96%;
+    --popover: 155 5% 10%;
+    --popover-foreground: 155 5% 96%;
+
+    --primary: 152 60% 40%;
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 155 5% 14%;
+    --secondary-foreground: 155 5% 65%;
+    --muted: 155 5% 14%;
+    --muted-foreground: 155 5% 55%;
+
+    --accent: 152 60% 40%;
+    --accent-hover: 152 60% 45%;
+    --accent-light: 152 60% 15%;
+    --accent-dark: 152 60% 25%;
+
+    --accent-decorative: 155 5% 14%;
+    --accent-decorative-foreground: 155 5% 96%;
+
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 40%;
+    --success-foreground: 0 0% 5%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 5%;
+    --info: 213 94% 70%;
+    --info-foreground: 0 0% 5%;
+
+    --border: 155 5% 18%;
+    --input: 155 5% 18%;
+    --ring: 152 60% 40%;
+
+    --scrollbar-thumb: 155 5% 25%;
+    --scrollbar-thumb-hover: 155 5% 35%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Instrument Sans', sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Dashboard table-row anchor links — override browser default blue */
+a.table-row,
+a[role="row"] {
+  color: inherit;
+  text-decoration: none;
+}
+a.table-row:visited,
+a[role="row"]:visited {
+  color: inherit;
+}
+
+/* Cursor blink — terminal style */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Data ticker scroll */
+@keyframes ticker {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker 40s linear infinite;
+}
+
+/* Live counter pulse */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+/* Marquee horizontal */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 60s linear infinite;
+}
+
+/* Fade in up */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+/* ── Microinteraction utilities (#13) ── */
+
+/* Hover lift — cards, links */
+.hover-lift {
+  transition: transform 150ms ease-out, border-color 150ms ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Hover brighten — text links, nav items */
+.hover-brighten {
+  transition: color 150ms ease-out;
+}
+.hover-brighten:hover {
+  color: hsl(var(--foreground));
+}
+
+/* Focus ring — inputs, buttons */
+.focus-ring {
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+}
+.focus-ring:focus {
+  outline: none;
+  border-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3);
+}
+
+/* Card hover — border highlight only, no shadow */
+.card-hover {
+  transition: border-color 200ms ease-out;
+}
+.card-hover:hover {
+  border-color: hsl(var(--primary) / 0.25);
+}
+
+/* Pill press — button active state */
+.pill-press {
+  transition: transform 100ms ease-out, opacity 150ms ease-out;
+}
+.pill-press:active {
+  transform: scale(0.97);
+}
+.pill-press:hover {
+  opacity: 0.9;
+}
+
+/* Slide in right — panels, modals */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 300ms ease-out forwards;
+}
+
+/* Fade in — page transitions, modal backdrop */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 200ms ease-out forwards;
+}
+
+/* Grid dot pattern */
+.bg-grid {
+  background-image: radial-gradient(circle, hsl(0 0% 15%) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Gradient noise overlay */
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* ── Dataset Chart (Hero) ── */
+.dataset-chart-wrap {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 16px 16px 10px;
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+.chart-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.chart-legend {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.chart-legend-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.legend-dot--emerald { background: #10b981; }
+.legend-dot--amber { background: #f59e0b; }
+.chart-live-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(16,185,129,0.7);
+}
+.chart-live--amber {
+  color: rgba(245,158,11,0.6);
+}
+.chart-live-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.2);
+}
+.live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16,185,129,0.5);
+  animation: live-blink 2s ease-in-out infinite;
+}
+@keyframes live-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.dataset-canvas {
+  width: 100%;
+  height: 200px;
+  display: block;
+}
+.chart-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 2px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.15);
+}
+@media (max-width: 767px) {
+  .dataset-chart-wrap { max-width: 100%; }
+  .dataset-canvas { height: 160px; }
+}
+
+/* ── Subtle scrollbar (dark theme) ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+
+/* ── Adjudicatario link (global) ── */
+.adj-link,
+.adj-link:visited,
+.adj-link:link,
+.adj-link:active {
+  color: #10b981 !important;
+  text-decoration: none !important;
+  transition: color 0.15s;
+}
+.adj-link:hover {
+  color: rgba(255,255,255,0.88) !important;
+  text-decoration: none !important;
+}
+
+/* ── ContextualHelp Tooltip ── */
+.ctx-tooltip {
+  position: fixed;
+  z-index: 9999;
+  max-width: 280px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.ctx-tooltip.ctx-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Blog responsive tables ── */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 640px) {
+  .prose table { font-size: 13px; }
+  .prose th, .prose td { padding: 6px 10px; }
+}
+
+/* ── Blog iframe responsive wrapper ── */
+.blog-artifact-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #0a0a14;
+}
+.blog-artifact-wrap iframe {
+  width: 100%;
+  border: none;
+  display: block;
+}
+@media (max-width: 640px) {
+  .blog-artifact-wrap { border-radius: 8px; }
+}
+
+/* ── prefers-reduced-motion (tarea 26) ──
+   Respeta la configuración del SO: anula animaciones de movimiento
+   (marquee, ticker, blink, pulse, fades, toasts) y hace instantáneas
+   las transiciones (nav, hovers). Cubre todas las páginas: main.astro
+   y dashboard.astro importan este CSS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

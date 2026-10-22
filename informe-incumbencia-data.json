@@ -1,0 +1,425 @@
+{
+  "metodologia": "temporal",
+  "descripcion": "La tasa de incumbencia mide el porcentaje de contratos adjudicados a un proveedor que tambien gano con el mismo organo en el ano anterior. Periodo 2019-2025.",
+  "kpi_global": {
+    "tasa_incumbencia_pct": 47.01,
+    "periodo": "2020-2025",
+    "contratos_con_previo": 3187658,
+    "contratos_total": 6780308,
+    "organos_analizados": "Todos con datos validos"
+  },
+  "by_tipo": [
+    {
+      "tipo": "Servicios",
+      "contratos_con_previo": 1339622,
+      "contratos_total": 3292140,
+      "pct": 40.69
+    },
+    {
+      "tipo": "Suministros",
+      "contratos_con_previo": 1411900,
+      "contratos_total": 2820319,
+      "pct": 50.06
+    },
+    {
+      "tipo": "Obras",
+      "contratos_con_previo": 248634,
+      "contratos_total": 667849,
+      "pct": 37.23
+    }
+  ],
+  "by_importe": [
+    {
+      "rango": "Menos de 10K",
+      "contratos_con_previo": 2179060,
+      "contratos_total": 4524160,
+      "pct": 48.16
+    },
+    {
+      "rango": "10K-50K",
+      "contratos_con_previo": 371120,
+      "contratos_total": 1288594,
+      "pct": 28.8
+    },
+    {
+      "rango": "50K-200K",
+      "contratos_con_previo": 129308,
+      "contratos_total": 548760,
+      "pct": 23.56
+    },
+    {
+      "rango": "200K-1M",
+      "contratos_con_previo": 63560,
+      "contratos_total": 282650,
+      "pct": 22.49
+    },
+    {
+      "rango": "Más de 1M",
+      "contratos_con_previo": 20816,
+      "contratos_total": 109587,
+      "pct": 18.99
+    }
+  ],
+  "evolucion": [
+    {
+      "ano": 2020,
+      "contratos_con_previo": 72198,
+      "contratos_total": 272981,
+      "pct": 26.45
+    },
+    {
+      "ano": 2021,
+      "contratos_con_previo": 194713,
+      "contratos_total": 1073737,
+      "pct": 18.13
+    },
+    {
+      "ano": 2022,
+      "contratos_con_previo": 642545,
+      "contratos_total": 1273625,
+      "pct": 50.45
+    },
+    {
+      "ano": 2023,
+      "contratos_con_previo": 729483,
+      "contratos_total": 1322732,
+      "pct": 55.15
+    },
+    {
+      "ano": 2024,
+      "contratos_con_previo": 784830,
+      "contratos_total": 1384912,
+      "pct": 56.67
+    },
+    {
+      "ano": 2025,
+      "contratos_con_previo": 836087,
+      "contratos_total": 1452321,
+      "pct": 57.57
+    }
+  ],
+  "top_adjudicatarios": [
+    {
+      "nombre": "Empresa de Transformación Agraria S.A.,S.M.E., M.P",
+      "nif": "A28476208",
+      "organos": 191,
+      "contratos": 6680,
+      "expedientes_distintos": 3001,
+      "anos_activo": 5
+    },
+    {
+      "nombre": "Tecnologías y Servicios Agrarios S.A.,S.M.E., M.P.",
+      "nif": "A79365821",
+      "organos": 225,
+      "contratos": 5386,
+      "expedientes_distintos": 2447,
+      "anos_activo": 6
+    },
+    {
+      "nombre": "LIFE TECHNOLOGIES, S.A.",
+      "nif": "A28139434",
+      "organos": 54,
+      "contratos": 4543,
+      "expedientes_distintos": 2157,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "EULEN, S.A.",
+      "nif": "A28517308",
+      "organos": 292,
+      "contratos": 4103,
+      "expedientes_distintos": 1546,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "SOLRED S.A.",
+      "nif": "A79707345",
+      "organos": 262,
+      "contratos": 4052,
+      "expedientes_distintos": 1692,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "ELECNOR SERVICIOS Y PROYECTOS, S.A.U.",
+      "nif": "A79486833",
+      "organos": 365,
+      "contratos": 3597,
+      "expedientes_distintos": 1215,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "IBERDROLA CLIENTES, S.A.U.",
+      "nif": "A95758389",
+      "organos": 313,
+      "contratos": 3421,
+      "expedientes_distintos": 1482,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "QUIRON PREVENCION S.L.U",
+      "nif": "B64076482",
+      "organos": 590,
+      "contratos": 3331,
+      "expedientes_distintos": 955,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "EL CORTE INGLES, S.A.",
+      "nif": "A28017895",
+      "organos": 138,
+      "contratos": 3259,
+      "expedientes_distintos": 1501,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "EL CORTE INGLES S.A.",
+      "nif": "A28017895",
+      "organos": 80,
+      "contratos": 3212,
+      "expedientes_distintos": 1547,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "PALEX MEDICAL, S.A.",
+      "nif": "A58710740",
+      "organos": 88,
+      "contratos": 3194,
+      "expedientes_distintos": 1332,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "CRUZ ROJA ESPAÑOLA",
+      "nif": "Q2866001G",
+      "organos": 344,
+      "contratos": 2792,
+      "expedientes_distintos": 1231,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "PROQUINORTE S.A.",
+      "nif": "A48202451",
+      "organos": 73,
+      "contratos": 2752,
+      "expedientes_distintos": 1206,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "PLATAFORMA FEMAR SL",
+      "nif": "B91016238",
+      "organos": 65,
+      "contratos": 2701,
+      "expedientes_distintos": 1028,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "SCHARLAB, S.L.",
+      "nif": "B63048540",
+      "organos": 72,
+      "contratos": 2542,
+      "expedientes_distintos": 1223,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "SERCAMAN 1, S.L.",
+      "nif": "B45243474",
+      "organos": 82,
+      "contratos": 2211,
+      "expedientes_distintos": 1012,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "INETUM ESPAÑA, S.A.",
+      "nif": "A28855260",
+      "organos": 163,
+      "contratos": 2183,
+      "expedientes_distintos": 869,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "ENDESA ENERGIA SAU",
+      "nif": "A81948077",
+      "organos": 261,
+      "contratos": 2171,
+      "expedientes_distintos": 837,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "SOCIEDAD ESTATAL CORREOS Y TELEGRAFOS S.A. S.M.E.",
+      "nif": "A83052407",
+      "organos": 195,
+      "contratos": 2057,
+      "expedientes_distintos": 798,
+      "anos_activo": 7
+    },
+    {
+      "nombre": "Vodafone España, S.A.U.",
+      "nif": "A80907397",
+      "organos": 376,
+      "contratos": 2056,
+      "expedientes_distintos": 618,
+      "anos_activo": 7
+    }
+  ],
+  "top_organos": [
+    {
+      "organo": "Dirección General del Catastro",
+      "nif_organo": "S2826053G",
+      "total_contratos": 914,
+      "top_adj_contratos": 514,
+      "top_adj": "Consejo de Administración de la Sociedad Mercantil",
+      "incumbencia_pct": 56.24
+    },
+    {
+      "organo": "Dirección Gerente del Centro de Recuperación de Personas con Discapaci",
+      "nif_organo": "Q2669009I",
+      "total_contratos": 278,
+      "top_adj_contratos": 145,
+      "top_adj": "EKYPO, FORMACION Y CONSULTORIA SL",
+      "incumbencia_pct": 52.16
+    },
+    {
+      "organo": "Presidencia de la Mancomunidad de Servicios de la Provincia de Huelva",
+      "nif_organo": "P2100031J",
+      "total_contratos": 221,
+      "top_adj_contratos": 114,
+      "top_adj": "ANA MARIA  MORERA  SANZ",
+      "incumbencia_pct": 51.58
+    },
+    {
+      "organo": "Consejería Delegada de Servicios Informáticos Local de Menorca, S.A.",
+      "nif_organo": "A07279227",
+      "total_contratos": 709,
+      "top_adj_contratos": 327,
+      "top_adj": "INFOTELECOM NETWORKS, SL",
+      "incumbencia_pct": 46.12
+    },
+    {
+      "organo": "Gerencia de Salud de Área de Burgos",
+      "nif_organo": "Q0927001H",
+      "total_contratos": 1334,
+      "top_adj_contratos": 610,
+      "top_adj": "HOSPITAL RECOLETAS DE BURGOS S.L.U.",
+      "incumbencia_pct": 45.73
+    },
+    {
+      "organo": "Alcaldía del Concello de Dumbría",
+      "nif_organo": "P1503400B",
+      "total_contratos": 293,
+      "top_adj_contratos": 125,
+      "top_adj": "LIRES CONS SL",
+      "incumbencia_pct": 42.66
+    },
+    {
+      "organo": "Junta de Gobierno Local del Ayuntamiento de Oza-Cesuras",
+      "nif_organo": "P1500029B",
+      "total_contratos": 257,
+      "top_adj_contratos": 92,
+      "top_adj": "CANARGA, S.L.",
+      "incumbencia_pct": 35.8
+    },
+    {
+      "organo": "Gerencia de la Entidad Pública Empresarial Aguas de Ames EPEL",
+      "nif_organo": "Q1500458C",
+      "total_contratos": 309,
+      "top_adj_contratos": 110,
+      "top_adj": "ESPINA Y DELFIN SL",
+      "incumbencia_pct": 35.6
+    },
+    {
+      "organo": "Junta de Gobierno del Ayuntamiento de Touro",
+      "nif_organo": "P1508600B",
+      "total_contratos": 366,
+      "top_adj_contratos": 130,
+      "top_adj": "OBRAS Y VIALES DE GALICIA, S.L.",
+      "incumbencia_pct": 35.52
+    },
+    {
+      "organo": "Consejería Delegada de la Empresa Mixta Municipal de Aguas de Níjar",
+      "nif_organo": "A04516852",
+      "total_contratos": 218,
+      "top_adj_contratos": 72,
+      "top_adj": "FCC AQUALIA, S.A.",
+      "incumbencia_pct": 33.03
+    },
+    {
+      "organo": "Alcaldía del Ayuntamiento de Mazaricos",
+      "nif_organo": "P1504600F",
+      "total_contratos": 203,
+      "top_adj_contratos": 65,
+      "top_adj": "EXCAVACIONES YONI TUÑAS S.L.",
+      "incumbencia_pct": 32.02
+    },
+    {
+      "organo": "Alcaldía del Concello de Tordoia",
+      "nif_organo": "P1508500D",
+      "total_contratos": 206,
+      "top_adj_contratos": 65,
+      "top_adj": "OBRAS Y VIALES DE GALICIA, S.L.",
+      "incumbencia_pct": 31.55
+    },
+    {
+      "organo": "Junta de Gobierno Local del Ayuntamiento de San Sadurniño",
+      "nif_organo": "P1507700A",
+      "total_contratos": 260,
+      "top_adj_contratos": 82,
+      "top_adj": "JOSE NO MANTIÑAN E HIJOS CONSTRUCCIONES, S.A.",
+      "incumbencia_pct": 31.54
+    },
+    {
+      "organo": "Alcaldía del Ayuntamiento de Cerceda",
+      "nif_organo": "P1502400C",
+      "total_contratos": 204,
+      "top_adj_contratos": 64,
+      "top_adj": "OBRAS Y VIALES DE GALICIA, S.L.",
+      "incumbencia_pct": 31.37
+    },
+    {
+      "organo": "Gerencia de Servicios Municipales de Petrer, S.L.",
+      "nif_organo": "B03832037",
+      "total_contratos": 610,
+      "top_adj_contratos": 187,
+      "top_adj": "Gráficas Azorín, S.L.",
+      "incumbencia_pct": 30.66
+    },
+    {
+      "organo": "Alcaldía del Ayuntamiento de Castropodame",
+      "nif_organo": "P2405100E",
+      "total_contratos": 230,
+      "top_adj_contratos": 69,
+      "top_adj": "PROMOCIONES Y CONSTRUCCIONES CONRADO Y TOÑO S.L",
+      "incumbencia_pct": 30.0
+    },
+    {
+      "organo": "Presidencia del Centro Iniciativas para la Formación y el Empleo",
+      "nif_organo": "P7805801C",
+      "total_contratos": 364,
+      "top_adj_contratos": 109,
+      "top_adj": "Papelería Atenas, S.L.",
+      "incumbencia_pct": 29.95
+    },
+    {
+      "organo": "Consejo de Administración de Promociones e Iniciativas Municipales de ",
+      "nif_organo": "A03475001",
+      "total_contratos": 1209,
+      "top_adj_contratos": 357,
+      "top_adj": "Repsol Comercial de Productos Petrolíferos, S.A.",
+      "incumbencia_pct": 29.53
+    },
+    {
+      "organo": "Comisión Ejecutiva del Patronato Municipal de Deportes del Ayuntamient",
+      "nif_organo": "P7101001A",
+      "total_contratos": 682,
+      "top_adj_contratos": 200,
+      "top_adj": "SECURITAS DIRECT ESPAÑA SAU",
+      "incumbencia_pct": 29.33
+    },
+    {
+      "organo": "Alcaldía del Ayuntamiento de La Puebla de los Infantes",
+      "nif_organo": "P4107800G",
+      "total_contratos": 2646,
+      "top_adj_contratos": 764,
+      "top_adj": "NABALIA ENERGIA 2000 S.A.",
+      "incumbencia_pct": 28.87
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+---
+title: "Anatomía de una predicción de renovación"
+excerpt: "Cómo se construye una estimación de fecha de renovación a partir de datos históricos. Ciclos contractuales, intervalos de confianza y validación."
+date: "2026-02-18"
+readTime: "4 min"
+category: "Metodología"
+series: "Guías y producto"
+author: "Equipo Elicita"
+tags: ["predicción", "renovación", "metodología", "machine learning"]
+draft: false
+---
+
+Predecir cuándo se renovará un contrato público no es adivinación. Es análisis de patrones sobre datos históricos estructurados. Este artículo describe el proceso conceptual sin entrar en los detalles propietarios de implementación.
+
+## El dato base: duración contractual
+
+Todo contrato público tiene una duración definida. Cuando un organismo contrata un servicio por 2 años con opción a 1 año de prórroga, sabemos que en algún momento entre los 24 y 36 meses posteriores a la adjudicación, necesitará renovar o volver a licitar.
+
+## Patrones de comportamiento
+
+Los organismos públicos son predecibles. Un ayuntamiento que renueva su contrato de limpieza viaria cada 4 años tenderá a mantener ese ciclo. Una consejería que externaliza su soporte IT cada 2 años seguirá necesitando ese servicio.
+
+Cuando acumulas 26 años de datos históricos sobre decenas de miles de organismos, los patrones emergen con claridad estadística.
+
+## Intervalos de confianza
+
+No todas las predicciones tienen la misma fiabilidad. Un contrato que se ha renovado 5 veces con periodicidad regular tiene un intervalo de confianza estrecho. Un contrato sin histórico previo tiene un intervalo amplio.
+
+El sistema asigna a cada predicción un nivel de confianza que permite al usuario priorizar su atención: las predicciones de alta confianza merecen acción inmediata; las de confianza media, seguimiento; las de baja confianza, monitorización pasiva.
+
+## Validación continua
+
+Cada vez que una predicción se confirma (o no), el modelo se recalibra. Este bucle de retroalimentación es lo que permite que la precisión mejore con el tiempo. El sistema aprende de sus errores y de sus aciertos.

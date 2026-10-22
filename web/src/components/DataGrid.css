@@ -1,0 +1,460 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   DataGrid — shared table component for Elicita Explorer
+   Dark mode only; matches dashboard aesthetic.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.dg-root {
+  --dg-bg: #080808;
+  --dg-fg: rgba(255, 255, 255, 0.7);
+  --dg-fg-muted: rgba(255, 255, 255, 0.35);
+  --dg-fg-heading: rgba(255, 255, 255, 0.85);
+  --dg-border: rgba(255, 255, 255, 0.06);
+  --dg-border-soft: rgba(255, 255, 255, 0.03);
+  --dg-accent: #10b981;
+  --dg-accent-soft: rgba(16, 185, 129, 0.05);
+  --dg-accent-hover: rgba(16, 185, 129, 0.1);
+  --dg-row-hover: rgba(16, 185, 129, 0.03);
+  --dg-header-bg: rgba(255, 255, 255, 0.03);
+  --dg-radius: 8px;
+  --dg-pad-x: 14px;
+  --dg-pad-y: 10px;
+  --dg-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --dg-row-h: 40px;
+
+  background: var(--dg-bg);
+  color: var(--dg-fg);
+  border: 1px solid var(--dg-border);
+  border-radius: var(--dg-radius);
+  overflow: hidden;
+  font-size: 13px;
+}
+
+/* ── Density ──────────────────────────────────────────────────────────── */
+.dg-density-compact { --dg-pad-y: 6px; --dg-row-h: 32px; }
+.dg-density-comfortable { --dg-pad-y: 10px; --dg-row-h: 40px; }
+.dg-density-spacious { --dg-pad-y: 16px; --dg-row-h: 52px; }
+
+.dg-density-compact .dg-th,
+.dg-density-compact .dg-td { font-size: 12px; }
+.dg-density-spacious .dg-th,
+.dg-density-spacious .dg-td { font-size: 13px; }
+
+/* ── Toolbar ──────────────────────────────────────────────────────────── */
+.dg-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--dg-border);
+  background: var(--dg-bg);
+  min-height: 44px;
+  flex-wrap: wrap;
+}
+
+.dg-count {
+  font-family: var(--dg-font-mono);
+  font-size: 11px;
+  color: var(--dg-fg-muted);
+}
+
+.dg-count strong {
+  color: var(--dg-fg-heading);
+  font-weight: 500;
+}
+
+.dg-count-loading {
+  animation: dg-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes dg-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.dg-density {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--dg-border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--dg-bg);
+}
+
+.dg-density-btn {
+  font-family: var(--dg-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: var(--dg-fg-muted);
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--dg-border);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+
+.dg-density-btn:first-child { border-left: none; }
+
+.dg-density-btn:hover {
+  color: var(--dg-fg);
+  background: var(--dg-header-bg);
+}
+
+.dg-density-active {
+  color: var(--dg-accent);
+  background: var(--dg-accent-soft);
+}
+
+/* ── Scroll wrapper + table ───────────────────────────────────────────── */
+.dg-scroll {
+  overflow: auto;
+  max-height: calc(100vh - 200px);
+  position: relative;
+}
+
+.dg-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  min-width: 640px;
+}
+
+.dg-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.dg-table th,
+.dg-table td {
+  padding: var(--dg-pad-y) var(--dg-pad-x);
+  border-bottom: 1px solid var(--dg-border-soft);
+  vertical-align: middle;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dg-table th {
+  background: var(--dg-header-bg);
+  font-family: var(--dg-font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dg-fg-muted);
+  border-bottom: 1px solid var(--dg-border);
+  user-select: none;
+}
+
+.dg-th-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.dg-th-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sticky first column (organismo/nombre) */
+.dg-first-col {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: var(--dg-bg);
+  box-shadow: 1px 0 0 var(--dg-border);
+}
+
+.dg-table thead .dg-first-col {
+  z-index: 30;
+  background: var(--dg-header-bg);
+}
+
+/* Sort indicators — always visible on sorted, subtle otherwise */
+.dg-sort-icons {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 12px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.25;
+  transition: opacity 0.12s;
+}
+
+.dg-sort-icon {
+  width: 10px;
+  height: 10px;
+  color: currentColor;
+}
+
+.dg-sort-icon:not(.dg-sort-active) {
+  opacity: 0.25;
+}
+
+.dg-sort-visible,
+.dg-sortable:hover .dg-sort-icons {
+  opacity: 1;
+}
+
+.dg-sortable { cursor: pointer; }
+.dg-sortable:hover { color: rgba(255, 255, 255, 0.6); }
+.dg-sorted { color: var(--dg-accent); }
+.dg-sorted .dg-sort-icon.dg-sort-active {
+  color: var(--dg-accent);
+  opacity: 1;
+}
+.dg-sorted .dg-sort-icon:not(.dg-sort-active) {
+  opacity: 0.2;
+}
+
+/* Alignment */
+.dg-align-left { text-align: left; }
+.dg-align-right { text-align: right; }
+.dg-align-center { text-align: center; }
+
+.dg-align-right .dg-th-content,
+.dg-align-center .dg-th-content {
+  justify-content: flex-end;
+}
+
+.dg-align-center .dg-th-content {
+  justify-content: center;
+}
+
+/* Monospace / tabular nums */
+.dg-mono {
+  font-family: var(--dg-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.dg-table td.dg-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Row hover */
+.dg-td {
+  color: var(--dg-fg);
+  transition: color 0.1s, background 0.1s;
+}
+
+.dg-tr {
+  transition: background 0.1s;
+}
+
+.dg-tr:hover { background: var(--dg-row-hover); }
+.dg-tr:hover .dg-td { color: rgba(255, 255, 255, 0.9); }
+.dg-tr.dg-clickable { cursor: pointer; }
+
+/* ── Loading / empty states ─────────────────────────────────────────── */
+.dg-loading-cell,
+.dg-empty-cell {
+  text-align: center;
+  padding: 48px 24px;
+  border-bottom: none;
+}
+
+.dg-loading,
+.dg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--dg-fg-muted);
+  font-family: var(--dg-font-mono);
+  font-size: 12px;
+}
+
+.dg-empty-icon {
+  font-size: 32px;
+  opacity: 0.35;
+  line-height: 1;
+}
+
+.dg-empty-text {
+  color: var(--dg-fg);
+  font-size: 13px;
+}
+
+/* ── Totals row ───────────────────────────────────────────────────────── */
+.dg-tfoot {
+  position: sticky;
+  bottom: 0;
+  z-index: 15;
+}
+
+.dg-tfoot .dg-total {
+  background: var(--dg-header-bg);
+  border-top: 1px solid var(--dg-border);
+  border-bottom: none;
+  font-family: var(--dg-font-mono);
+  font-size: 12px;
+  color: var(--dg-fg-muted);
+}
+
+.dg-total-value {
+  color: var(--dg-fg-heading);
+  font-weight: 500;
+}
+
+.dg-total-label {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.dg-totals-custom {
+  padding: 0;
+}
+
+/* ── Hidden columns banner ────────────────────────────────────────────── */
+.dg-hidden-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--dg-border);
+  background: var(--dg-accent-soft);
+  font-family: var(--dg-font-mono);
+  font-size: 10px;
+  color: var(--dg-accent);
+}
+
+.dg-show-all {
+  font-family: var(--dg-font-mono);
+  font-size: 10px;
+  color: var(--dg-accent);
+  background: transparent;
+  border: 1px solid var(--dg-accent);
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.dg-show-all:hover {
+  background: var(--dg-accent-hover);
+}
+
+/* ── Header context menu ──────────────────────────────────────────────── */
+.dg-context-menu {
+  position: absolute;
+  z-index: 100;
+  min-width: 170px;
+  background: #0d0d0d;
+  border: 1px solid var(--dg-border);
+  border-radius: 6px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dg-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dg-fg);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.dg-menu-item:hover {
+  background: var(--dg-header-bg);
+  color: var(--dg-fg-heading);
+}
+
+.dg-menu-item svg {
+  flex-shrink: 0;
+  color: var(--dg-fg-muted);
+}
+
+.dg-menu-danger:hover {
+  color: #ef4444;
+}
+
+.dg-menu-divider {
+  height: 1px;
+  background: var(--dg-border);
+  margin: 2px 6px;
+}
+
+/* ── Mobile: hide secondary columns ───────────────────────────────────── */
+@media (max-width: 767px) {
+  .dg-root {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+
+  .dg-toolbar {
+    padding: 10px 12px;
+  }
+
+  .dg-density-btn {
+    padding: 5px 7px;
+    font-size: 9px;
+  }
+
+  .dg-scroll {
+    margin: 0 0 16px;
+    max-height: calc(100vh - 170px);
+  }
+
+  .dg-table { min-width: 100%; }
+
+  .dg-table th,
+  .dg-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  /* Hide any column not marked first on mobile.
+     Consumers can still override via tableClassName. */
+  .dg-table th:not(.dg-first-col),
+  .dg-table td:not(.dg-first-col) {
+    display: none;
+  }
+
+  .dg-first-col {
+    position: static;
+    box-shadow: none;
+    width: 100% !important;
+  }
+}
+
+/* Scrollbar styling for webkit */
+.dg-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dg-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dg-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.dg-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

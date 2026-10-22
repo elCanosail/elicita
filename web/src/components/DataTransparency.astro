@@ -1,0 +1,109 @@
+---
+import {
+  TECHNOLOGY_DATASET,
+  marketIntelligenceLatestPath,
+  type SnapshotLoadResult,
+  loadPublishedMarketSnapshot,
+} from '@/lib/market-intelligence';
+
+interface Props {
+  publication?: SnapshotLoadResult;
+  heading?: string;
+}
+
+const {
+  publication = await loadPublishedMarketSnapshot(),
+  heading = 'Transparencia de datos',
+} = Astro.props;
+
+const formatDate = (date: string) => new Intl.DateTimeFormat('es-ES', {
+  dateStyle: 'long',
+  timeZone: 'UTC',
+}).format(new Date(date));
+
+const formatCount = (value: number) => new Intl.NumberFormat('es-ES').format(value);
+const coverages = publication.status === 'published' ? [
+  ['CPV resuelto', publication.value.snapshot.coverage.cpv_resolved_pct],
+  ['Importe válido', publication.value.snapshot.coverage.amount_valid_pct],
+  ['Proveedor resuelto', publication.value.snapshot.coverage.supplier_resolved_pct],
+  ['Comprador resuelto', publication.value.snapshot.coverage.buyer_resolved_pct],
+] : [];
+---
+
+<section class="not-prose rounded-lg border border-border bg-card p-6" aria-labelledby="data-transparency-heading">
+  <div class="flex flex-col gap-2 border-b border-border pb-4 sm:flex-row sm:items-baseline sm:justify-between">
+    <div>
+      <p class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Evidencia reproducible</p>
+      <h2 id="data-transparency-heading" class="mt-2 text-xl tracking-tight text-foreground">{heading}</h2>
+    </div>
+    {publication.status === 'published' ? (
+      <span class="inline-flex w-fit rounded-full border border-primary px-2.5 py-1 font-mono text-xs uppercase tracking-wider text-primary">Snapshot validado</span>
+    ) : (
+      <span class="inline-flex w-fit rounded-full border border-warning px-2.5 py-1 font-mono text-xs uppercase tracking-wider text-warning">Pendiente de publicación</span>
+    )}
+  </div>
+
+  {publication.status === 'published' ? (
+    <div class="mt-5 space-y-6">
+      <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <dt class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Actualizado</dt>
+          <dd class="mt-1 text-sm text-foreground">{formatDate(publication.value.snapshot.generated_at)}</dd>
+        </div>
+        <div>
+          <dt class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Periodo</dt>
+          <dd class="mt-1 font-mono text-sm text-foreground">{publication.value.snapshot.period.from} — {publication.value.snapshot.period.to}</dd>
+        </div>
+        <div>
+          <dt class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Contratos analíticos</dt>
+          <dd class="mt-1 font-mono text-sm text-foreground">{formatCount(publication.value.snapshot.universe.analytic_contracts)}</dd>
+        </div>
+        <div>
+          <dt class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Snapshot</dt>
+          <dd class="mt-1 break-words font-mono text-sm text-foreground">{publication.value.snapshot.snapshot_id}</dd>
+        </div>
+      </dl>
+
+      <div>
+        <h3 class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Cobertura</h3>
+        <ul class="mt-3 grid gap-2 sm:grid-cols-2" role="list">
+          {coverages.map(([label, value]) => (
+            <li class="flex items-baseline justify-between gap-3 border-b border-border py-2 text-sm">
+              <span class="text-muted-foreground">{label}</span>
+              <span class="font-mono text-foreground">{value.toLocaleString('es-ES')} %</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div>
+          <h3 class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Metodología</h3>
+          <p class="mt-2 text-sm leading-6 text-muted-foreground">
+            Schema {publication.value.snapshot.methodology.schema_version} · metodología {publication.value.snapshot.methodology.methodology_version} · taxonomía {publication.value.snapshot.methodology.taxonomy_version} · identidades {publication.value.snapshot.methodology.identity_registry_version}.
+          </p>
+        </div>
+        <div>
+          <h3 class="font-mono text-xs uppercase tracking-wider text-muted-foreground">Qué no sabemos</h3>
+          <ul class="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground">
+            {publication.value.snapshot.limitations.map((limitation) => <li>{limitation}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <p class="text-sm text-muted-foreground">
+        <a class="font-mono text-primary underline decoration-primary/40 underline-offset-4 hover:text-foreground" href={`${marketIntelligenceLatestPath(TECHNOLOGY_DATASET)}snapshot.json`}>Descargar JSON</a>
+        <span aria-hidden="true"> · </span>
+        <a class="font-mono text-primary underline decoration-primary/40 underline-offset-4 hover:text-foreground" href={`${marketIntelligenceLatestPath(TECHNOLOGY_DATASET)}coverage.csv`}>descargar cobertura CSV</a>
+        <span aria-hidden="true"> · </span>
+        <a class="font-mono text-primary underline decoration-primary/40 underline-offset-4 hover:text-foreground" href="/datos-abiertos">ver catálogo y checksums</a>
+      </p>
+    </div>
+  ) : (
+    <div class="mt-5 space-y-3 text-sm leading-6 text-muted-foreground">
+      <p>{publication.reason}</p>
+      <p>No mostramos cifras, descargas ni identificadores hasta que el pipeline publique todos los artefactos con recibo y checksums verificables.</p>
+      <a class="font-mono text-primary underline decoration-primary/40 underline-offset-4 hover:text-foreground" href="/datos-abiertos">Ver el estado de Datos Abiertos</a>
+    </div>
+  )}
+</section>

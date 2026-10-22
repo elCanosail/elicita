@@ -1,0 +1,141 @@
+---
+title: "Radiografía #1 — El mapa del tesoro: 30,9 millones de licitaciones bajo el microscopio"
+excerpt: "66,4 millones de registros. 27,5K organismos. 488K adjudicatarios. Así hemos construido el dataset más completo de contratación pública española — y esto es lo que revela."
+date: "2026-03-15"
+readTime: "6 min"
+category: "Radiografía"
+series: "Radiografía"
+author: "Equipo Elicita"
+tags: ["radiografía", "dataset", "contratación pública", "datos", "transparencia", "análisis"]
+draft: false
+---
+
+import { Image } from 'astro:assets';
+
+*Este es el primer artículo de la serie **"Radiografía de la Contratación Pública Española"** — un análisis exhaustivo basado en datos reales, sin estimaciones infladas ni proyecciones de consultora. Cada cifra procede de nuestro dataset.*
+
+---
+
+## El problema: un país que no puede verse a sí mismo
+
+España gasta decenas de miles de millones de euros al año en contratación pública. Obras, servicios, suministros — desde el AVE hasta el papel higiénico de un ayuntamiento de 500 habitantes.
+
+Pero si intentas responder preguntas básicas — ¿cuánto se gasta? ¿quién gana los contratos? ¿hay concentración de mercado? — te encuentras con un muro. No de secreto, sino de **fragmentación**.
+
+Los datos existen. Están publicados. Pero repartidos en decenas de portales que no se hablan entre sí.
+
+## Lo que hemos construido
+
+Hemos agregado, normalizado y cruzado **66,4 millones de registros** de contratación pública española. No es un número redondo porque no redondeamos — es lo que hay.
+
+### Desglose por fuente
+
+| Fuente | Registros | Cobertura |
+|--------|-----------|-----------|
+| PLACE (estatal) | 13,4M | AGE + organismos vinculados |
+| TED (europeo) | 6,5M | Contratos sobre umbral UE |
+| Comunidad de Madrid | 2,6M | Portal propio |
+| Catalunya | 2,0M | Portal propio |
+| Galicia (DOGA) | 1,7M | Portal propio |
+| Andalucía | 808K | Portal propio |
+| Euskadi | 714K | Portal propio |
+| Otras fuentes / unificación | ~3,2M | Valencia, Aragón y resto |
+| **Subtotal licitaciones** | **30,9M** | |
+| BORME (empresas + cargos) | 26,3M | Registro Mercantil |
+| Tabla de calidad | 8,7M | Indicadores normalizados |
+| NIFs canónicos | 488K | Resolución de identidades |
+| **Total dataset** | **66,4M** | |
+
+No es una lista de PDFs. Cada registro está estructurado, normalizado y vinculable con los demás.
+
+### ¿Por qué BORME?
+
+Porque la contratación pública no ocurre en el vacío. Si un adjudicatario cambia de nombre, se fusiona con otro o nombra nuevos administradores, eso importa. 26,3 millones de registros mercantiles nos permiten **resolver la identidad real** detrás de cada NIF, incluso cuando los portales de licitación escriben el nombre de formas distintas.
+
+## Lo que dicen los números
+
+### 2 billones de euros bajo la lupa
+
+Solo en PLACE (contratos estatales), el volumen acumulado de adjudicaciones supera los **2 billones de euros** (filtrado de outliers por errores de publicación). Esto incluye registros desde el año 2000 hasta hoy.
+
+Para poner la cifra en contexto: el PIB de España en 2024 fue de ~1,5 billones. La contratación pública acumulada que tenemos indexada equivale a **más de un año completo de producción económica nacional**.
+
+### La distribución del dinero es brutal
+
+El contrato público mediano vale **4.405 €**. La media: **195.089 €**. Esa diferencia — un factor de 44x — revela lo que cualquier consultor de licitaciones sabe pero pocos cuantifican: **el mercado está dominado por volúmenes extremos**.
+
+| Percentil | Importe |
+|-----------|---------|
+| 25% | 606 € |
+| 50% (mediana) | 4.405 € |
+| 75% | 29.735 € |
+| 95% | 377.251 € |
+
+El 95% de los contratos no llegan a 400K €. Pero el 5% restante concentra la inmensa mayoría del gasto. Ley de Pareto en estado puro.
+
+### Quién gana: 487.604 adjudicatarios, pero solo 875 importan
+
+De los casi medio millón de NIFs que aparecen como adjudicatarios en PLACE:
+
+- **3.007 empresas** han ganado exactamente un contrato. Una vez. Nunca más.
+- **17.000 empresas** acumulan 100 o más adjudicaciones.
+- **875 empresas** superan las 1.000 adjudicaciones.
+
+Esas 875 empresas — el **0,18%** del total de adjudicatarios — son las que sostienen la maquinaria. Servicios de limpieza, mantenimiento, consultoría, construcción. Las mismas caras, década tras década.
+
+En el próximo artículo de esta serie ("Los 875") entraremos en detalle en quiénes son y qué patrones revelan.
+
+### 27.501 organismos comprando
+
+PLACE registra **27.501 organismos contratantes únicos**. Desde el Ministerio de Defensa hasta la Mancomunidad de Servicios de la Vega del Henares.
+
+Cada uno tiene sus propios ritmos de compra, preferencias de proveedor y ciclos presupuestarios. Mapearlos individualmente es imposible para un humano. No para un algoritmo.
+
+## Los 10 sectores que mueven España
+
+Los códigos CPV (Common Procurement Vocabulary) clasifican cada contrato por tipo de bien o servicio. Estos son los 10 sectores con más registros:
+
+| CPV | Sector | Registros | Volumen |
+|-----|--------|-----------|---------|
+| 45 | Construcción | 1,4M | 533B € |
+| 90 | Medio ambiente | 348K | 159B € |
+| 85 | Salud | 334K | 134B € |
+| 50 | Mantenimiento | 627K | 126B € |
+| 33 | Equipos médicos | 529K | 105B € |
+| 34 | Transporte | 314K | 104B € |
+| 72 | Servicios TI | 384K | 91B € |
+| 79 | Servicios empresariales | 818K | 82B € |
+| 71 | Arquitectura e ingeniería | 608K | 56B € |
+| 92 | Cultura y recreación | 507K | 17B € |
+
+**Construcción es rey.** 533.000 millones de euros — más del doble que cualquier otro sector. Y dentro de construcción, las infraestructuras de transporte (AVE, autopistas, puertos) concentran importes desorbitados.
+
+Pero si miras por **número de oportunidades**, los servicios empresariales (CPV 79) y el mantenimiento (CPV 50) ofrecen más puertas de entrada. Más contratos, importes más asequibles, ciclos de renovación más cortos.
+
+## Cobertura y alcance
+
+El dataset integra 5 comunidades autónomas como fuentes propias, además de PLACE y TED. Las 12 restantes aparecen cuando publican en plataformas centralizadas. Los contratos menores tienen cobertura parcial — depende de si cada administración los reporta. Los errores de origen (importes incorrectos, NIFs mal formateados) se filtran y normalizan automáticamente.
+
+La cobertura crece cada 4 horas con nuevos registros.
+
+## Para qué sirve todo esto
+
+Un dataset no es un producto. Es una materia prima.
+
+Lo que construimos sobre él es lo que importa: **perfilado automático** de cualquier empresa por su CIF (historial completo de adjudicaciones, competidores recurrentes, ciclos de renovación), **detección de oportunidades** antes de que se publiquen (basada en patrones históricos), y **análisis competitivo** (quién gana, quién pierde, y por qué).
+
+Pero eso es para los próximos artículos de esta serie.
+
+---
+
+## La serie completa
+
+1. **El mapa del tesoro** ← estás aquí
+2. **Los 875** — Las empresas que dominan la contratación pública
+3. **CPV: el ADN de cada contrato** — Qué sectores mueven más dinero y por qué
+4. **17 reinos, 17 formas de publicar** — La fragmentación autonómica
+5. **El efecto incumbente** — Por qué el que ya está dentro casi siempre repite
+
+---
+
+*Todos los datos de esta serie proceden del dataset de Elicita actualizado a marzo de 2026. Las cifras se basan en registros publicados por fuentes oficiales. No se utilizan datos ficticios, estimaciones sin base real ni proyecciones no fundamentadas.*

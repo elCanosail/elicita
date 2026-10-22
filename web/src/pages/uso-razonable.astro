@@ -1,0 +1,104 @@
+---
+import Layout from '../layouts/main.astro';
+
+const description = "Política de uso razonable de Elicita: límites técnicos, conductas prohibidas y procedimiento de suspensión.";
+---
+
+<Layout title="Política de Uso Razonable — Elicita" description={description}>
+	<section class="py-20 md:py-32">
+		<div class="container mx-auto px-4">
+			<div class="max-w-4xl mx-auto">
+				<h1 class="text-4xl md:text-5xl font-light text-white mb-4">Política de Uso Razonable</h1>
+				<p class="text-white/30 mb-8">Última actualización: 6 de julio de 2026</p>
+
+				<div class="prose prose-lg dark:prose-invert max-w-none">
+					<p class="text-white/50">
+						Elicita aplica una política de uso razonable para proteger la estabilidad del servicio, garantizar el acceso equitativo de todos los usuarios y cumplir las condiciones de reutilización de las fuentes públicas que estructuramos.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">1. Qué es uso razonable</h2>
+					<p class="text-white/50">
+						Por uso razonable entendemos un uso del servicio compatible con su naturaleza pública y con la capacidad técnica que cada plan ofrece. La plataforma está pensada para consultas humanas y para integraciones técnicas a través de la API publicada, dentro de los límites de cada plan.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">2. Límites técnicos por plan</h2>
+					<p class="text-white/50">
+						Los límites concretos están publicados en <a href="/precios" class="text-emerald-400 hover:text-emerald-300">/precios</a> y resumidos en los <a href="/terms" class="text-emerald-400 hover:text-emerald-300">términos de uso</a>. Los superamos sólo en circunstancias excepcionales y previo acuerdo escrito.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">3. Conductas prohibidas</h2>
+					<ul>
+						<li>Scraping masivo o automatizado fuera de la API publicada o por encima de los límites del plan contratado.</li>
+						<li>Sobrecargar la infraestructura mediante peticiones no razonables, ataques de denegación de servicio o uso abusivo de exportaciones.</li>
+						<li>Redistribuir, revender o sublicenciar los datos como si fueran «fuente oficial» o sin la atribución requerida (PLACSP/TED/BORME + Elicita).</li>
+						<li>Construir perfiles comerciales o publicitarios sobre personas físicas (RGPD art. 5.1.b).</li>
+						<li>Evadir, falsificar o intentar burlar las medidas técnicas, de seguridad o los límites del plan.</li>
+						<li>Utilizar el servicio con fines ilícitos o contrarios al ordenamiento jurídico español.</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">4. Reutilización y atribución</h2>
+					<p class="text-white/50">
+						La reutilización de los datos está permitida bajo licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es" class="text-emerald-400 hover:text-emerald-300">Creative Commons Attribution 4.0 (CC BY 4.0)</a>, citando como fuente: PLACSP/TED/BORME (fuente oficial) y Elicita.es (intermediario técnico). Ver <a href="/reutilizacion-y-atribucion" class="text-emerald-400 hover:text-emerald-300">reutilización y atribución</a> para detalle.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">5. Suspensión y limitación de cuentas</h2>
+					<p class="text-white/50">
+						Ante un uso anómalo, Elicita se reserva el derecho de:
+					</p>
+					<ul>
+						<li>Notificar al titular de la cuenta el comportamiento detectado y solicitar su corrección.</li>
+						<li>Aplicar limitaciones temporales (rate-limit reducido, suspensión de exportaciones).</li>
+						<li>Suspender o cancelar la cuenta cuando el uso comprometa la estabilidad o la legalidad del servicio.</li>
+						<li>Reclamar judicialmente, si procede, los daños causados por uso abusivo o ilícito.</li>
+					</ul>
+					<p class="text-white/50">
+						Antes de cualquier limitación significativa, intentaremos contactar al usuario salvo que el comportamiento exija una respuesta inmediata.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">6. Acceso técnico extendido</h2>
+					<p class="text-white/50">
+						Si necesitas un volumen de uso superior al disponible en el plan Empresa (integraciones a gran escala, automatización compleja, datasets completos diarios), contáctanos en <a href="mailto:hola@elicita.es" class="text-emerald-400 hover:text-emerald-300">hola@elicita.es</a>. Estudiaremos cada caso individualmente y propondremos condiciones específicas que sean sostenibles para ambas partes.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">7. Detección automatizada de uso anómalo</h2>
+					<p class="text-white/50">
+						Para garantizar el acceso equitativo aplicamos detección automatizada de patrones de uso anómalos, atendiendo principalmente a:
+					</p>
+					<ul>
+						<li>Volumen de peticiones por unidad de tiempo desde una IP, una clave API o una cuenta.</li>
+						<li>Cadencia y profundidad de navegación incompatibles con uso humano (peticiones cada décimas de segundo, navegación exhaustiva sin selectividad).</li>
+						<li>Concurrencia anormal de peticiones desde múltiples IPs vinculadas a una misma cuenta o origen.</li>
+						<li>Volumen de exportaciones desproporcionado respecto al uso declarado.</li>
+						<li>Patrones de scraping fuera de la API publicada (parsing del HTML de fichas individuales en serie).</li>
+					</ul>
+					<p class="text-white/50">
+						Cuando se detecta un patrón anómalo aplicamos primero medidas automáticas no destructivas: rate-limit dinámico, retorno de respuestas con menor frecuencia, bloqueos temporales por IP. Si el patrón persiste, escalamos a revisión humana.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">8. Procedimiento ante limitaciones</h2>
+					<p class="text-white/50">
+						Si una cuenta o IP queda limitada y consideras que es un error, escribe a <a href="mailto:hola@elicita.es" class="text-emerald-400 hover:text-emerald-300">hola@elicita.es</a> indicando:
+					</p>
+					<ul>
+						<li>Tu cuenta o IP afectada.</li>
+						<li>Qué uso legítimo estabas haciendo cuando se aplicó la limitación.</li>
+						<li>Si la limitación afecta a un caso de uso comercial concreto que justifica volumen.</li>
+					</ul>
+					<p class="text-white/50">
+						Respondemos en 24-48 h hábiles. La mayoría de bloqueos por falsos positivos se resuelven en pocos minutos verificando la legitimidad.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">9. Cambios de esta política</h2>
+					<p class="text-white/50">
+						Podemos actualizar esta política para reflejar la evolución técnica del servicio, cambios legales aplicables o nuevas funcionalidades. La fecha de última actualización figura al inicio del documento. Las modificaciones sustanciales se anuncian con 30 días de antelación a usuarios registrados por correo y mediante banner en el sitio. El uso continuado tras la publicación implica aceptación de la nueva versión.
+					</p>
+
+					<hr class="border-white/5 my-8" />
+					<p class="text-sm text-white/25">
+						Última actualización: 6 de julio de 2026.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>

@@ -1,0 +1,31 @@
+{
+  "schema": "elicita.generation-receipt/v1",
+  "snapshot_id": "technology-20260914-220000Z",
+  "generated_at": "2026-09-14T22:00:00Z",
+  "pipeline_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "working_tree_clean": true,
+  "source_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "taxonomy_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "identity_registry_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "query_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "outputs": {
+    "snapshot.json": "sha256:2103683046d553c73fe5aa17f215252ac8515704875f138733dc0d75cd41db74",
+    "companies.csv": "sha256:083078f5a40175fee967285d36e475d2aa628865e917a34ad94783c554959a3b",
+    "business-groups.csv": "sha256:f94cf5710f1250455b6a210664e58cbfaec49d085308811a62c990431f9146da",
+    "buyers.csv": "sha256:b03970121748ffaf1664eb971ae14a5e2d126ba7b4c230dfc9d1653c62576a26",
+    "concentration.csv": "sha256:9c59bcb1a5fd6f64386aadc2a856c87890b6ece676c69ff734c433d7512bc1d1",
+    "evolution.csv": "sha256:c9ff933a472cce26601ed7247f268a7bbc03a280bc26b98cb10a76ee0a6a5371",
+    "coverage.csv": "sha256:e8ffa51fd089641c2e4179d1fd2532b4e7617e18d42e53da674f8029651d5d18",
+    "exclusions.csv": "sha256:b16e89bbd2599d544cf4e68fbeab06347c1d925eb27e03a520446c3834aca316",
+    "methodology.json": "sha256:1aac1e166356e2cc7a64913109562c1b861b4b4d543ca323cff634af70855948"
+  },
+  "checks": {
+    "schema_valid": true,
+    "duplicate_analytic_ids": 0,
+    "shares_within_tolerance": true,
+    "rankings_deterministic": true,
+    "no_direct_identifiers": true,
+    "minimum_group_policy_applied": true,
+    "freshness_non_regression": true
+  }
+}

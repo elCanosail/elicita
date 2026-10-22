@@ -1,0 +1,304 @@
+---
+import Layout from '../layouts/main.astro';
+import { Database, Globe, Building2, FileCheck, Activity, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+
+const description = "Las 16 fuentes oficiales de elicita_ —PLACSP, TED, boletines autonómicos y registro mercantil— con 63M+ registros oficiales actualizados cada 4 horas.";
+
+const sources = [
+  {
+    name: "PLACSP Nacional",
+    code: "nacional",
+    url: "https://contrataciondelestado.es",
+    type: "Contratación",
+    records: "13.4M",
+    status: "active",
+    frequency: "Cada 4 horas",
+    coverage: "Estatal — todos los organismos del sector público estatal",
+    notes: "Plataforma de Contratación del Sector Público. Fuente principal de licitaciones estatales."
+  },
+  {
+    name: "TED UE",
+    code: "ted",
+    url: "https://ted.europa.eu",
+    type: "Contratación",
+    records: "6.5M",
+    status: "active",
+    frequency: "Diario",
+    coverage: "Europea — licitaciones above-threshold de todos los Estados miembros",
+    notes: "Tenders Electronic Daily. Diario oficial de contratación pública de la UE."
+  },
+  {
+    name: "Catalunya",
+    code: "catalunya",
+    url: "https://contractaciopublica.gencat.cat",
+    type: "Contratación",
+    records: "2.5M",
+    status: "active",
+    frequency: "Diario",
+    coverage: "Comunidad autónoma de Cataluña",
+    notes: "Plataforma de Contractació Pública de Catalunya."
+  },
+  {
+    name: "Comunidad de Madrid",
+    code: "madrid",
+    url: "https://contratos.madrid.org",
+    type: "Contratación",
+    records: "2.6M",
+    status: "active",
+    frequency: "Diario",
+    coverage: "Comunidad autónoma de Madrid",
+    notes: "Plataforma de contratos de la Comunidad de Madrid."
+  },
+  {
+    name: "Ayuntamiento de Madrid",
+    code: "madrid_ayto",
+    url: "https://datos.madrid.es",
+    type: "Contratación",
+    records: "6.2K",
+    status: "active",
+    frequency: "Cada 4 horas",
+    coverage: "Municipal — contratos del Ayuntamiento de Madrid y organismos municipales",
+    notes: "Portal de datos abiertos del Ayuntamiento de Madrid. Contratos menores y adjudicaciones del municipio."
+  },
+  {
+    name: "Galicia",
+    code: "galicia",
+    url: "https://www.contratosdegalicia.gal",
+    type: "Contratación",
+    records: "1.7M",
+    status: "active",
+    frequency: "Diario",
+    coverage: "Comunidad autónoma de Galicia",
+    notes: "Plataforma de contratos públicos de la Xunta de Galicia."
+  },
+  {
+    name: "Galicia — DOGA (feed)",
+    code: "doga",
+    url: "https://contrataciondelestado.es",
+    type: "Alertas",
+    records: "2.3K",
+    status: "active",
+    frequency: "Cada 4 horas",
+    coverage: "Galicia — anuncios de licitación y adjudicación del Diario Oficial de Galicia",
+    notes: "Feed Atom en tiempo real del Diario Oficial de Galicia vía sindicación de PLACSP. Complementa el dataset histórico de Galicia."
+  },
+  {
+    name: "Andalucía",
+    code: "andalucia",
+    url: "https://www.juntadeandalucia.es/contratacion",
+    type: "Contratación",
+    records: "808K",
+    status: "active",
+    frequency: "Diario",
+    coverage: "Comunidad autónoma de Andalucía",
+    notes: "Plataforma de contratación pública de la Junta de Andalucía."
+  },
+  {
+    name: "Euskadi",
+    code: "euskadi",
+    url: "https://www.contratacion.euskadi.eus",
+    type: "Contratación",
+    records: "713K",
+    status: "active",
+    frequency: "Diario",
+    coverage: "Comunidad autónoma del País Vasco",
+    notes: "Plataforma de contratación pública del Gobierno Vasco."
+  },
+  {
+    name: "Asturias",
+    code: "asturias",
+    url: "https://transparencia.asturias.es",
+    type: "Contratación",
+    records: "375K",
+    status: "active",
+    frequency: "Mensual",
+    coverage: "Comunidad autónoma del Principado de Asturias",
+    notes: "Dataset abierto del Principado de Asturias."
+  },
+  {
+    name: "Valencia",
+    code: "valencia",
+    url: "https://contratacion.gva.es",
+    type: "Contratación",
+    records: "246K",
+    status: "active",
+    frequency: "Diario",
+    coverage: "Comunidad Valenciana",
+    notes: "Plataforma de contratación de la Generalitat Valenciana."
+  },
+  {
+    name: "Valencia — DOGV (feed)",
+    code: "dogv",
+    url: "https://contrataciondelestado.es",
+    type: "Alertas",
+    records: "7.5K",
+    status: "active",
+    frequency: "Cada 4 horas",
+    coverage: "C. Valenciana — licitaciones y adjudicaciones en tiempo real vía sindicación",
+    notes: "Feed sindicado de perfiles de contratante de la C. Valenciana en PLACSP. Complementa el dataset histórico de Valencia."
+  },
+  {
+    name: "BOE — Alerta temprana",
+    code: "boe",
+    url: "https://www.boe.es",
+    type: "Alertas",
+    records: "3.4K",
+    status: "active",
+    frequency: "Diario",
+    coverage: "Estatal — avances de licitaciones publicadas en BOE",
+    notes: "Alerta temprana diaria de licitaciones publicadas en el BOE antes de su aparición en PLACSP."
+  },
+  {
+    name: "BORME — Empresas",
+    code: "borme_empresas",
+    url: "https://www.boe.es/diario_borme",
+    type: "Mercantil",
+    records: "9.3M",
+    status: "active",
+    frequency: "Diario (D+1)",
+    coverage: "Nacional — todas las empresas inscritas en el Registro Mercantil",
+    notes: "Boletín Oficial del Registro Mercantil. Estructura societaria, cargos y actos mercantiles."
+  },
+  {
+    name: "BORME — Cargos",
+    code: "borme_cargos",
+    url: "https://www.boe.es/diario_borme",
+    type: "Mercantil",
+    records: "17.1M",
+    status: "active",
+    frequency: "Diario (D+1)",
+    coverage: "Nacional — nombramientos y ceses de administradores, apoderados y socios",
+    notes: "Cargos publicados en BORME desde 2009. Base del grafo de relaciones (Universo)."
+  },
+  {
+    name: "Calidad de contratos",
+    code: "calidad",
+    url: "https://contrataciondelestado.es",
+    type: "Calidad",
+    records: "8.7M",
+    status: "active",
+    frequency: "Histórico (feb-2026)",
+    coverage: "Estatal — contratos con indicadores de calidad aplicados (dataset histórico, última edición feb-2026)",
+    notes: "20 indicadores de validez, consistencia y fiabilidad. Score automático 0-100 por contrato. Fuente externa sin actualización activa."
+  },
+  {
+    name: "Aragón Open Data",
+    code: "aragon",
+    url: "https://opendata.aragon.es",
+    type: "Contratación",
+    records: "536",
+    status: "historica",
+    frequency: "Ingesta histórica — sin conector activo",
+    coverage: "Aragón — contratos publicados en el portal abierto del Gobierno de Aragón (jul–ago 2026)",
+    notes: "536 contratos reales de una fuente oficial, incorporados en una ingesta histórica puntual. No forma parte de las 16 fuentes activas del registro vivo (sin conector cada 4h); se lista por trazabilidad. Los registros permanecen consultables."
+  }
+];
+
+const totalRecords = sources.reduce((acc, s) => {
+  const num = parseFloat(s.records.replace(/[KM]/, ''));
+  const mult = s.records.includes('K') ? 1000 : s.records.includes('M') ? 1000000 : 1;
+  return acc + num * mult;
+}, 0);
+
+const sourceTypes = [...new Set(sources.map(s => s.type))];
+
+const stats = [
+  { value: "63M+", label: "registros oficiales", icon: Database },
+  { value: sources.filter((s) => s.status === 'active').length, label: "fuentes activas", icon: Globe },
+  { value: "9.3M", label: "empresas (BORME)", icon: Building2 },
+  { value: "4h", label: "ciclo mínimo", icon: RefreshCw },
+];
+---
+
+<Layout title="Fuentes de datos — Elicita" description={description}>
+	<section class="py-20 md:py-32">
+		<div class="container mx-auto px-4">
+			<div class="max-w-6xl mx-auto">
+				<h1 class="text-4xl md:text-5xl font-light text-white mb-4">Fuentes de datos</h1>
+				<p class="text-white/50 mb-12 text-lg">
+					Todos los datos de Elicita provienen de fuentes públicas oficiales. Cero datos inventados.
+					Reutilización al amparo de la <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814" class="text-emerald-400 hover:text-emerald-300">Ley 37/2007</a>. Licencia datos: <a href="/reutilizacion-y-atribucion" class="text-emerald-400 hover:text-emerald-300">CC BY 4.0</a>.
+				</p>
+
+				<!-- Stats -->
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+					{stats.map((stat) => (
+						<div class="rounded-lg border border-white/5 bg-white/[0.02] p-4">
+							<stat.icon class="h-5 w-5 text-emerald-400 mb-2" />
+							<div class="text-2xl font-light text-white">{stat.value}</div>
+							<div class="text-sm text-white/50">{stat.label}</div>
+						</div>
+					))}
+				</div>
+
+				<!-- Source table -->
+				<div class="space-y-3">
+					{sources.map((source) => (
+						<div class="rounded-lg border border-white/5 bg-white/[0.02] p-5 hover:bg-white/[0.04] transition-colors">
+							<div class="flex flex-col md:flex-row md:items-start gap-4">
+								<div class="flex-shrink-0">
+									{source.status === 'active' ? (
+										<CheckCircle2 class="h-5 w-5 text-emerald-400" />
+									) : (
+										<AlertCircle class="h-5 w-5 text-amber-400" />
+									)}
+								</div>
+								<div class="flex-1 space-y-2">
+									<div class="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
+										<h3 class="text-white font-medium">{source.name}</h3>
+										<span class="text-xs text-white/50 px-2 py-0.5 rounded bg-white/5">{source.type}</span>
+										{source.status !== 'active' && (
+											<span class="text-xs text-amber-400/90 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">ingesta histórica — sin conector activo</span>
+										)}
+										<span class="text-xs text-white/50">{source.records} registros</span>
+									</div>
+									<p class="text-sm text-white/50">{source.notes}</p>
+									<div class="flex flex-col md:flex-row gap-1 md:gap-6 text-xs text-white/50">
+										<span>Cobertura: {source.coverage}</span>
+										<span>Actualización: {source.frequency}</span>
+										{source.url !== 'internal' && (
+											<a href={source.url} target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300">
+												Fuente oficial →
+											</a>
+										)}
+									</div>
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+
+				<p class="text-xs text-white/50 mt-4">
+					Además del listado, elicita mantiene una tabla interna de canonicalización de NIF (<code class="text-emerald-400">nif_canonical</code>) que unifica variantes de CIF antes de cruzar las fuentes. No es una fuente externa: no incorpora registros propios.
+				</p>
+
+				<p class="text-xs text-white/50 mt-2">
+					Aragón Open Data se lista como ingesta histórica (sin conector activo): sus 536 contratos son reales y consultables, pero no cuentan en las 16 fuentes activas del registro vivo, que se actualiza cada 4 horas.
+				</p>
+
+				<!-- Notes -->
+				<div class="mt-12 space-y-4">
+					<h2 class="text-2xl font-light text-white mb-4">Notas sobre reutilización</h2>
+					<div class="prose prose-sm dark:prose-invert max-w-none">
+						<ul class="space-y-2 text-white/50">
+							<li><strong class="text-white/70">Independencia:</strong> Elicita no está afiliado a ninguna de estas fuentes. Es un servicio técnico privado que reestructura datos públicos.</li>
+							<li><strong class="text-white/70">No-responsabilidad:</strong> Los errores presentes en la fuente original se reproducen tal cual. Para trámites oficiales, consulta siempre la fuente directa.</li>
+							<li><strong class="text-white/70">Cobertura no uniforme:</strong> Los datos anteriores a 2010 tienen menor completitud, especialmente en administraciones locales pequeñas.</li>
+							<li><strong class="text-white/70">Deduplicación:</strong> El mismo contrato puede aparecer en PLACSP y en una plataforma autonómica. Lo detectamos y unificamos en <code class="text-emerald-400">contratos_vivos</code>.</li>
+							<li><strong class="text-white/70">BORME D+1:</strong> El BORME se publica diariamente y lo procesamos con un día de retraso respecto a la fecha oficial.</li>
+							<li><strong class="text-white/70">Calidad:</strong> 20 indicadores aplicados a cada contrato: validez (datos completos), consistencia (sin contradicciones) y fiabilidad (trazabilidad). Score automático 0-100.</li>
+							<li><strong class="text-white/70">Licencia:</strong> Los datos derivados se publican bajo <a href="/reutilizacion-y-atribucion" class="text-emerald-400 hover:text-emerald-300">CC BY 4.0</a>. Atribución: PLACSP/TED/BORME (fuente oficial) + Elicita.es (intermediario técnico).</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- Ver también -->
+				<div class="mt-8 pt-8 border-t border-white/5">
+					<p class="text-sm text-white/50">
+						Ver también: <a href="/cobertura" class="text-emerald-400 hover:text-emerald-300">cobertura de datos</a> · <a href="/docs/metodologia" class="text-emerald-400 hover:text-emerald-300">metodología</a> · <a href="/reutilizacion-y-atribucion" class="text-emerald-400 hover:text-emerald-300">reutilización y atribución</a>
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>

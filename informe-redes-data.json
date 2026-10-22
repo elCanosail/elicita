@@ -1,0 +1,1150 @@
+{
+  "resumen": {
+    "nacional_total": 740,
+    "ted_total": 2578,
+    "nacional_importe_eur": 785854174.8900003,
+    "ted_importe_eur": 3569598809.800001
+  },
+  "nacional_por_ano": [
+    {
+      "año": 2016,
+      "contratos": 54,
+      "importe_total": 85916829.47,
+      "importe_medio": 1591052.4
+    },
+    {
+      "año": 2017,
+      "contratos": 110,
+      "importe_total": 46784911.94,
+      "importe_medio": 425317.38
+    },
+    {
+      "año": 2018,
+      "contratos": 3,
+      "importe_total": 40077000.0,
+      "importe_medio": 13359000.0
+    },
+    {
+      "año": 2019,
+      "contratos": 14,
+      "importe_total": 28718848.56,
+      "importe_medio": 2051346.33
+    },
+    {
+      "año": 2020,
+      "contratos": 120,
+      "importe_total": 155713338.95,
+      "importe_medio": 1319604.57
+    },
+    {
+      "año": 2021,
+      "contratos": 128,
+      "importe_total": 178993927.25,
+      "importe_medio": 1398390.06
+    },
+    {
+      "año": 2022,
+      "contratos": 86,
+      "importe_total": 100674216.7,
+      "importe_medio": 1170630.43
+    },
+    {
+      "año": 2023,
+      "contratos": 114,
+      "importe_total": 78789686.24,
+      "importe_medio": 691137.6
+    },
+    {
+      "año": 2024,
+      "contratos": 55,
+      "importe_total": 32912169.91,
+      "importe_medio": 598403.09
+    },
+    {
+      "año": 2025,
+      "contratos": 56,
+      "importe_total": 37273245.87,
+      "importe_medio": 665593.68
+    }
+  ],
+  "ted_por_ano": [
+    {
+      "año": 2016,
+      "contratos": 158,
+      "importe_total": 442384753.83,
+      "importe_medio": 2799903.51
+    },
+    {
+      "año": 2017,
+      "contratos": 304,
+      "importe_total": 200871942.44,
+      "importe_medio": 660762.97
+    },
+    {
+      "año": 2018,
+      "contratos": 16,
+      "importe_total": 213744000.0,
+      "importe_medio": 13359000.0
+    },
+    {
+      "año": 2019,
+      "contratos": 60,
+      "importe_total": 139423585.68,
+      "importe_medio": 2323726.43
+    },
+    {
+      "año": 2020,
+      "contratos": 458,
+      "importe_total": 807683881.22,
+      "importe_medio": 1763501.92
+    },
+    {
+      "año": 2021,
+      "contratos": 536,
+      "importe_total": 791365124.88,
+      "importe_medio": 1476427.47
+    },
+    {
+      "año": 2022,
+      "contratos": 294,
+      "importe_total": 373267386.84,
+      "importe_medio": 1269616.96
+    },
+    {
+      "año": 2023,
+      "contratos": 428,
+      "importe_total": 363600792.85,
+      "importe_medio": 849534.56
+    },
+    {
+      "año": 2024,
+      "contratos": 175,
+      "importe_total": 126973088.85,
+      "importe_medio": 725560.51
+    },
+    {
+      "año": 2025,
+      "contratos": 149,
+      "importe_total": 110284253.21,
+      "importe_medio": 740162.77
+    }
+  ],
+  "top_adj_nacional_contratos": [
+    {
+      "adjudicatario": "TELEFONICA SOLUCIONES DE INFORMATICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+      "contratos": 18,
+      "importe_total": 39868866.57,
+      "nifs": [
+        "A78053147"
+      ]
+    },
+    {
+      "adjudicatario": "TELEFONICA DE ESPAÑA, S.A.U.",
+      "contratos": 17,
+      "importe_total": 9998311.77,
+      "nifs": [
+        "A82018474"
+      ]
+    },
+    {
+      "adjudicatario": "OESIA NETWORKS, S.L.",
+      "contratos": 15,
+      "importe_total": 7522413.12,
+      "nifs": [
+        "B95087482"
+      ]
+    },
+    {
+      "adjudicatario": "LYNTIA NETWORKS SAU",
+      "contratos": 13,
+      "importe_total": 4905490.96,
+      "nifs": [
+        "A61648069"
+      ]
+    },
+    {
+      "adjudicatario": "PACKET CLEARING HOUSE",
+      "contratos": 12,
+      "importe_total": 1576512.0,
+      "nifs": [
+        "94-3380476"
+      ]
+    },
+    {
+      "adjudicatario": "UTE INNOVA NEXT, S.L.U. Y THE VALLEY DIGITAL BUSINESS SCHOOL, S.L",
+      "contratos": 11,
+      "importe_total": 27274978.5,
+      "nifs": [
+        "270076"
+      ]
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE, S.A.U.",
+      "contratos": 10,
+      "importe_total": 36168043.75,
+      "nifs": [
+        "A82009812"
+      ]
+    },
+    {
+      "adjudicatario": "TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+      "contratos": 10,
+      "importe_total": 7546544.76,
+      "nifs": [
+        "A78053147",
+        "B83668913",
+        "A82018474"
+      ]
+    },
+    {
+      "adjudicatario": "QUALITY MEDIA PRODUCCIONES SL",
+      "contratos": 10,
+      "importe_total": 150913.5,
+      "nifs": [
+        "B87390860"
+      ]
+    },
+    {
+      "adjudicatario": "TELECYL, S.A",
+      "contratos": 10,
+      "importe_total": 1874711.0,
+      "nifs": [
+        "A47310941"
+      ]
+    },
+    {
+      "adjudicatario": "CAJA DE SEGUROS REUNIDOS COMPAÑÍA DE SEGUROS Y REASEGUROS S.A (CASER SA)",
+      "contratos": 9,
+      "importe_total": 118545.06,
+      "nifs": [
+        "A28013050"
+      ]
+    },
+    {
+      "adjudicatario": "EY TRANSFORMA SERVICIOS DE CONSULTORÍA, S.L.",
+      "contratos": 8,
+      "importe_total": 6861678.71,
+      "nifs": [
+        "B88428404"
+      ]
+    },
+    {
+      "adjudicatario": "EVERIS SPAIN, S.L.",
+      "contratos": 8,
+      "importe_total": 3488309.28,
+      "nifs": [
+        "B82387770"
+      ]
+    },
+    {
+      "adjudicatario": "UTE TELEFÓNICA MÓVILES ESPAÑA, S.A.U. - TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.",
+      "contratos": 8,
+      "importe_total": 57097727.64,
+      "nifs": [
+        "266180",
+        "U05342555",
+        "266384"
+      ]
+    },
+    {
+      "adjudicatario": "COMPUSOF, S.A.",
+      "contratos": 7,
+      "importe_total": 1554023.42,
+      "nifs": [
+        "A28793917"
+      ]
+    },
+    {
+      "adjudicatario": "NTT DATA SPAIN, S.L.U.",
+      "contratos": 6,
+      "importe_total": 4783040.0,
+      "nifs": [
+        "B82387770"
+      ]
+    },
+    {
+      "adjudicatario": "ICLAVES S.L",
+      "contratos": 6,
+      "importe_total": 501120.0,
+      "nifs": [
+        "B85609709"
+      ]
+    },
+    {
+      "adjudicatario": "KPMG Asesores, S.L.",
+      "contratos": 6,
+      "importe_total": 384000.0,
+      "nifs": [
+        "B82498650"
+      ]
+    },
+    {
+      "adjudicatario": "D'ALEPH INICIATIVAS Y ORGANIZACIÓN S.A.",
+      "contratos": 6,
+      "importe_total": 2802602.4,
+      "nifs": [
+        "A63141170"
+      ]
+    },
+    {
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "contratos": 6,
+      "importe_total": 47924938.82,
+      "nifs": [
+        "A82018474"
+      ]
+    }
+  ],
+  "top_adj_nacional_importe": [
+    {
+      "adjudicatario": "UTE TELEFÓNICA MÓVILES ESPAÑA, S.A.U. - TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.",
+      "contratos": 8,
+      "importe_total": 57097727.64
+    },
+    {
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "contratos": 6,
+      "importe_total": 47924938.82
+    },
+    {
+      "adjudicatario": "SISTEMAS INFORMATICOS ABIERTOS, S.A.",
+      "contratos": 3,
+      "importe_total": 40077000.0
+    },
+    {
+      "adjudicatario": "TELEFONICA SOLUCIONES DE INFORMATICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+      "contratos": 18,
+      "importe_total": 39868866.57
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE, S.A.U.",
+      "contratos": 10,
+      "importe_total": 36168043.75
+    },
+    {
+      "adjudicatario": "UTE TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.U., Y TELEFÓNICA MÓVILES ESPAÑA, S.A.U.",
+      "contratos": 5,
+      "importe_total": 32517276.2
+    },
+    {
+      "adjudicatario": "UTE INNOVA NEXT, S.L.U. Y THE VALLEY DIGITAL BUSINESS SCHOOL, S.L",
+      "contratos": 11,
+      "importe_total": 27274978.5
+    },
+    {
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "contratos": 1,
+      "importe_total": 24790605.96
+    },
+    {
+      "adjudicatario": "INUSUAL COMUNICACIÓN INNOVADORA, S.L.",
+      "contratos": 3,
+      "importe_total": 23694771.15
+    },
+    {
+      "adjudicatario": "VODAFONE ESPAÑA, S.A.U",
+      "contratos": 2,
+      "importe_total": 17500123.7
+    },
+    {
+      "adjudicatario": "Orange Espagne, S.A.U.",
+      "contratos": 1,
+      "importe_total": 14638290.65
+    },
+    {
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U",
+      "contratos": 2,
+      "importe_total": 13844464.87
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE, S.A.U",
+      "contratos": 3,
+      "importe_total": 12973173.5
+    },
+    {
+      "adjudicatario": "UTE EVERIS BPO, S.L.U.- EVERIS SPAIN, S.L.U. – OESÍA NETWORKS",
+      "contratos": 1,
+      "importe_total": 10997280.0
+    },
+    {
+      "adjudicatario": "UTE THE VALLEY DIGITAL BUSINESS SCHOOL, S.L. – INNOVA NEXT, S.L.U.",
+      "contratos": 3,
+      "importe_total": 10909090.92
+    },
+    {
+      "adjudicatario": "TELEFONICA DE ESPAÑA, S.A.U.",
+      "contratos": 17,
+      "importe_total": 9998311.77
+    },
+    {
+      "adjudicatario": "SISTEMAS INFORMÁTICOS ABIERTOS, S.A.",
+      "contratos": 1,
+      "importe_total": 9804373.16
+    },
+    {
+      "adjudicatario": "Guadaltel, S.A",
+      "contratos": 5,
+      "importe_total": 9749385.16
+    },
+    {
+      "adjudicatario": "SISTEMAS INFORMATICOS ABIERTOS, S.A",
+      "contratos": 3,
+      "importe_total": 8654000.0
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE S.A.U",
+      "contratos": 4,
+      "importe_total": 8602578.64
+    }
+  ],
+  "top_adj_ted_contratos": [
+    {
+      "adjudicatario": "TELEFONICA SOLUCIONES DE INFORMATICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+      "contratos": 76,
+      "importe_total": 169006251.48,
+      "nifs": [
+        "A78053147"
+      ]
+    },
+    {
+      "adjudicatario": "UTE INNOVA NEXT, S.L.U. Y THE VALLEY DIGITAL BUSINESS SCHOOL, S.L",
+      "contratos": 66,
+      "importe_total": 163649871.0,
+      "nifs": [
+        "270076"
+      ]
+    },
+    {
+      "adjudicatario": "TELEFONICA DE ESPAÑA, S.A.U.",
+      "contratos": 58,
+      "importe_total": 35635299.2,
+      "nifs": [
+        "A82018474"
+      ]
+    },
+    {
+      "adjudicatario": "LYNTIA NETWORKS SAU",
+      "contratos": 57,
+      "importe_total": 20994968.0,
+      "nifs": [
+        "A61648069"
+      ]
+    },
+    {
+      "adjudicatario": "OESIA NETWORKS, S.L.",
+      "contratos": 45,
+      "importe_total": 32257279.85,
+      "nifs": [
+        "B95087482"
+      ]
+    },
+    {
+      "adjudicatario": "TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+      "contratos": 45,
+      "importe_total": 35838397.74,
+      "nifs": [
+        "A82018474",
+        "A78053147",
+        "B83668913"
+      ]
+    },
+    {
+      "adjudicatario": "UTE TELEFÓNICA MÓVILES ESPAÑA, S.A.U. - TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.",
+      "contratos": 45,
+      "importe_total": 182704463.43,
+      "nifs": [
+        "266180",
+        "U05342555",
+        "266384"
+      ]
+    },
+    {
+      "adjudicatario": "PACKET CLEARING HOUSE",
+      "contratos": 44,
+      "importe_total": 5780544.0,
+      "nifs": [
+        "94-3380476"
+      ]
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE, S.A.U.",
+      "contratos": 42,
+      "importe_total": 173060350.47,
+      "nifs": [
+        "A82009812"
+      ]
+    },
+    {
+      "adjudicatario": "TELECYL, S.A",
+      "contratos": 41,
+      "importe_total": 10000448.0,
+      "nifs": [
+        "A47310941"
+      ]
+    },
+    {
+      "adjudicatario": "EY TRANSFORMA SERVICIOS DE CONSULTORÍA, S.L.",
+      "contratos": 37,
+      "importe_total": 26097026.84,
+      "nifs": [
+        "B88428404"
+      ]
+    },
+    {
+      "adjudicatario": "EVERIS SPAIN, S.L.",
+      "contratos": 33,
+      "importe_total": 15454832.16,
+      "nifs": [
+        "B82387770"
+      ]
+    },
+    {
+      "adjudicatario": "NTT DATA SPAIN, S.L.U.",
+      "contratos": 32,
+      "importe_total": 27971080.0,
+      "nifs": [
+        "B82387770"
+      ]
+    },
+    {
+      "adjudicatario": "CAJA DE SEGUROS REUNIDOS COMPAÑÍA DE SEGUROS Y REASEGUROS S.A (CASER SA)",
+      "contratos": 31,
+      "importe_total": 410135.74,
+      "nifs": [
+        "A28013050"
+      ]
+    },
+    {
+      "adjudicatario": "UTE TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.U., Y TELEFÓNICA MÓVILES ESPAÑA, S.A.U.",
+      "contratos": 30,
+      "importe_total": 195103657.2,
+      "nifs": [
+        "261601"
+      ]
+    },
+    {
+      "adjudicatario": "NEORIS ESPAÑA SLU",
+      "contratos": 30,
+      "importe_total": 20057209.5,
+      "nifs": [
+        "B60390192"
+      ]
+    },
+    {
+      "adjudicatario": "CENTRO REGIONAL DE SERVICIOS AVANZADOS, S.A.",
+      "contratos": 26,
+      "importe_total": 8054076.02,
+      "nifs": [
+        "A09310475"
+      ]
+    },
+    {
+      "adjudicatario": "COMPUSOF S.A.",
+      "contratos": 24,
+      "importe_total": 6600000.0,
+      "nifs": [
+        "A28793917"
+      ]
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE S.A.U",
+      "contratos": 24,
+      "importe_total": 51615471.84,
+      "nifs": [
+        "A82009812"
+      ]
+    },
+    {
+      "adjudicatario": "COMPUSOF, S.A.",
+      "contratos": 23,
+      "importe_total": 6915501.84,
+      "nifs": [
+        "A28793917"
+      ]
+    }
+  ],
+  "top_adj_ted_importe": [
+    {
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "contratos": 21,
+      "importe_total": 275665238.37
+    },
+    {
+      "adjudicatario": "SISTEMAS INFORMATICOS ABIERTOS, S.A.",
+      "contratos": 16,
+      "importe_total": 213744000.0
+    },
+    {
+      "adjudicatario": "UTE TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.U., Y TELEFÓNICA MÓVILES ESPAÑA, S.A.U.",
+      "contratos": 30,
+      "importe_total": 195103657.2
+    },
+    {
+      "adjudicatario": "UTE TELEFÓNICA MÓVILES ESPAÑA, S.A.U. - TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.",
+      "contratos": 45,
+      "importe_total": 182704463.43
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE, S.A.U.",
+      "contratos": 42,
+      "importe_total": 173060350.47
+    },
+    {
+      "adjudicatario": "TELEFONICA SOLUCIONES DE INFORMATICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+      "contratos": 76,
+      "importe_total": 169006251.48
+    },
+    {
+      "adjudicatario": "UTE INNOVA NEXT, S.L.U. Y THE VALLEY DIGITAL BUSINESS SCHOOL, S.L",
+      "contratos": 66,
+      "importe_total": 163649871.0
+    },
+    {
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "contratos": 6,
+      "importe_total": 148743635.76
+    },
+    {
+      "adjudicatario": "VODAFONE ESPAÑA, S.A.U",
+      "contratos": 10,
+      "importe_total": 87500618.5
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE, S.A.U",
+      "contratos": 18,
+      "importe_total": 77839041.0
+    },
+    {
+      "adjudicatario": "INUSUAL COMUNICACIÓN INNOVADORA, S.L.",
+      "contratos": 9,
+      "importe_total": 71084313.45
+    },
+    {
+      "adjudicatario": "ORANGE ESPAGNE S.A.U",
+      "contratos": 24,
+      "importe_total": 51615471.84
+    },
+    {
+      "adjudicatario": "EY TRANSFORMA SERVICIOS DE CONSULTORIA S.L.",
+      "contratos": 6,
+      "importe_total": 50152500.0
+    },
+    {
+      "adjudicatario": "UTE THE VALLEY DIGITAL BUSINESS SCHOOL, S.L. – INNOVA NEXT, S.L.U.",
+      "contratos": 13,
+      "importe_total": 47272727.32
+    },
+    {
+      "adjudicatario": "Orange Espagne, S.A.U.",
+      "contratos": 3,
+      "importe_total": 43914871.95
+    },
+    {
+      "adjudicatario": "TELEFONICA SOLUCIONES DE INFORMATICA Y COMUNICACIONES DE ESPAÑA,  S.A.U.",
+      "contratos": 15,
+      "importe_total": 41770934.46
+    },
+    {
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U",
+      "contratos": 6,
+      "importe_total": 41533394.61
+    },
+    {
+      "adjudicatario": "HEALTHCARE PROVIDER SOFTWARE SPAIN S.L.U. – CORE & GLOBAL IT  SOLUTIONS, S.A.,",
+      "contratos": 6,
+      "importe_total": 41391420.84
+    },
+    {
+      "adjudicatario": "TELEFONICA SOLUCIONES DE  INFORMATICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+      "contratos": 12,
+      "importe_total": 40662357.84
+    },
+    {
+      "adjudicatario": "ALGORITMOS PROCESOS Y  DISEÑOS, S.A.",
+      "contratos": 6,
+      "importe_total": 38699160.0
+    }
+  ],
+  "top_contratos_nacional": [
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/7079203",
+      "expediente": "002/21-SP",
+      "objeto": "Suministro de soluciones de puesto educativo en el hogar para centros educativos de Andalucía",
+      "adjudicatario": "UTE TELEFÓNICA MÓVILES ESPAÑA, S.A.U. - TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.",
+      "importe_adjudicacion": 53293967.47,
+      "fecha_publicacion": "2021-03-01 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=qls0RzgN4XDnSoTX3z%2F7wA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/1281594",
+      "expediente": "076/16-SV",
+      "objeto": "Escuelas conectadas Andalucía",
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "importe_adjudicacion": 40049647.94,
+      "fecha_publicacion": "2016-11-17 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=UQ0MC2R0PMkQK2TEfXGy%2BA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/13728283",
+      "expediente": "050/23-SI",
+      "objeto": "Servicio de soporte a la gestión de convocatorias y convenios para el desarrollo del programa Kit Digital",
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "importe_adjudicacion": 24790605.96,
+      "fecha_publicacion": "2023-11-22 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=nfKtAhfOfL7IGlsa0Wad%2Bw%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/1179723",
+      "expediente": "053/16-SV",
+      "objeto": "Escuelas conectadas Galicia",
+      "adjudicatario": "Orange Espagne, S.A.U.",
+      "importe_adjudicacion": 14638290.65,
+      "fecha_publicacion": "2016-10-05 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=w68m6AvcQtEQK2TEfXGy%2BA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/2296628",
+      "expediente": "004/18-RI",
+      "objeto": "Contrato de suministro de equipamiento óptico para la renovación tecnológica de la Red Académica y Científica Española (RedIRIS-Nova 100)",
+      "adjudicatario": "SISTEMAS INFORMATICOS ABIERTOS, S.A.",
+      "importe_adjudicacion": 13359000.0,
+      "fecha_publicacion": "2018-07-19 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=o00rI2fT6x6iEJrVRqloyA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/2296628",
+      "expediente": "004/18-RI",
+      "objeto": "Contrato de suministro de equipamiento óptico para la renovación tecnológica de la Red Académica y Científica Española (RedIRIS-Nova 100)",
+      "adjudicatario": "SISTEMAS INFORMATICOS ABIERTOS, S.A.",
+      "importe_adjudicacion": 13359000.0,
+      "fecha_publicacion": "2018-07-19 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=o00rI2fT6x6iEJrVRqloyA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/2296628",
+      "expediente": "004/18-RI",
+      "objeto": "Contrato de suministro de equipamiento óptico para la renovación tecnológica de la Red Académica y Científica Española (RedIRIS-Nova 100)",
+      "adjudicatario": "SISTEMAS INFORMATICOS ABIERTOS, S.A.",
+      "importe_adjudicacion": 13359000.0,
+      "fecha_publicacion": "2018-07-19 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=o00rI2fT6x6iEJrVRqloyA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/1336494",
+      "expediente": "072/16-SV",
+      "objeto": "Escuelas conectadas Canarias",
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U",
+      "importe_adjudicacion": 11814464.87,
+      "fecha_publicacion": "2017-01-13 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=YURGgsqBJQoQK2TEfXGy%2BA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/8142362",
+      "expediente": "075/21-SI",
+      "objeto": "Servicio de soporte a la gestión de convocatorias, expedientes y convenios para el desarrollo del programa digital Toolkit",
+      "adjudicatario": "UTE EVERIS BPO, S.L.U.- EVERIS SPAIN, S.L.U. – OESÍA NETWORKS",
+      "importe_adjudicacion": 10997280.0,
+      "fecha_publicacion": "2021-08-17 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=C1ncd9cA6Rurz3GQd5r6SQ%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/10005736",
+      "expediente": "062/21-SI",
+      "objeto": "Suministro y gestión de una solución para la explotación de sistemas en Cloud",
+      "adjudicatario": "SISTEMAS INFORMÁTICOS ABIERTOS, S.A.",
+      "importe_adjudicacion": 9804373.16,
+      "fecha_publicacion": "2022-05-19 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=JqXGsKOmdkaXQV0WE7lYPw%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/1241278",
+      "expediente": "070/16-SV",
+      "objeto": "Escuelas conectadas Murcia",
+      "adjudicatario": "VODAFONE ESPAÑA, S.A.U",
+      "importe_adjudicacion": 8750061.85,
+      "fecha_publicacion": "2016-11-15 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=LEwFUO0UrIQQK2TEfXGy%2BA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/1241278",
+      "expediente": "070/16-SV",
+      "objeto": "Escuelas conectadas Murcia",
+      "adjudicatario": "VODAFONE ESPAÑA, S.A.U",
+      "importe_adjudicacion": 8750061.85,
+      "fecha_publicacion": "2016-11-15 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=LEwFUO0UrIQQK2TEfXGy%2BA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/6597692",
+      "expediente": "093/20-SP",
+      "objeto": "Suministro de soluciones de puesto educativo en el hogar para centros educativos de Aragón, Asturias, Baleares, Ceuta y Melilla",
+      "adjudicatario": "ORANGE ESPAGNE, S.A.U",
+      "importe_adjudicacion": 8420334.2,
+      "fecha_publicacion": "2020-11-19 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=ktuQVbl3Q34SugstABGr5A%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/10687154",
+      "expediente": "012-22-ED",
+      "objeto": "Servicio de soporte y apoyo técnico y administrativo para el desarrollo de los programas de la Dirección de Economía Digital",
+      "adjudicatario": "EY TRANSFORMA SERVICIOS DE CONSULTORIA S.L.",
+      "importe_adjudicacion": 8358750.0,
+      "fecha_publicacion": "2022-07-13 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=gRfVSzcKkWp7h85%2Fpmmsfw%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/10005756",
+      "expediente": "020/22-SP",
+      "objeto": "Suministro de armarios de carga para centros educativos de Andalucía, Aragón, Asturias, Canarias, Cantabria, Ceuta, Extremadura, Galicia, Madrid, Melilla, Murcia y País Vasco",
+      "adjudicatario": "INUSUAL COMUNICACIÓN INNOVADORA, S.L.",
+      "importe_adjudicacion": 7898257.05,
+      "fecha_publicacion": "2022-05-19 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=zgsD83EAa3Crz3GQd5r6SQ%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/10005756",
+      "expediente": "020/22-SP",
+      "objeto": "Suministro de armarios de carga para centros educativos de Andalucía, Aragón, Asturias, Canarias, Cantabria, Ceuta, Extremadura, Galicia, Madrid, Melilla, Murcia y País Vasco",
+      "adjudicatario": "INUSUAL COMUNICACIÓN INNOVADORA, S.L.",
+      "importe_adjudicacion": 7898257.05,
+      "fecha_publicacion": "2022-05-19 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=zgsD83EAa3Crz3GQd5r6SQ%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/10005756",
+      "expediente": "020/22-SP",
+      "objeto": "Suministro de armarios de carga para centros educativos de Andalucía, Aragón, Asturias, Canarias, Cantabria, Ceuta, Extremadura, Galicia, Madrid, Melilla, Murcia y País Vasco",
+      "adjudicatario": "INUSUAL COMUNICACIÓN INNOVADORA, S.L.",
+      "importe_adjudicacion": 7898257.05,
+      "fecha_publicacion": "2022-05-19 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=zgsD83EAa3Crz3GQd5r6SQ%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/6091872",
+      "expediente": "040/20-SP",
+      "objeto": "Suministro de una solución de redes internas inalámbricas para el proyecto escuelas conectadas en la Comunidad Valenciana",
+      "adjudicatario": "NUNSYS, S.L",
+      "importe_adjudicacion": 7214192.93,
+      "fecha_publicacion": "2020-07-11 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=p2RdXiz3q64BPRBxZ4nJ%2Fg%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/7851935",
+      "expediente": "039/21-SP",
+      "objeto": "Servicio para la implantación de una solución corporativa para el seguimiento proactivo de pacientes crónicos en el sistema sanitario público de Andalucía",
+      "adjudicatario": "HEALTHCARE PROVIDER SOFTWARE SPAIN S.L.U. – CORE & GLOBAL IT  SOLUTIONS, S.A.,",
+      "importe_adjudicacion": 6898570.14,
+      "fecha_publicacion": "2021-07-14 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=1g%2Fd70iSl4FvYnTkQN0%2FZA%3D%3D"
+    },
+    {
+      "id": "https://contrataciondelestado.es/sindicacion/licitacionesPerfilContratante/7783911",
+      "expediente": "061/21-SP",
+      "objeto": "Suministro de soluciones de puesto educativo en el hogar para centros educativos de Cataluña",
+      "adjudicatario": "UTE TELEFONICA SOLUCIONES DE INFORMATICA Y COMUNICACIONES DE ESPAÑA, S.A.U. - TELEFÓNICA MÓVILES ESPAÑA, S.A.U.",
+      "importe_adjudicacion": 6628807.31,
+      "fecha_publicacion": "2021-07-03 00:00:00",
+      "url": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=UtIuP%2BoGl9oSugstABGr5A%3D%3D"
+    }
+  ],
+  "top_contratos_ted": [
+    {
+      "id": null,
+      "expediente": "002/21-SP",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE TELEFÓNICA MÓVILES ESPAÑA, S.A.U. - TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.",
+      "importe_adjudicacion": 53293967.47,
+      "ano": 2021
+    },
+    {
+      "id": null,
+      "expediente": "002/21-SP",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE TELEFÓNICA MÓVILES ESPAÑA, S.A.U. - TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.",
+      "importe_adjudicacion": 53293967.47,
+      "ano": 2021
+    },
+    {
+      "id": null,
+      "expediente": "002/21-SP",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE TELEFÓNICA MÓVILES ESPAÑA, S.A.U. - TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.",
+      "importe_adjudicacion": 53293967.47,
+      "ano": 2021
+    },
+    {
+      "id": null,
+      "expediente": "076/16-SV",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "importe_adjudicacion": 40049647.94,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "076/16-SV",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "importe_adjudicacion": 40049647.94,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "076/16-SV",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "importe_adjudicacion": 40049647.94,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "076/16-SV",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "importe_adjudicacion": 40049647.94,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "076/16-SV",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "importe_adjudicacion": 40049647.94,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "076/16-SV",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "TELEFÓNICA DE ESPAÑA, S.A.U.",
+      "importe_adjudicacion": 40049647.94,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "050/23-SI",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "importe_adjudicacion": 24790605.96,
+      "ano": 2023
+    },
+    {
+      "id": null,
+      "expediente": "050/23-SI",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "importe_adjudicacion": 24790605.96,
+      "ano": 2023
+    },
+    {
+      "id": null,
+      "expediente": "050/23-SI",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "importe_adjudicacion": 24790605.96,
+      "ano": 2023
+    },
+    {
+      "id": null,
+      "expediente": "050/23-SI",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "importe_adjudicacion": 24790605.96,
+      "ano": 2023
+    },
+    {
+      "id": null,
+      "expediente": "050/23-SI",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "importe_adjudicacion": 24790605.96,
+      "ano": 2023
+    },
+    {
+      "id": null,
+      "expediente": "050/23-SI",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "UTE NTT DATA SPAIN - NTT DATA SPAIN BPO - OESIA NETWORKS",
+      "importe_adjudicacion": 24790605.96,
+      "ano": 2023
+    },
+    {
+      "id": null,
+      "expediente": "053/16-SV",
+      "organo_contratante": "Dirección General de RED.ES",
+      "adjudicatario": "Orange Espagne, S.A.U.",
+      "importe_adjudicacion": 14638290.65,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "053/16-SV",
+      "organo_contratante": "Dirección General de RED.ES",
+      "adjudicatario": "Orange Espagne, S.A.U.",
+      "importe_adjudicacion": 14638290.65,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "053/16-SV",
+      "organo_contratante": "Dirección General de RED.ES",
+      "adjudicatario": "Orange Espagne, S.A.U.",
+      "importe_adjudicacion": 14638290.65,
+      "ano": 2016
+    },
+    {
+      "id": null,
+      "expediente": "004/18-RI",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "SISTEMAS INFORMATICOS ABIERTOS, S.A.",
+      "importe_adjudicacion": 13359000.0,
+      "ano": 2018
+    },
+    {
+      "id": null,
+      "expediente": "004/18-RI",
+      "organo_contratante": "Dirección General de la Entidad Pública Empresarial RED.ES",
+      "adjudicatario": "SISTEMAS INFORMATICOS ABIERTOS, S.A.",
+      "importe_adjudicacion": 13359000.0,
+      "ano": 2018
+    }
+  ],
+  "tipos_nacional": [
+    {
+      "tipo_contrato": "Servicios",
+      "contratos": 536,
+      "importe_total": 300007711.7
+    },
+    {
+      "tipo_contrato": "Suministros",
+      "contratos": 204,
+      "importe_total": 485846463.19
+    }
+  ],
+  "tipos_ted": [
+    {
+      "tipo_contrato": "Servicios",
+      "contratos": 1699,
+      "importe_total": 1325165371.61
+    },
+    {
+      "tipo_contrato": "Suministros",
+      "contratos": 879,
+      "importe_total": 2244433438.19
+    }
+  ],
+  "duracion_nacional": [
+    {
+      "duracion": "24.0",
+      "unidad": "MON",
+      "contratos": 146
+    },
+    {
+      "duracion": "12.0",
+      "unidad": "MON",
+      "contratos": 142
+    },
+    {
+      "duracion": "36.0",
+      "unidad": "MON",
+      "contratos": 61
+    },
+    {
+      "duracion": "6.0",
+      "unidad": "MON",
+      "contratos": 49
+    },
+    {
+      "duracion": "15.0",
+      "unidad": "MON",
+      "contratos": 24
+    },
+    {
+      "duracion": "48.0",
+      "unidad": "MON",
+      "contratos": 22
+    },
+    {
+      "duracion": "8.0",
+      "unidad": "MON",
+      "contratos": 22
+    },
+    {
+      "duracion": "30.0",
+      "unidad": "MON",
+      "contratos": 20
+    },
+    {
+      "duracion": "18.0",
+      "unidad": "MON",
+      "contratos": 19
+    },
+    {
+      "duracion": "1.0",
+      "unidad": "ANN",
+      "contratos": 19
+    },
+    {
+      "duracion": "2.0",
+      "unidad": "ANN",
+      "contratos": 17
+    },
+    {
+      "duracion": "5.0",
+      "unidad": "MON",
+      "contratos": 17
+    },
+    {
+      "duracion": "28.0",
+      "unidad": "MON",
+      "contratos": 15
+    },
+    {
+      "duracion": "4.0",
+      "unidad": "MON",
+      "contratos": 12
+    },
+    {
+      "duracion": "7.0",
+      "unidad": "MON",
+      "contratos": 11
+    }
+  ],
+  "duracion_ted": [
+    {
+      "duracion_dias": 12.0,
+      "contratos": 6
+    },
+    {
+      "duracion_dias": 51.0,
+      "contratos": 3
+    }
+  ],
+  "procedimientos_nacional": [
+    {
+      "procedimiento": "Abierto",
+      "contratos": 616,
+      "importe_total": 721233696.9
+    },
+    {
+      "procedimiento": "Basado en sistema dinámico",
+      "contratos": 69,
+      "importe_total": 3047253.46
+    },
+    {
+      "procedimiento": "Negociado con publicidad",
+      "contratos": 50,
+      "importe_total": 19779201.36
+    },
+    {
+      "procedimiento": "Diálogo competitivo",
+      "contratos": 3,
+      "importe_total": 40077000.0
+    },
+    {
+      "procedimiento": "Contrato menor",
+      "contratos": 2,
+      "importe_total": 1717023.17
+    }
+  ]
+}

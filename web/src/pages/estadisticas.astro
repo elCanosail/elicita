@@ -1,0 +1,236 @@
+---
+// /estadisticas — página pública, no requiere auth
+import Layout from '../layouts/main.astro';
+import StatsCharts from '../components/StatsCharts';
+import fs from 'fs';
+import path from 'path';
+
+// SSR: totales para KPIs del hero (se pasan como props al HTML estático)
+const pipelineDir = path.join(process.cwd(), '..', 'ingesta', 'data');
+let totalRT = 0;
+try {
+  const files = fs.readdirSync(pipelineDir).filter(f => f.endsWith('_contracts.json'));
+  for (const file of files) {
+    const data = JSON.parse(fs.readFileSync(path.join(pipelineDir, file), 'utf8'));
+    totalRT += data.total ?? data.contratos?.length ?? 0;
+  }
+} catch {}
+
+// Sello de frescura: última ejecución real del pipeline (ingesta/data/status.json).
+// SSR: se lee en cada petición, cero JS en el cliente.
+let ultimaLectura: string | null = null;
+try {
+  const status = JSON.parse(fs.readFileSync(path.join(pipelineDir, 'status.json'), 'utf8'));
+  const d = new Date(status?.ultima_ejecucion);
+  if (!Number.isNaN(d.getTime())) {
+    ultimaLectura = d.toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC';
+  }
+} catch {}
+---
+
+<Layout title="Estadísticas del mercado — elicita_" description="El mercado de contratación pública en números: 63M+ registros oficiales (contratación y mercantil), 16 fuentes, actualizados cada 4 horas.">
+<style is:global>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: hsl(var(--card)); --bg2: hsl(var(--card)); --bg3: hsl(var(--card) / 0.9);
+      --border: hsl(var(--foreground) / 0.12); --em: hsl(var(--primary)); --am: hsl(var(--warning));
+      --text: hsl(var(--foreground)); --muted: hsl(var(--muted-foreground) / 0.7);
+      --mono: 'JetBrains Mono', monospace; --sans: 'Instrument Sans', sans-serif;
+    }
+
+    html { background: var(--bg); color: var(--text); font-family: var(--sans); }
+    body { min-height: 100vh; }
+    a { color: var(--em); text-decoration: none; }
+    a:hover { opacity: .8; }
+
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: hsl(var(--card) / 0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 52px;
+    }
+    .nav-brand { font-family: var(--mono); font-weight: 700; font-size: .95rem; color: var(--em); }
+    .nav-links { display: flex; gap: 1.5rem; font-size: .8rem; }
+    .nav-links a { color: var(--muted); }
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      padding: 4.5rem 2rem 2.5rem;
+      text-align: center; max-width: 800px; margin: 0 auto;
+    }
+    .hero-label {
+      font-family: var(--mono); font-size: .7rem; letter-spacing: .15em;
+      color: var(--em); text-transform: uppercase; margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.8rem, 4.5vw, 3rem); font-weight: 700;
+      line-height: 1.12; letter-spacing: -.03em; margin-bottom: .8rem;
+    }
+    .hero h1 span { color: var(--em); }
+    .hero p { font-size: 1rem; color: var(--muted); line-height: 1.6; max-width: 560px; margin: 0 auto; }
+
+    .kpi-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+      max-width: 920px; margin: 2.5rem auto 4rem;
+    }
+    @media (max-width: 600px) { .kpi-row { grid-template-columns: 1fr; } }
+    .kpi {
+      background: var(--bg2); padding: 1.75rem 1.25rem;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+    }
+    .kpi-val {
+      font-family: var(--mono); font-size: 2.6rem; font-weight: 700;
+      letter-spacing: -.04em; line-height: 1;
+    }
+    .kpi-val.em { color: var(--em); }
+    .kpi-val.am { color: var(--am); }
+    .kpi-val.wh { color: var(--text); }
+    .kpi-label { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: .5rem; }
+    .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; opacity: .7; }
+
+    .section { max-width: 1100px; margin: 0 auto 2rem; padding: 0 2rem; }
+    .section-title {
+      font-family: var(--mono); font-size: .68rem; letter-spacing: .15em;
+      text-transform: uppercase; color: var(--em); margin-bottom: .4rem;
+    }
+    .section-h2 { font-size: 1.4rem; font-weight: 600; letter-spacing: -.02em; margin-bottom: .3rem; }
+    .section-sub { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+    /* BORME strip */
+    .borme-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: var(--border); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    @media (max-width: 600px) { .borme-grid { grid-template-columns: 1fr; } }
+    .borme-card { background: var(--bg2); padding: 1.75rem 1.5rem; }
+    .borme-val { font-family: var(--mono); font-size: 2rem; font-weight: 700; color: var(--am); }
+    .borme-label { font-size: .8rem; color: var(--muted); margin-top: .4rem; }
+    .borme-sub { font-size: .72rem; color: var(--muted); margin-top: .25rem; opacity: .7; }
+
+    .highlight-strip {
+      background: linear-gradient(135deg, hsl(var(--primary) / .06), hsl(var(--primary) / .02));
+      border: 1px solid hsl(var(--primary) / .15);
+      border-radius: 10px; padding: 1.5rem 2rem;
+      display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;
+      margin-top: 1rem;
+    }
+    .hs-val { font-family: var(--mono); font-size: 1.4rem; font-weight: 700; color: var(--em); }
+    .hs-label { font-size: .7rem; color: var(--muted); margin-top: .15rem; }
+    .tag-amber {
+      background: hsl(var(--warning) / .1); border: 1px solid hsl(var(--warning) / .2);
+      color: var(--am); font-size: .68rem; font-family: var(--mono);
+      padding: .2rem .6rem; border-radius: 4px; letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    hr.div { border: none; border-top: 1px solid var(--border); margin: 0 0 3rem; max-width: 1100px; display: block; }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem; display: flex; justify-content: space-between; align-items: center;
+      font-size: .75rem; color: var(--muted);
+      max-width: 1100px; margin: 0 auto;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-brand { font-family: var(--mono); color: var(--em); font-weight: 700; }
+    .hero .kpi-fresh { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+  </style>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Datos públicos · Inteligencia propietaria</div>
+  <h1>El mercado de <span>contratación pública</span> española, en números.</h1>
+  <p>Cifras reales. Sin estimaciones. Fuentes oficiales. Actualizadas cada 4 horas.{ultimaLectura && <span class="kpi-fresh"> Última lectura del pipeline: {ultimaLectura}.</span>}</p>
+</div>
+
+<!-- KPI ROW -->
+<div class="kpi-row" style="padding: 0 2rem;">
+  <div class="kpi">
+    <div class="kpi-val em" id="kpi-hist">63.4M</div>
+    <div class="kpi-label">Registros históricos</div>
+    <div class="kpi-sub">2002–2026 · 16 fuentes</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-val am" id="kpi-eur">2.700B €</div>
+    <div class="kpi-label">Valor adjudicado acumulado</div>
+    <div class="kpi-sub">Miles de millones · PLACSP</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-val wh" id="kpi-rt">{totalRT.toLocaleString('es-ES')}</div>
+    <div class="kpi-label">Contratos activos ahora</div>
+    <div class="kpi-sub">11 conectores · ciclo 4h</div>
+  </div>
+</div>
+
+<!-- DYNAMIC CHARTS SECTION -->
+<div class="section" style="margin-bottom: 4rem;">
+  <div class="section-title">Inteligencia en tiempo real</div>
+  <div class="section-h2">Gráficos dinámicos · datos vivos</div>
+  <div class="section-sub">Los gráficos se refrescan automáticamente cada 5 minutos</div>
+
+  <StatsCharts client:only="react" />
+</div>
+
+<hr class="div" style="margin: 0 auto 3rem;" />
+
+<!-- BORME -->
+<div class="section">
+  <div class="section-title">Registro Mercantil</div>
+  <div class="section-h2">BORME — capa de inteligencia sobre adjudicatarios</div>
+  <div class="section-sub">Cruce con contratación para visualizar relaciones empresariales</div>
+
+  <div class="borme-grid">
+    <div class="borme-card">
+      <div class="borme-val">9.3M</div>
+      <div class="borme-label">Empresas en el Registro Mercantil</div>
+      <div class="borme-sub">NIF, forma jurídica, domicilio, capital social</div>
+    </div>
+    <div class="borme-card">
+      <div class="borme-val">17.1M</div>
+      <div class="borme-label">Registros de cargos y apoderados</div>
+      <div class="borme-sub">Administradores, consejeros, apoderados — 2009–2026</div>
+    </div>
+  </div>
+
+  <div class="highlight-strip">
+    <div>
+      <div class="hs-val">26.4M</div>
+      <div class="hs-label">Registros BORME totales</div>
+    </div>
+    <div style="flex:1; font-size:.82rem; color:var(--muted); line-height:1.6;">
+      El cruce BORME × contratación permite identificar cargos compartidos, verificar NIFs y revelar conexiones entre administradores de empresas y órganos contratantes.
+    </div>
+  </div>
+</div>
+
+<hr class="div" style="margin: 3rem auto;" />
+
+<script>
+  function animateCounter(el: HTMLElement, from: number, to: number, suffix: string, dur = 2000) {
+    const fmt = (n: number) => n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? Math.round(n).toLocaleString('es-ES') : Math.round(n).toLocaleString('es-ES');
+    const t0 = performance.now();
+    const step = (t: number) => {
+      const p = Math.min((t - t0) / dur, 1);
+      const e = 1 - Math.pow(1-p, 4);
+      el.textContent = fmt(from + (to - from) * e) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    const id = (e.target as HTMLElement).id;
+    if (id === 'kpi-hist') animateCounter(e.target as HTMLElement, 60_000_000, 63_400_000, '', 2500);
+    if (id === 'kpi-eur')  animateCounter(e.target as HTMLElement, 2600, 2700, 'B €', 2200);
+    io.unobserve(e.target);
+  }), { threshold: 0.5 });
+  document.querySelectorAll('#kpi-hist,#kpi-eur').forEach(el => io.observe(el));
+</script>
+
+</Layout>

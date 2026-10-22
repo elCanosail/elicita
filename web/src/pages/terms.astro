@@ -1,0 +1,129 @@
+---
+import Layout from '../layouts/main.astro';
+
+const description = "Condiciones de uso de Elicita: inteligencia sobre contratación pública española y europea.";
+---
+
+<Layout title="Condiciones de uso — Elicita" description={description}>
+	<section class="py-20 md:py-32">
+		<div class="container mx-auto px-4">
+			<div class="max-w-4xl mx-auto">
+				<h1 class="text-4xl md:text-5xl font-light text-white mb-4">Condiciones de uso</h1>
+				<p class="text-white/30 mb-8">Última actualización: 6 de julio de 2026</p>
+
+				<div class="prose prose-lg dark:prose-invert max-w-none">
+					<p class="lead text-white/50">
+						El uso de elicita.es implica la aceptación íntegra de estas condiciones. Si no estás de acuerdo, no utilices el servicio.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">1. Naturaleza del servicio</h2>
+					<p class="text-white/50">
+						Elicita es una plataforma técnica privada e independiente que reestructura información pública procedente de la Plataforma de Contratación del Sector Público (PLACSP), Tenders Electronic Daily (TED UE), el Boletín Oficial del Registro Mercantil (BORME), la Base de Datos Nacional de Subvenciones (BDNS) y otras fuentes públicas. Elicita no es una administración pública y no emite documentos con valor jurídico oficial.
+					</p>
+					<p class="text-white/50">
+						Elicita reutiliza información pública al amparo de la <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814" class="text-emerald-400 hover:text-emerald-300">Ley 37/2007 de reutilización de información del sector público</a>. No está afiliado ni vinculado oficialmente a ningún organismo público.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">2. Uso permitido</h2>
+					<ul>
+						<li>Consulta personal o profesional de licitaciones, empresas y contratos públicos.</li>
+						<li>Uso programático de la API pública respetando el rate-limit publicado.</li>
+						<li>Reutilización de los datos bajo licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es" class="text-emerald-400 hover:text-emerald-300">CC BY 4.0</a> citando la fuente: PLACSP/TED/BORME y Elicita como intermediario técnico.</li>
+						<li>Inclusión de fragmentos en investigación, periodismo y análisis con la atribución correspondiente.</li>
+						<li>Configuración de alertas de licitaciones según los límites del plan.</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">3. Uso prohibido</h2>
+					<ul>
+						<li>Scraping masivo o automatizado por encima del rate-limit publicado.</li>
+						<li>Reventa o redistribución del dataset presentándolo como «fuente oficial».</li>
+						<li>Construcción de perfiles comerciales o publicitarios sobre personas físicas (RGPD art. 5.1.b).</li>
+						<li>Cualquier intento de explotar vulnerabilidades, evadir limitaciones o degradar el servicio.</li>
+						<li>Uso del servicio para finalidades ilícitas o contrarias al ordenamiento jurídico español.</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">4. Limitación de responsabilidad</h2>
+					<p class="text-white/50">
+						La extracción es automatizada y puede contener errores puntuales. Elicita se ofrece «tal cual», sin garantía de exhaustividad, exactitud o disponibilidad continuada. Para cualquier trámite legal, administrativo, judicial o de contratación real, consulta SIEMPRE la fuente oficial (PLACSP, BOE/BORME, el Registro Mercantil competente o las plataformas de licitación correspondientes).
+					</p>
+					<p class="text-white/50">
+						Los datos de contratación pública provienen de fuentes oficiales, pero pueden contener errores u omisiones de las fuentes originales. Eres responsable de verificar la información antes de tomar decisiones basadas en ella.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">5. Propiedad intelectual</h2>
+					<p class="text-white/50">
+						El código fuente, el diseño, los textos editoriales y la marca «Elicita» son propiedad del titular. Los datos derivados de fuentes públicas se publican bajo <a href="https://creativecommons.org/licenses/by/4.0/deed.es" class="text-emerald-400 hover:text-emerald-300">CC BY 4.0</a>. Las marcas de empresas terceras citadas pertenecen a sus respectivos propietarios.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">6. Uso razonable y límites por plan</h2>
+					<p class="text-white/50">
+						Elicita aplica límites técnicos por plan para proteger la estabilidad del servicio, prevenir abusos y cumplir las condiciones de reutilización de las fuentes públicas:
+					</p>
+					<ul>
+						<li><strong>Plan Free:</strong> Consulta básica, búsqueda, alertas limitadas. Sin API.</li>
+						<li><strong>Plan Pro:</strong> Monitor en tiempo real, alertas ilimitadas, API con rate-limit, soporte por email (24h laborables).</li>
+						<li><strong>Plan Empresa:</strong> API ampliada, servidor MCP, explorer de predicciones, soporte prioritario, SLA personalizado.</li>
+					</ul>
+					<p class="text-white/50">
+						Ante uso anómalo (degradación del servicio, scraping fuera de la API, redistribución no autorizada, automatización abusiva), Elicita se reserva el derecho de suspender o limitar la cuenta tras notificación. Ver <a href="/uso-razonable" class="text-emerald-400 hover:text-emerald-300">política de uso razonable</a> para detalle.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">7. Suscripciones de pago</h2>
+					<p class="text-white/50">
+						Los planes Pro y Empresa descritos en <a href="/precios" class="text-emerald-400 hover:text-emerald-300">/precios</a> se rigen por el periodo contratado (mensual o anual). La cancelación es efectiva al final del período pagado, sin reembolsos parciales salvo obligación legal. Los precios se muestran sin IVA; se aplica el IVA correspondiente según país de facturación.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">8. Datos y privacidad</h2>
+					<p class="text-white/50">
+						Tu uso de los Servicios también se rige por nuestra <a href="/privacy" class="text-emerald-400 hover:text-emerald-300">Política de Privacidad</a>. Puntos clave:
+					</p>
+					<ul>
+						<li>No usamos tus datos para entrenar modelos sin consentimiento</li>
+						<li>Puedes eliminar tus datos en cualquier momento</li>
+						<li>Implementamos medidas de seguridad de estándar industrial</li>
+						<li>Cumplimos con el RGPD y la LOPDGDD</li>
+						<li>Ejercicio de derechos: <a href="/derechos-rgpd" class="text-emerald-400 hover:text-emerald-300">formulario RGPD</a></li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">9. Terminación</h2>
+					<p class="text-white/50">
+						Puedes terminar tu cuenta en cualquier momento desde tu panel o contactándonos. Las suscripciones de pago continuarán hasta el final del período de facturación.
+					</p>
+					<p class="text-white/50">
+						Podemos suspender o terminar tu acceso si: infringes estas Condiciones, realizas actividad fraudulenta, no pagas las cantidades adeudadas, o generas riesgo legal para nosotros. Proporcionaremos aviso cuando sea razonablemente posible.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">10. Descargas de responsabilidad</h2>
+					<p class="text-white/50">
+						Los Servicios se proporcionan "tal cual" y "según disponibilidad" sin garantías de ningún tipo. Descartamos todas las garantías de comercialidad, idoneidad para un propósito particular, precisión, fiabilidad o completitud de los resultados, y operación ininterrumpida o libre de errores.
+					</p>
+					<p class="text-white/50">
+						En la máxima medida permitida por la ley, Elicita no será responsable de daños indirectos, incidentales o consecuentes, ni de pérdida de beneficios, datos u oportunidades de negocio, ni de daños que excedan las cantidades pagadas en los últimos 12 meses.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">11. Modificaciones</h2>
+					<p class="text-white/50">
+						Podemos actualizar estos términos para reflejar cambios técnicos, legales o de servicio. La fecha de última actualización siempre figura al inicio. Los cambios sustanciales se anuncian con 30 días de antelación a usuarios registrados. El uso continuado tras la publicación implica aceptación de la nueva versión.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">12. Ley aplicable y jurisdicción</h2>
+					<p class="text-white/50">
+						Estas Condiciones se rigen por la legislación española. Para la resolución de cualquier controversia, las partes se someten a los Juzgados y Tribunales de Sevilla, salvo que la ley imponga un fuero distinto para consumidores.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">13. Contacto</h2>
+					<ul>
+						<li>Email: <a href="mailto:hola@elicita.es" class="text-emerald-400 hover:text-emerald-300">hola@elicita.es</a></li>
+						<li>RGPD: <a href="mailto:privacidad@elicita.es" class="text-emerald-400 hover:text-emerald-300">privacidad@elicita.es</a></li>
+					</ul>
+
+					<hr class="border-white/5 my-8" />
+
+					<p class="text-sm text-white/25">
+						Al usar los Servicios de Elicita, reconoces haber leído, comprendido y aceptado estas Condiciones de Uso.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>

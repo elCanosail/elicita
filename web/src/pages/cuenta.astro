@@ -1,0 +1,74 @@
+---
+import DashboardLayout from '../layouts/dashboard.astro';
+import { UserProfile } from '@clerk/astro/components';
+import { dark } from '@clerk/themes';
+---
+
+<DashboardLayout title="Usuario — elicita_">
+  <div class="cuenta-wrap">
+    <UserProfile
+      appearance={{
+        baseTheme: dark,
+        elements: {
+          rootBox: 'clerk-profile-root',
+          card: 'clerk-profile-card',
+          navbar: 'clerk-profile-nav',
+          pageScrollBox: 'clerk-profile-scroll',
+        },
+      }}
+    />
+  </div>
+</DashboardLayout>
+
+<style is:global>
+.cuenta-wrap {
+  padding: 24px;
+  max-width: 900px;
+}
+
+/* Clerk UserProfile overrides for dark theme */
+.clerk-profile-root {
+  width: 100% !important;
+}
+.clerk-profile-card {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 1px solid hsl(var(--border) / 0.06) !important;
+  border-radius: 8px !important;
+}
+.clerk-profile-nav {
+  border-right: 1px solid hsl(var(--border) / 0.06) !important;
+}
+
+/* Match elicita dark theme */
+.cl-userProfile-root {
+  --cl-font-family: 'Instrument Sans', sans-serif;
+}
+.cl-profilePage {
+  background: transparent !important;
+}
+.cl-formFieldInput {
+  background: hsl(var(--background) / 0.05) !important;
+  border: 1px solid hsl(var(--border) / 0.1) !important;
+  color: hsl(var(--foreground)) !important;
+  border-radius: 6px !important;
+}
+.cl-formFieldInput:focus {
+  border-color: hsl(var(--primary) / 0.5) !important;
+  outline: none !important;
+}
+.cl-formButtonPrimary {
+  background: hsl(var(--primary)) !important;
+  border-radius: 6px !important;
+}
+.cl-formButtonPrimary:hover {
+  background: hsl(var(--primary) / 0.8) !important;
+}
+.cl-badge {
+  background: hsl(var(--primary) / 0.15) !important;
+  color: hsl(var(--primary)) !important;
+}
+.cl-internal-b3fm6y {
+  background: hsl(var(--background)) !important;
+}
+</style>

@@ -1,0 +1,43 @@
+{
+  "name": "elicita-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server stateless para Elicita (búsqueda de licitaciones públicas)",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "start:v2": "node dist/v2/index.js",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "generate:open-data": "tsx scripts/generate-open-data-candidate.ts"
+  },
+  "keywords": [
+    "mcp",
+    "licitaciones",
+    "elicita"
+  ],
+  "author": "Elcano",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
+    "@modelcontextprotocol/node": "2.0.0",
+    "@types/node": "26.1.2",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "overrides": {
+    "hono": "4.13.7",
+    "fast-uri": "3.1.6",
+    "qs": "6.16.0"
+  }
+}

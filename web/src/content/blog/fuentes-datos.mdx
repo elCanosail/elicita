@@ -1,0 +1,45 @@
+---
+title: "Fuentes de datos: PLACE, TED, BORME y por qué importan"
+excerpt: "El ecosistema de contratación pública española está fragmentado en 18 fuentes. Así las agregamos en un dataset unificado de 66,4M registros."
+date: "2026-02-15"
+readTime: "4 min"
+category: "Técnico"
+series: "Guías y producto"
+author: "Equipo Elicita"
+tags: ["datos", "PLACE", "TED", "fuentes", "técnico", "pipeline"]
+draft: false
+---
+
+## PLACE — Plataforma de Contratación del Sector Público
+
+Plataforma de Contratación del Sector Público. Cubre la Administración General del Estado y organismos vinculados. Formato XML estandarizado. **Limitación**: su cobertura de contratos menores y de mucha contratación autonómica/local es parcial: una parte relevante sigue en portales propios.
+
+## TED — Tenders Electronic Daily
+
+Diario Oficial de Licitaciones de la UE. Obligatorio para contratos que superan umbrales comunitarios. Los umbrales TED vigentes varían por tipo de poder adjudicador y modalidad (obras: varios millones de euros; suministros y servicios: desde varios cientos de miles). Consultar los umbrales actualizados de la Comisión Europea. Valor añadido: detecta oportunidades internacionales y adjudicaciones a empresas extranjeras en España.
+
+## BORME — Boletín Oficial del Registro Mercantil
+
+Publica actos mercantiles de sociedades. Uso en el sistema: vincular NIF con razones sociales, identificar adjudicatarios cuando PLACE usa nombre comercial, detectar cambios estructurales en competidores.
+
+## Boletines Oficiales Regionales
+
+17 comunidades autónomas, 17 formatos diferentes, 17 sistemas de búsqueda. DOGA (Galicia), BOJA (Andalucía), DOCM (Castilla-La Mancha)... Scrapers especializados y normalización de esquemas a formato unificado.
+
+## Ayuntamientos y entidades locales
+
+Tablones electrónicos, perfiles de contratante municipales, boletines de provincias. Cobertura altamente variable — grandes ciudades tienen sistemas sofisticados; municipios pequeños pueden depender de publicación en prensa local.
+
+## Pipeline de ingestión
+
+```
+18 Fuentes → Scrapers especializados → Normalización → Enriquecimiento → Análisis predictivo → Dashboard
+```
+
+**Volumen diario**: ~12K registros procesados, deduplicados a ~8K contratos únicos.
+
+## ¿Por qué no basta con consultar PLACE?
+
+Usar solo PLACE significa perder ~40% de contratos autonómicos no centralizados, ~60% de contratos locales, el 100% de contratos UE con posibilidad de competencia extranjera, y el histórico completo para análisis predictivo.
+
+La ventaja competitiva está en la **agregación**, no en el acceso individual a fuentes.

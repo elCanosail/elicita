@@ -1,0 +1,265 @@
+---
+import AuthLayout from '../layouts/auth.astro';
+import { SignUp } from '@clerk/astro/components';
+import { sanitizeInternalRedirect } from '../lib/redirect';
+
+// F1.2: /sign-up?redirect=/perfil/<nif> devuelve al usuario al perfil tras
+// crear cuenta. Solo rutas internas; fallback al onboarding por defecto.
+const rawRedirect = Astro.url.searchParams.get('redirect');
+const redirectUrl = sanitizeInternalRedirect(rawRedirect, '/cuenta/onboard');
+const carryRedirect = rawRedirect && sanitizeInternalRedirect(rawRedirect, '') ? redirectUrl : null;
+---
+
+<AuthLayout title="Crear cuenta — elicita_" description="Crea tu cuenta en Elicita. Empieza gratis. 63M+ registros oficiales.">
+  <style is:global>
+    .auth-grid {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .auth-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      border-right: 1px solid hsl(var(--border) / 0.05);
+      background: hsl(var(--background));
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .auth-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      color: hsl(var(--foreground));
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .auth-logo span { color: hsl(var(--primary)); }
+    .auth-content {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+    }
+    .auth-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: hsl(var(--primary));
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+    .auth-content h1 {
+      font-size: 36px;
+      font-weight: 300;
+      color: hsl(var(--foreground));
+      line-height: 1.2;
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+    .auth-content h1 em {
+      font-style: normal;
+      color: hsl(var(--muted-foreground) / 0.7);
+    }
+    .auth-content p {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground) / 0.7);
+      line-height: 1.7;
+    }
+    .auth-features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 40px;
+    }
+    .auth-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      border: 1px solid hsl(var(--border) / 0.06);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: hsl(var(--card));
+    }
+    .auth-feature-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: hsl(var(--primary));
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .auth-feature-text {
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.5;
+    }
+    .auth-feature-text strong {
+      color: hsl(var(--foreground));
+      font-weight: 500;
+    }
+    .auth-footer {
+      position: relative;
+      z-index: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: hsl(var(--muted-foreground) / 0.3);
+    }
+    .auth-form-wrap {
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-form-wrap h2 {
+      font-size: 22px;
+      font-weight: 400;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+    }
+    .auth-form-wrap .auth-sub {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground) / 0.7);
+      margin-bottom: 28px;
+    }
+    .auth-form-wrap .auth-sub a {
+      color: hsl(var(--primary));
+      text-decoration: none;
+    }
+    .auth-form-wrap .auth-sub a:hover { color: hsl(var(--primary) / 0.7); }
+
+    /* Clerk overrides */
+    .cl-rootBox { width: 100% !important; }
+    .cl-card {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+    .cl-headerTitle,
+    .cl-headerSubtitle { display: none !important; }
+    .cl-formFieldInput {
+      background: hsl(var(--background) / 0.04) !important;
+      border: 1px solid hsl(var(--border) / 0.08) !important;
+      color: hsl(var(--foreground)) !important;
+      border-radius: 8px !important;
+      font-family: 'Instrument Sans', sans-serif !important;
+      min-height: 44px !important;
+    }
+    .cl-formFieldInput:focus {
+      border-color: hsl(var(--primary) / 0.5) !important;
+      outline: none !important;
+      box-shadow: 0 0 0 1px hsl(var(--primary) / 0.2) !important;
+    }
+    .cl-formButtonPrimary {
+      background: hsl(var(--primary)) !important;
+      color: hsl(var(--background)) !important;
+      border-radius: 8px !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 13px !important;
+      letter-spacing: 0.02em !important;
+      min-height: 44px !important;
+      font-weight: 500 !important;
+      transition: background 0.2s !important;
+    }
+    .cl-formButtonPrimary:hover { background: hsl(var(--primary) / 0.8) !important; }
+    .cl-footerAction { display: none !important; }
+    .cl-formFieldLabel { color: hsl(var(--muted-foreground)) !important; font-size: 12px !important; }
+    .cl-dividerLine { background: hsl(var(--border) / 0.06) !important; }
+    .cl-dividerText { color: hsl(var(--muted-foreground) / 0.5) !important; font-size: 11px !important; }
+    .cl-socialButtonsBlockButton {
+      background: hsl(var(--background) / 0.04) !important;
+      border: 1px solid hsl(var(--border) / 0.08) !important;
+      color: hsl(var(--foreground) / 0.7) !important;
+      border-radius: 8px !important;
+      min-height: 40px !important;
+    }
+    .cl-socialButtonsBlockButton:hover { background: hsl(var(--background) / 0.08) !important; }
+    .cl-identityPreviewText { color: hsl(var(--foreground) / 0.6) !important; }
+    .cl-formResendCodeLink { color: hsl(var(--primary)) !important; }
+    .cl-internal-b3fm6y { background: hsl(var(--background)) !important; }
+
+    @media (max-width: 900px) {
+      .auth-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .auth-left {
+        border-right: none;
+        border-bottom: 1px solid hsl(var(--border) / 0.05);
+        padding: 32px 24px 24px;
+      }
+      .auth-content h1 { font-size: 26px; }
+      .auth-content p { font-size: 13px; }
+      .auth-features { margin-top: 24px; }
+      .auth-feature { padding: 12px; }
+      .auth-footer { display: none; }
+      .auth-right { padding: 24px; }
+      .auth-form-wrap h2 { font-size: 18px; }
+    }
+  </style>
+
+  <div class="auth-grid">
+    <div class="auth-left">
+      <div class="bg-grid"></div>
+      <a href="/" class="auth-logo">elicita<span>_</span></a>
+
+      <div class="auth-content">
+        <p class="auth-eyebrow">Gratis para siempre</p>
+        <h1>Crea <em>tu cuenta</em></h1>
+        <p>
+          Tu perfil por CIF, 3 búsquedas al día y acceso al dashboard. En menos de un minuto, sin tarjeta.
+        </p>
+
+        <div class="auth-features">
+          <div class="auth-feature">
+            <div class="auth-feature-dot"></div>
+            <p class="auth-feature-text"><strong>Plan gratuito</strong> con acceso al dashboard y alertas personalizadas.</p>
+          </div>
+          <div class="auth-feature">
+            <div class="auth-feature-dot"></div>
+            <p class="auth-feature-text"><strong>Pásate a Pro</strong> cuando necesites búsquedas ilimitadas, alertas y API.</p>
+          </div>
+          <div class="auth-feature">
+            <div class="auth-feature-dot"></div>
+            <p class="auth-feature-text"><strong>Y Pro cuando lo necesites</strong>: alertas por email, predicciones de renovación y API.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        Dataset · PLACSP · BOE · Plataformas autonómicas · TED
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="bg-grid opacity-30"></div>
+      <div class="auth-form-wrap">
+        <h2>Crear cuenta</h2>
+        <p class="auth-sub">¿Ya tienes cuenta? <a href={carryRedirect ? `/sign-in?redirect=${encodeURIComponent(carryRedirect)}` : '/sign-in'}>Acceder</a></p>
+        <SignUp forceRedirectUrl={redirectUrl} />
+      </div>
+    </div>
+  </div>
+</AuthLayout>

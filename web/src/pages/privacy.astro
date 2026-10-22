@@ -1,0 +1,198 @@
+---
+import Layout from '../layouts/main.astro';
+
+const description = "Política de Privacidad de Elicita: cómo tratamos tus datos personales conforme al RGPD y la LOPDGDD.";
+---
+
+<Layout title="Política de Privacidad — Elicita" description={description}>
+	<section class="py-20 md:py-32">
+		<div class="container mx-auto px-4">
+			<div class="max-w-4xl mx-auto">
+				<h1 class="text-4xl md:text-5xl font-light text-white mb-4">Política de Privacidad</h1>
+				<p class="text-white/30 mb-8">Última actualización: 29 de julio de 2026</p>
+
+				<div class="prose prose-lg dark:prose-invert max-w-none">
+					<p class="text-white/50">
+						En Elicita tratamos tus datos personales con el máximo respeto. Esta política explica qué datos recogemos, para qué, durante cuánto tiempo, y qué derechos tienes. Cumplimos con el RGPD (UE 2016/679) y la LOPDGDD (LO 3/2018).
+					</p>
+
+					<h2 class="text-white font-light text-2xl">1. Responsable del tratamiento</h2>
+					<ul>
+						<li><strong>Responsable:</strong> José María Hontoria de la Esperanza</li>
+						<li><strong>NIF:</strong> 48924606H</li>
+						<li><strong>Domicilio:</strong> Calle Doctor Antonio Cortés Lladó, 5, 41004 Sevilla</li>
+						<li><strong>Email:</strong> <a href="mailto:privacidad@elicita.es" class="text-emerald-400 hover:text-emerald-300">privacidad@elicita.es</a></li>
+						<li><strong>Canal general:</strong> <a href="mailto:hola@elicita.es" class="text-emerald-400 hover:text-emerald-300">hola@elicita.es</a></li>
+					</ul>
+					<p class="text-white/50">
+						Elicita es un proyecto personal del responsable en calidad de autónomo. No existe entidad jurídica societaria intermedia. El tratamiento se realiza bajo la figura del responsable individual.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">2. Datos que recogemos</h2>
+					<h3 class="text-white/70">Datos que tú nos proporcionas</h3>
+					<ul>
+						<li>Nombre y apellidos</li>
+						<li>Dirección de correo electrónico</li>
+						<li>Nombre de la empresa y CIF/NIF</li>
+						<li>Datos de perfil: sectores de interés, CPVs preferidos, organismos</li>
+						<li>Datos de pago (procesados por Stripe; no los almacenamos directamente)</li>
+					</ul>
+
+					<h3 class="text-white/70">Datos generados automáticamente</h3>
+					<ul>
+						<li>Dirección IP, tipo de navegador y sistema operativo</li>
+						<li>Páginas visitadas, consultas de búsqueda y patrones de uso</li>
+						<li>Cookies técnicas y analíticas (véase la sección de cookies)</li>
+					</ul>
+
+					<h3 class="text-white/70">Datos que no recogemos</h3>
+					<ul>
+						<li>No recogemos datos de menores de 16 años</li>
+						<li>No recogemos categorías especiales de datos (salud, afiliación sindical, etc.)</li>
+					</ul>
+
+					<h3 class="text-white/70">Datos reutilizados de fuentes públicas</h3>
+					<p class="text-white/50">
+						Elicita estructura y reutiliza información pública procedente de fuentes oficiales (PLACSP, TED UE, BORME, BDNS) que puede contener datos personales de administradores, apoderados y representantes de empresas. Este tratamiento se ampara en el art. 6.1.e/f del RGPD (interés público y legítimo en la transparencia de la contratación pública y mercantil) y en la Ley 37/2007 de reutilización de información del sector público.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">3. Finalidad del tratamiento</h2>
+					<p class="text-white/50">Usamos tus datos para:</p>
+					<ul>
+						<li>Prestar el servicio de inteligencia sobre contratación pública</li>
+						<li>Gestionar tu cuenta y la autenticación (Clerk)</li>
+						<li>Procesar pagos y emitir facturas (Stripe)</li>
+						<li>Enviar alertas de licitaciones que has configurado</li>
+						<li>Enviar comunicaciones de servicio (cambios en la plataforma, mantenimiento)</li>
+						<li>Mejorar la plataforma de forma agregada y anónima</li>
+					</ul>
+					<p class="text-white/50">
+						<strong>No usamos tus datos ni los resultados de tus búsquedas para entrenar modelos de IA.</strong>
+					</p>
+
+					<h2 class="text-white font-light text-2xl">4. Base legal</h2>
+					<ul>
+						<li><strong>Ejecución contractual:</strong> Prestar el servicio contratado (art. 6.1.b RGPD)</li>
+						<li><strong>Consentimiento:</strong> Cookies analíticas y comunicaciones comerciales (art. 6.1.a)</li>
+						<li><strong>Interés legítimo:</strong> Seguridad, prevención de fraude, mejora del servicio (art. 6.1.f)</li>
+						<li><strong>Interés público / misión de interés público:</strong> Reutilización de información pública para transparencia de la contratación (art. 6.1.e RGPD + Ley 37/2007)</li>
+						<li><strong>Obligación legal:</strong> Cumplimiento normativo (facturación, retención fiscal) (art. 6.1.c)</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">5. Destinatarios y transferencias</h2>
+					<p class="text-white/50">Compartimos datos solo con los proveedores necesarios para el servicio:</p>
+					<ul>
+						<li><strong>Clerk</strong> (EE.UU. — SCCs): Autenticación y gestión de usuarios</li>
+						<li><strong>Stripe</strong> (EE.UU. — SCCs): Procesamiento de pagos</li>
+						<li><strong>Resend</strong> (UE): Envío de emails transaccionales</li>
+						<li><strong>Cloudflare</strong> (EE.UU. — SCCs): CDN, DNS y seguridad</li>
+						<li><strong>Hetzner</strong> (UE): Hosting del servidor</li>
+						<li><strong>Plausible</strong> (UE): Analítica web sin cookies, sin datos personales</li>
+					</ul>
+					<p class="text-white/50">
+						No vendemos ni cedemos tus datos personales a terceros con fines comerciales.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">6. Transferencias internacionales</h2>
+					<p class="text-white/50">
+						Algunos proveedores procesan datos fuera del EEE. En todos los casos utilizamos Cláusulas Contractuales Tipo (SCCs) aprobadas por la Comisión Europea y evaluamos el nivel de protección del país tercero.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">7. Conservación de datos</h2>
+					<ul>
+						<li><strong>Datos de cuenta:</strong> Mientras la cuenta esté activa. Eliminados en los 30 días siguientes a la solicitud de baja.</li>
+						<li><strong>Datos de facturación:</strong> 6 años conforme a obligaciones fiscales españolas.</li>
+						<li><strong>Logs de acceso:</strong> 12 meses.</li>
+						<li><strong>Datos de fuentes públicas (BORME, etc.):</strong> Se conservan mientras la fuente original los publique. Si la fuente rectifica o elimina, actualizamos nuestro reflejo.</li>
+						<li><strong>Cookies:</strong> Según el tipo (véase sección de cookies).</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">8. Tus derechos (RGPD / LOPDGDD)</h2>
+					<p class="text-white/50">Puedes ejercer los siguientes derechos (detalle completo en <a href="/derechos-rgpd" class="text-emerald-400 hover:text-emerald-300">ejercicio de derechos RGPD</a>):</p>
+					<ul>
+						<li><strong>Acceso:</strong> Saber qué datos personales tenemos sobre ti</li>
+						<li><strong>Rectificación:</strong> Corregir datos inexactos</li>
+						<li><strong>Supresión:</strong> Solicitar la eliminación de tus datos</li>
+						<li><strong>Oposición:</strong> Oponerte al tratamiento basado en interés legítimo</li>
+						<li><strong>Limitación:</strong> Restringir el tratamiento en determinadas circunstancias</li>
+						<li><strong>Portabilidad:</strong> Recibir tus datos en formato estructurado</li>
+					</ul>
+					<p class="text-white/50">
+						Para ejercer estos derechos: <a href="mailto:privacidad@elicita.es" class="text-emerald-400 hover:text-emerald-300">privacidad@elicita.es</a> o mediante el <a href="/derechos-rgpd" class="text-emerald-400 hover:text-emerald-300">formulario oficial RGPD</a>. Responderemos en un plazo máximo de 30 días.
+					</p>
+					<p class="text-white/50">
+						También puedes presentar una reclamación ante la <strong>Agencia Española de Protección de Datos</strong> (AEPD) si consideras que el tratamiento no se ajusta a la normativa: <a href="https://www.aepd.es" class="text-emerald-400 hover:text-emerald-300">www.aepd.es</a>.
+					</p>
+
+					<h2 class="text-white font-light text-2xl" id="cookies">9. Cookies</h2>
+					<p class="text-white/50">Usamos los siguientes tipos de cookies:</p>
+
+					<h3 class="text-white/70">Cookies técnicas (necesarias)</h3>
+					<ul>
+						<li><strong>__client:</strong> Sesión de autenticación (Clerk). Expira al cerrar sesión.</li>
+						<li><strong>__client_uat:</strong> Timestamp de última autenticación. Expira al cerrar sesión.</li>
+						<li><strong>Tema (theme):</strong> Preferencia de tema claro/oscuro. Persistente (1 año).</li>
+					</ul>
+
+					<h3 class="text-white/70">Cookies analíticas</h3>
+					<ul>
+						<li>Usamos <strong>Plausible</strong> como analítica respetuosa con la privacidad. No utiliza cookies, no recoge datos personales y cumple con el RGPD sin necesidad de banner.</li>
+					</ul>
+
+					<h3 class="text-white/70">Cookies de terceros</h3>
+					<ul>
+						<li><strong>Stripe:</strong> Cookies estrictamente necesarias para procesar pagos.</li>
+						<li><strong>Clerk:</strong> Cookies de sesión para la autenticación.</li>
+					</ul>
+
+					<p class="text-white/50">
+						Puedes configurar tu navegador para bloquear todas las cookies, pero esto puede afectar la funcionalidad del servicio.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">10. Seguridad</h2>
+					<ul>
+						<li>Cifrado en tránsito (TLS 1.3) y en reposo (AES-256)</li>
+						<li>Autenticación segura vía Clerk con MFA disponible</li>
+						<li>Protección frente a ataques comunes (XSS, CSRF, inyección SQL)</li>
+						<li>Revisión periódica de accesos y permisos</li>
+						<li>Infraestructura hosted en Hetzner (UE, ISO 27001)</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">11. Servidor MCP</h2>
+					<p class="text-white/50">
+						Elicita expone un servidor MCP (Model Context Protocol) en <code>https://elicita.es/mcp</code>
+						mediante transporte Streamable HTTP. Permite a asistentes de IA consultar cuatro herramientas públicas y de solo lectura:
+						búsqueda de licitaciones, estadísticas, cobertura de fuentes y códigos CPV.
+					</p>
+					<p class="text-white/50">
+						Esta versión no ofrece OAuth público ni Dynamic Client Registration. Las solicitudes anónimas están sujetas a límites de uso y el servidor no requiere ni recopila credenciales de cuenta para estas herramientas públicas.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">12. Privacidad de menores</h2>
+					<p class="text-white/50">
+						Nuestros servicios no están dirigidos a menores de 16 años. No recogemos conscientemente datos personales de menores. Si detectamos que hemos recogido datos de un menor, los eliminaremos de inmediato.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">13. Modificaciones</h2>
+					<p class="text-white/50">
+						Podemos actualizar esta política. Notificaremos cambios significativos por email o mediante aviso en la plataforma con 30 días de antelación. La fecha de última actualización aparece al inicio.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">14. Contacto</h2>
+					<ul>
+						<li>Email general: <a href="mailto:hola@elicita.es" class="text-emerald-400 hover:text-emerald-300">hola@elicita.es</a></li>
+						<li>RGPD: <a href="mailto:privacidad@elicita.es" class="text-emerald-400 hover:text-emerald-300">privacidad@elicita.es</a></li>
+						<li>Correo postal: Calle Doctor Antonio Cortés Lladó, 5, 41004 Sevilla</li>
+						<li>Agencia Española de Protección de Datos: <a href="https://www.aepd.es" class="text-emerald-400 hover:text-emerald-300">www.aepd.es</a></li>
+					</ul>
+
+					<hr class="border-white/5 my-8" />
+
+					<p class="text-sm text-white/25">
+						Al usar los servicios de Elicita, reconoces haber leído y comprendido esta Política de Privacidad.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>

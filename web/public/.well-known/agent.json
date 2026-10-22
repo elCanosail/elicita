@@ -1,0 +1,61 @@
+{
+  "name": "elicita",
+  "url": "https://elicita.es",
+  "description": "Inteligencia sobre contratación pública española. 66.4M+ registros de licitaciones, adjudicaciones, BORME y calidad de contratos. Busca, filtra y analiza contratos públicos en tiempo real.",
+  "category": "business-intelligence",
+  "language": "es",
+  "country": "ES",
+  "apis": [
+    {
+      "url": "https://api.elicita.es/v1",
+      "type": "rest",
+      "auth": "clerk",
+      "docs": "https://elicita.es/docs/api"
+    },
+    {
+      "url": "https://elicita.es/mcp",
+      "type": "mcp",
+      "transport": "streamable-http",
+      "protocol_version": "2025-06-18",
+      "auth": "none",
+      "docs": "https://elicita.es/docs/mcp",
+      "tools": [
+        "get_stats",
+        "get_cobertura",
+        "search_cpv"
+      ],
+      "description": "Acceso público de descubrimiento: estadísticas, cobertura y CPV. La búsqueda de contratos requiere API key del plan Pro."
+    }
+  ],
+  "capabilities": [
+    "search",
+    "filter",
+    "alerts",
+    "analytics",
+    "export",
+    "predictions",
+    "borme",
+    "calidad",
+    "mcp-server"
+  ],
+  "data": {
+    "total_records": "66.4M",
+    "licitaciones": "30.9M",
+    "borme_empresas": "9.3M",
+    "borme_cargos": "17.1M",
+    "calidad_contratos": "8.7M",
+    "nif_canonical": "10.7K",
+    "fuentes": 12,
+    "refresh": "4h"
+  },
+  "integrations": {
+    "clerk": "authentication",
+    "resend": "notifications",
+    "notion": "documentation"
+  },
+  "discovery": {
+    "api_catalog": "https://elicita.es/.well-known/api-catalog",
+    "robots_txt": "https://elicita.es/robots.txt",
+    "sitemap": "https://elicita.es/sitemap-index.xml"
+  }
+}

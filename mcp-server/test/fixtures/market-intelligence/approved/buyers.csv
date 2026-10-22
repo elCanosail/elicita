@@ -1,0 +1,3 @@
+rank,buyer_id,buyer_name,analytic_contracts,observed_amount_eur,share_market_amount_pct
+1,buyer-fixture-1,Comprador Fixture Uno,4,500000,50
+2,buyer-fixture-2,Comprador Fixture Dos,2,250000,25

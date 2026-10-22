@@ -1,0 +1,30 @@
+{
+  "apps": [
+    {
+      "name": "elicita",
+      "script": "./dist/server/entry.mjs",
+      "cwd": "/ruta/a/elicita/web",
+      "node_args": "--max-old-space-size=4096",
+      "env_production": {
+        "HOST": "127.0.0.1",
+        "PORT": "4321",
+        "NODE_ENV": "production",
+        "PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_<tu-publishable-key>",
+        "CLERK_SECRET_KEY": "sk_live_<tu-secret-key>",
+        "NAN_BASE_URL": "https://api.nan.builders/v1",
+        "NAN_API_KEY": "<tu-nan-api-key>",
+        "OLLAMA_BASE_URL": "https://ollama.com/v1",
+        "OLLAMA_API_KEY": "<tu-ollama-api-key>",
+        "RESEND_API_KEY": "re_<tu-resend-api-key>",
+        "AI_RESUMEN_MODEL_NAN": "gemma4",
+        "AI_ASISTENTE_MODEL_NAN": "gemma4",
+        "CLERK_WEBHOOK_SECRET": "whsec_<tu-webhook-secret>",
+        "ADMIN_API_KEY": "<tu-admin-api-key>"
+      },
+      "restart_delay": 3000,
+      "max_memory_restart": "4G",
+      "max_restarts": 5,
+      "watch": false
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+---
+import Layout from '../../layouts/main.astro';
+import { CCAA_LIST } from '../../lib/ccaa-data';
+
+const title = 'Licitaciones por Comunidad Autónoma — Elicita';
+const description = 'Explora licitaciones y contratos públicos por CCAA en España. Andalucía, Cataluña, Madrid, Galicia, Euskadi y todas las comunidades autónomas. Datos actualizados cada 4 horas.';
+const canonicalUrl = new URL(Astro.url.pathname, 'https://elicita.es').href;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Licitaciones por Comunidad Autónoma',
+  description,
+  url: canonicalUrl,
+};
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://elicita.es/' },
+    { '@type': 'ListItem', position: 2, name: 'Licitaciones', item: canonicalUrl },
+  ],
+};
+---
+
+<Layout title={title} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} slot="head" />
+  <meta property="og:type" content="website" slot="head" />
+  <meta property="og:title" content={title} slot="head" />
+  <meta property="og:description" content={description} slot="head" />
+  <meta property="og:url" content={canonicalUrl} slot="head" />
+
+  <section class="py-12 md:py-20">
+    <div class="container mx-auto px-4 max-w-5xl">
+      <nav class="flex items-center gap-2 text-xs font-mono text-white/50 mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-emerald-400 transition-colors">Inicio</a>
+        <span>/</span>
+        <span class="text-white/60">Licitaciones</span>
+      </nav>
+
+      <div class="mb-10">
+        <p class="font-mono text-xs text-emerald-400/70 tracking-widest uppercase mb-3">Cobertura territorial</p>
+        <h1 class="text-3xl md:text-5xl font-light text-white tracking-tight mb-4">
+          Licitaciones por Comunidad Autónoma
+        </h1>
+        <p class="text-white/50 text-sm md:text-base max-w-2xl leading-relaxed">
+          Datos públicos de contratación pública organizados por CCAA. Encuentra licitaciones activas, organismos principales, sectores con más contratos y adjudicaciones recientes en cada comunidad autónoma.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {CCAA_LIST.map((ccaa) => (
+          <a
+            href={`/licitaciones/${ccaa.slug}`}
+            class="group flex items-center justify-between bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] hover:border-emerald-500/30 rounded-lg p-5 transition-all"
+          >
+            <div>
+              <h2 class="text-base font-medium text-white group-hover:text-emerald-400 transition-colors mb-1">
+                Licitaciones en {ccaa.nombre}
+              </h2>
+              <p class="text-xs text-white/50 font-mono">Ver contratos públicos →</p>
+            </div>
+            <span class="text-emerald-500/50 group-hover:text-emerald-400 transition-colors text-xl">→</span>
+          </a>
+        ))}
+      </div>
+
+      <div class="mt-12 pt-8 border-t border-white/[0.06]">
+        <a href="/buscar" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-mono px-6 py-3 rounded transition-colors">
+          Buscar licitaciones en toda España →
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/elicita/cli/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'projects/elicita/cli/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/elicita/cli
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Run vet
+        run: go vet ./...
+
+      - name: Smoke build
+        run: CGO_ENABLED=0 go build -ldflags="-s -w" -o elicitac ./cmd/elicita
+
+      - name: Check version
+        run: ./elicitac version

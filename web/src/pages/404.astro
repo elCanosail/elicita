@@ -1,0 +1,89 @@
+---
+import Layout from '../layouts/main.astro';
+import { Search, Home, ArrowLeft } from 'lucide-react';
+
+const description = "Esa página no existe. Prueba el buscador de licitaciones públicas de Elicita.";
+---
+
+<Layout title="Página no encontrada — Elicita" description={description}>
+	<section class="py-20 md:py-32 min-h-[60vh] flex items-center">
+		<div class="container mx-auto px-4">
+			<div class="max-w-2xl mx-auto text-center">
+				{/* 404 */}
+				<div class="mb-8">
+					<div class="relative">
+						<h1 class="text-9xl md:text-[200px] font-bold text-white/[0.03]">
+							404
+						</h1>
+						<div class="absolute inset-0 flex items-center justify-center">
+							<div class="relative">
+								<div class="absolute inset-0 bg-emerald-500/20 rounded-full blur-3xl"></div>
+								<Search class="h-24 w-24 md:h-32 md:w-32 text-emerald-500/40 relative" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* Content */}
+				<h2 class="text-3xl md:text-4xl font-light text-white mb-4">
+					Esa página no existe
+				</h2>
+				<p class="text-lg text-white/50 mb-8">
+					Pero seguro que hay una licitación que sí. Prueba el buscador.
+				</p>
+
+				{/* Actions */}
+				<div class="flex flex-col sm:flex-row gap-4 justify-center">
+					<a
+						href="/dashboard/monitor"
+						class="inline-flex items-center justify-center gap-2 h-10 px-6 rounded-md bg-emerald-500 hover:bg-emerald-600 text-black font-medium transition-colors"
+					>
+						<Search class="h-4 w-4" />
+						Ir al buscador
+					</a>
+					<a
+						href="/"
+						class="inline-flex items-center justify-center gap-2 h-10 px-6 rounded-md border border-white/10 hover:border-white/20 text-white/50 hover:text-white/70 transition-colors"
+					>
+						<Home class="h-4 w-4" />
+						Inicio
+					</a>
+					<button
+						onclick="history.back()"
+						class="inline-flex items-center justify-center gap-2 h-10 px-6 rounded-md border border-white/10 hover:border-white/20 text-white/50 hover:text-white/70 transition-colors"
+					>
+						<ArrowLeft class="h-4 w-4" />
+						Volver
+					</button>
+				</div>
+
+				{/* Helpful links */}
+				<div class="mt-12 pt-8 border-t border-white/5">
+					<p class="text-sm text-white/50 mb-4">
+						Páginas que sí existen:
+					</p>
+					<div class="flex flex-wrap gap-4 justify-center">
+						<a href="/dashboard/monitor" class="text-sm text-emerald-400/70 hover:text-emerald-400 transition-colors">
+							Monitor
+						</a>
+						<a href="/dashboard/explorer" class="text-sm text-emerald-400/70 hover:text-emerald-400 transition-colors">
+							Explorer
+						</a>
+						<a href="/cuenta/plan" class="text-sm text-emerald-400/70 hover:text-emerald-400 transition-colors">
+							Precios
+						</a>
+						<a href="/about" class="text-sm text-emerald-400/70 hover:text-emerald-400 transition-colors">
+							Sobre Elicita
+						</a>
+						<a href="/docs/metodologia" class="text-sm text-emerald-400/70 hover:text-emerald-400 transition-colors">
+							Metodología
+						</a>
+						<a href="/contact" class="text-sm text-emerald-400/70 hover:text-emerald-400 transition-colors">
+							Contacto
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>

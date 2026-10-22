@@ -1,0 +1,93 @@
+---
+// 500 SSR — lección del incidente del 29-09: las rutas caídas devolvían 500 con cuerpo vacío.
+// Página deliberadamente autocontenida: sin Layout, sin islas React, sin JS, sin CSS externo
+// (`is:inline`) — si el SSR falla, esto viaja en el propio HTML y no depende de chunks.
+// @astrojs/node (standalone) renderiza esta página ante errores SSR no capturados.
+Astro.response.status = 500;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<meta name="description" content="Error del servidor de Elicita. No es tu navegador: algo se ha roto por nuestro lado." />
+		<title>500 — Error del servidor — Elicita</title>
+		<style is:inline>
+			:root { color-scheme: dark; }
+			* { margin: 0; padding: 0; box-sizing: border-box; }
+			html, body { background: #080808; }
+			body {
+				min-height: 100vh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+				color: rgba(255, 255, 255, 0.9);
+				padding: 2rem;
+				-webkit-font-smoothing: antialiased;
+			}
+			main { max-width: 34rem; width: 100%; text-align: center; }
+			.kicker {
+				font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 0.75rem;
+				letter-spacing: 0.08em;
+				color: rgba(255, 255, 255, 0.7);
+				margin-bottom: 1.25rem;
+			}
+			.kicker::before { content: '● '; color: #10b981; }
+			h1 {
+				font-size: clamp(1.75rem, 5vw, 2.5rem);
+				font-weight: 500;
+				letter-spacing: -0.01em;
+				color: #ffffff;
+				margin-bottom: 1rem;
+			}
+			p { font-size: 1.0625rem; line-height: 1.65; color: rgba(255, 255, 255, 0.7); }
+			nav {
+				margin-top: 2rem;
+				padding-top: 2rem;
+				border-top: 1px solid rgba(255, 255, 255, 0.1);
+				display: flex;
+				gap: 1rem;
+				justify-content: center;
+				flex-wrap: wrap;
+			}
+			nav a {
+				display: inline-block;
+				font-size: 0.875rem;
+				line-height: 1;
+				padding: 0.75rem 1.25rem;
+				border-radius: 0.375rem;
+				text-decoration: none;
+			}
+			nav a.primary { background: #10b981; color: #080808; font-weight: 500; }
+			nav a.primary:hover { background: #059669; }
+			nav a.secondary { border: 1px solid rgba(255, 255, 255, 0.2); color: rgba(255, 255, 255, 0.9); }
+			nav a.secondary:hover { border-color: rgba(255, 255, 255, 0.4); }
+			nav a:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }
+			footer {
+				margin-top: 2.5rem;
+				font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 0.75rem;
+				color: rgba(255, 255, 255, 0.7);
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<p class="kicker">ERROR 500</p>
+			<h1>El fallo es nuestro, no tuyo</h1>
+			<p>
+				No es tu navegador: algo se ha roto en nuestro servidor y la página no
+				ha podido servirse. Estamos encima de ello.
+			</p>
+			<nav aria-label="Enlaces mientras se restaura el servicio">
+				<a class="primary" href="/">Volver al inicio</a>
+				<a class="secondary" href="/cobertura">Ver los datos</a>
+			</nav>
+			<footer>elicita_ · contratación pública, datos abiertos</footer>
+		</main>
+	</body>
+</html>

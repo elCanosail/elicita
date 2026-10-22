@@ -1,0 +1,637 @@
+---
+import Layout from '../../layouts/main.astro';
+
+const metadata = {
+  title: "Metodología — Elicita",
+  description: "Cómo construimos elicita_: 63M+ registros oficiales —contratación y mercantil—, 16 fuentes leídas cada 4 horas, 7 sectores publicados y trazabilidad completa.",
+};
+
+const canonicalUrl = 'https://elicita.es/docs/metodologia';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: 'Metodología — Elicita',
+  description: metadata.description,
+  author: { '@type': 'Organization', name: 'Elicita', url: 'https://elicita.es' },
+  publisher: { '@type': 'Organization', name: 'Elicita', url: 'https://elicita.es' },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+};
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <article class="py-20 md:py-28">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto">
+
+        <!-- Back link -->
+        <a
+          href="/docs"
+          class="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white/70 transition-colors mb-10 group"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+          Volver a docs
+        </a>
+
+        <!-- Article header -->
+        <header class="mb-12">
+          <div class="flex flex-wrap items-center gap-3 text-sm text-white/50 mb-4">
+            <span class="inline-flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+              Metodología
+            </span>
+            <span class="text-white/50">·</span>
+            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400">
+              Technical Deep Dive
+            </span>
+          </div>
+          <h1 class="text-3xl md:text-5xl font-bold leading-tight mb-5 text-white tracking-tight">
+            Metodología
+          </h1>
+          <p class="text-xl text-white/50 leading-relaxed">
+            Cómo transformamos datos públicos en inteligencia accionable.
+          </p>
+        </header>
+
+        <!-- MDX-style content wrapper -->
+        <div class="prose prose-lg prose-invert max-w-none
+                    prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-white
+                    prose-h2:text-2xl prose-h2:mt-14 prose-h2:mb-4
+                    prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+                    prose-p:text-white/60 prose-p:leading-relaxed prose-p:text-[15px] prose-p:my-4
+                    prose-strong:text-white/90
+                    prose-a:text-emerald-400 prose-a:no-underline hover:prose-a:underline
+                    prose-code:text-emerald-300 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+                    prose-pre:bg-white/5 prose-pre:border prose-pre:border-white/10
+                    prose-li:text-white/55 prose-li:my-1
+                    prose-blockquote:border-l-emerald-500/30 prose-blockquote:text-white/50 prose-blockquote:py-0 prose-blockquote:my-6">
+
+          <p>
+            <strong>elicita_</strong> viene del verbo <em>elicitar</em>: provocar, hacer
+            que suceda. En contratación pública, la diferencia entre ganar y perder un
+            contrato rara vez es el precio — es la anticipación.
+          </p>
+
+          <blockquote>
+            <p><strong>Saber antes, preparar mejor, llegar primero.</strong></p>
+          </blockquote>
+
+          <h2>El reto</h2>
+
+          <p>
+            La contratación pública española genera millones de registros cada año,
+            dispersos en decenas de plataformas con formatos incompatibles: feeds XML,
+            APIs REST, hojas de cálculo, boletines oficiales en PDF, portales web con
+            estructuras cambiantes.
+          </p>
+
+          <!-- Visual: fuentes dispersas → modelo unificado -->
+          <div class="not-prose my-8 flex items-center gap-4 flex-wrap">
+            <div class="flex flex-wrap gap-2 flex-1">
+              {['XML', 'PDF', 'REST', 'HTML', 'ATOM', 'CSV'].map((fmt) => (
+                <span class="font-mono text-xs px-3 py-1.5 rounded border border-red-500/20 bg-red-500/5 text-red-400 animate-pulse">{fmt}</span>
+              ))}
+            </div>
+            <span class="font-mono text-xl text-white/15">→</span>
+            <div class="inline-flex items-center gap-2 font-mono text-xs px-4 py-2.5 rounded-lg border border-emerald-500/25 bg-emerald-500/5 text-emerald-400 whitespace-nowrap">
+              ◆ Modelo unificado
+            </div>
+          </div>
+
+          <p>
+            Cada administración — estatal, autonómica, local — publica sus licitaciones
+            de forma diferente. Algunas ofrecen APIs estructuradas. Otras solo publican
+            documentos en formatos cerrados. Los campos varían: lo que en una fuente es
+            "importe de adjudicación", en otra es "valor estimado del contrato", y en
+            una tercera no existe.
+          </p>
+
+          <p>
+            <strong>Obtener los datos es solo el primer paso. El verdadero desafío es
+            hacerlos comparables, coherentes y útiles.</strong>
+          </p>
+
+          <h2>Dataset propietario</h2>
+
+          <p>
+            Los datos de contratación pública son, por definición, de acceso libre.
+            Cualquiera puede consultarlos. Sin embargo, acceder a ellos no es lo mismo
+            que dominarlos: decenas de plataformas, formatos dispares, PDFs, APIs
+            inestables, boletines que cambian sin aviso. Reunir todo esto en un único
+            lugar ya es difícil. Hacerlo de forma continua, estructurada y fiable es
+            lo que marca la diferencia.
+          </p>
+
+          <p>
+            <strong>elicita_</strong> conecta con fuentes oficiales de contratación a nivel
+            estatal y europeo, incluyendo plataformas centralizadas y boletines
+            autonómicos. Pero el dataset no se limita a licitaciones: incorporamos
+            registros, datos y otras fuentes que, cruzadas entre sí, revelan
+            relaciones que no son visibles consultando cada fuente por separado.
+            Es ese cruce — contratación, estructura empresarial, histórico
+            competitivo — lo que convierte datos públicos en inteligencia accionable.
+          </p>
+
+          <p>
+            Cada fuente se consulta, procesa y analiza para integrar datos fiables
+            periódicamente — varias veces al día — construyendo así un dataset
+            propietario único.
+          </p>
+
+          <!-- Visual: dataset bars -->
+          <div class="not-prose my-8 space-y-2">
+            <div class="h-7 rounded border border-emerald-500/25 bg-emerald-500/10 flex items-center px-3" style="width: 100%">
+              <span class="font-mono text-xs text-white/70">63M registros</span>
+            </div>
+            <div class="h-7 rounded border border-amber-500/20 bg-amber-500/10 flex items-center px-3" style="width: 72%">
+              <span class="font-mono text-xs text-amber-400">~987B€ volumen indexado</span>
+            </div>
+            <div class="grid grid-cols-4 gap-3 mt-4">
+              <div class="text-center">
+                <div class="font-mono text-sm text-white/70">13.4M</div>
+                <div class="text-xs text-white/50">Nacional (PLACSP)</div>
+              </div>
+              <div class="text-center">
+                <div class="font-mono text-sm text-white/70">6.5M</div>
+                <div class="text-xs text-white/50">Europa (TED)</div>
+              </div>
+              <div class="text-center">
+                <div class="font-mono text-sm text-white/70">26.3M</div>
+                <div class="text-xs text-white/50">Registros mercantiles</div>
+              </div>
+              <div class="text-center">
+                <div class="font-mono text-sm text-white/70">8.4M</div>
+                <div class="text-xs text-white/50">CC.AA. y local</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats grid -->
+          <div class="not-prose grid grid-cols-2 md:grid-cols-4 gap-3 my-8">
+            <div class="border border-white/5 bg-white/[0.02] rounded-xl p-4 text-center">
+              <div class="font-mono text-base text-white/90 mb-1">Múltiples</div>
+              <div class="text-xs text-white/50">fuentes oficiales activas</div>
+            </div>
+            <div class="border border-white/5 bg-white/[0.02] rounded-xl p-4 text-center">
+              <div class="font-mono text-base text-white/90 mb-1">Cada 4h</div>
+              <div class="text-xs text-white/50">sincronización</div>
+            </div>
+            <div class="border border-white/5 bg-white/[0.02] rounded-xl p-4 text-center">
+              <div class="font-mono text-base text-white/90 mb-1">26 años</div>
+              <div class="text-xs text-white/50">de histórico</div>
+            </div>
+            <div class="border border-white/5 bg-white/[0.02] rounded-xl p-4 text-center">
+              <div class="font-mono text-base text-white/90 mb-1">ES + UE</div>
+              <div class="text-xs text-white/50">cobertura geográfica</div>
+            </div>
+          </div>
+
+          <h2>Normalización</h2>
+
+          <p>
+            Cada fuente habla su propio idioma. Nuestro proceso de normalización
+            traduce todos los formatos a un modelo unificado:
+          </p>
+
+          <!-- Visual: pipeline -->
+          <div class="not-prose my-8 flex items-stretch gap-2 overflow-x-auto pb-2">
+            {[
+              { n: '①', label: 'Ingesta', desc: 'Conectores recogen datos en bruto' },
+              { n: '②', label: 'Normalización', desc: 'Campos, importes, fechas unificados' },
+              { n: '③', label: 'CPVs', desc: '9.454 códigos clasifican cada contrato' },
+              { n: '④', label: 'Deduplicación', desc: 'Cada contrato identificado una vez' },
+              { n: '⑤', label: 'Dataset', desc: 'Listo para consulta y predicción', final: true },
+            ].map((step) => (
+              <div class={`flex-1 min-w-[110px] text-center rounded-xl p-3.5 border ${step.final ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-white/5 bg-white/[0.02]'}`}>
+                <div class="font-mono text-base text-emerald-400/60 mb-1.5">{step.n}</div>
+                <div class="font-mono text-xs font-medium text-white/70 uppercase tracking-wider mb-1">{step.label}</div>
+                <div class="text-xs text-white/50 leading-tight">{step.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <ul>
+            <li>
+              <strong>Clasificación CPV.</strong> El vocabulario común de contratación
+              pública (CPV) es el estándar europeo para clasificar el objeto de un contrato.
+              Aplicamos un diccionario de 9.454 códigos para etiquetar cada licitación
+              con su categoría exacta — incluso cuando la fuente original no lo proporciona.
+            </li>
+            <li>
+              <strong>Deduplicación.</strong> Un mismo contrato puede aparecer en varias
+              fuentes (publicación estatal + europea, por ejemplo). Identificamos duplicados
+              por expediente, organismo y fechas para que cada oportunidad quede inequívocamente identificada.
+            </li>
+            <li>
+              <strong>Importes.</strong> Convertimos todos los valores a euros, diferenciando
+              entre importe estimado, precio de licitación e importe de adjudicación.
+              Cuando una fuente no proporciona el dato, el campo queda vacío — nunca se estima o infiere.
+            </li>
+            <li>
+              <strong>Fechas y estados.</strong> Cada fuente codifica el ciclo de vida del
+              contrato de forma diferente. Normalizamos a un modelo coherente: publicado,
+              abierto, adjudicado, formalizado.
+            </li>
+          </ul>
+
+          <h2>Infraestructura propia</h2>
+
+          <p>
+            Todo el procesamiento de <strong>elicita_</strong> se ejecuta sobre infraestructura propia,
+            con código desarrollado específicamente para este dominio. No dependemos
+            de servicios de inteligencia artificial externos, modelos de lenguaje (LLMs)
+            ni APIs de terceros para el análisis de datos.
+          </p>
+
+          <!-- Visual: 3 pilares -->
+          <div class="not-prose grid grid-cols-1 md:grid-cols-3 gap-3 my-8">
+            <div class="border border-white/5 bg-white/[0.02] rounded-xl p-5 text-center">
+              <div class="text-xl text-emerald-400 mb-2">⬡</div>
+              <div class="font-mono text-xs font-medium text-white/80 uppercase tracking-wider mb-2">Determinismo</div>
+              <div class="text-xs text-white/50 leading-relaxed">Misma consulta, mismo resultado. Sin variabilidad probabilística ni alucinaciones.</div>
+            </div>
+            <div class="border border-white/5 bg-white/[0.02] rounded-xl p-5 text-center">
+              <div class="text-xl text-emerald-400 mb-2">◈</div>
+              <div class="font-mono text-xs font-medium text-white/80 uppercase tracking-wider mb-2">Privacidad</div>
+              <div class="text-xs text-white/50 leading-relaxed">Tu CIF y tu perfil nunca salen de nuestros servidores. Cero proveedores externos.</div>
+            </div>
+            <div class="border border-white/5 bg-white/[0.02] rounded-xl p-5 text-center">
+              <div class="text-xl text-emerald-400 mb-2">◉</div>
+              <div class="font-mono text-xs font-medium text-white/80 uppercase tracking-wider mb-2">Disponibilidad</div>
+              <div class="text-xs text-white/50 leading-relaxed">Sin dependencia de terceros. Si un proveedor de IA cierra, elicita_ sigue igual.</div>
+            </div>
+          </div>
+
+          <p>
+            Los conectores que recopilan información, los algoritmos que normalizan y
+            deduplicican, las fórmulas que detectan ciclos de renovación, y los modelos
+            que identifican competidores — todo está programado, auditado y bajo nuestro
+            control. No hay cajas negras ajenas tomando decisiones sobre tus datos.
+          </p>
+
+          <h2>Perfilado</h2>
+
+          <p>
+            Cuando introduces tu CIF, cruzamos tu identificación fiscal contra el
+            histórico completo de adjudicaciones nacionales y europeas. En minutos,
+            el sistema construye un perfil que incluye:
+          </p>
+
+          <!-- Visual: flujo de perfilado -->
+          <div class="not-prose my-8 flex items-center gap-4 flex-wrap">
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <span class="font-mono text-sm bg-white/[0.04] border border-white/10 rounded-lg px-3.5 py-2 text-white/70">B12345678</span>
+              <span class="font-mono text-lg text-white/15">→</span>
+            </div>
+            <div class="relative overflow-hidden font-mono text-xs text-emerald-400 px-3.5 py-2 bg-emerald-500/5 border border-emerald-500/15 rounded-lg flex-shrink-0">
+              <div class="absolute top-0 left-0 w-[30%] h-full bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent animate-[scan_2s_ease-in-out_infinite]"></div>
+              <span>Analizando 63M registros</span>
+            </div>
+            <div class="flex flex-col gap-1 flex-1 min-w-[180px]">
+              {['Adjudicaciones históricas', 'CPVs activos', 'Competidores reales', 'Ciclos de renovación', 'Posición competitiva'].map((item) => (
+                <div class="font-mono text-xs text-white/50">◆ {item}</div>
+              ))}
+            </div>
+          </div>
+
+          <p>
+            Este perfil alimenta tu dashboard personalizado. Las licitaciones que ves
+            no son una lista genérica — son las que, según tu historial, tienen
+            relevancia directa para tu actividad.
+          </p>
+
+          <h2>Predicciones</h2>
+
+          <p>
+            Las secciones marcadas como
+            <code class="font-mono text-xs bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded">PROYECCIÓN</code>
+            se basan en análisis de patrones históricos reales. Si un organismo renueva un
+            contrato de mantenimiento cada 2 años, y la última adjudicación fue hace
+            22 meses, estimamos una ventana de publicación probable.
+          </p>
+
+          <!-- Visual: timeline de ciclo -->
+          <div class="not-prose my-8">
+            <div class="relative h-20 border-b border-white/5">
+              <div class="absolute top-0 left-[0%] -translate-x-1/2 text-center">
+                <div class="w-2.5 h-2.5 rounded-full bg-white/20 mx-auto mb-1.5"></div>
+                <div class="font-mono text-xs text-white/50">Adj. 2020</div>
+              </div>
+              <div class="absolute top-0 left-[33%] -translate-x-1/2 text-center">
+                <div class="w-2.5 h-2.5 rounded-full bg-white/20 mx-auto mb-1.5"></div>
+                <div class="font-mono text-xs text-white/50">Adj. 2022</div>
+              </div>
+              <div class="absolute top-0 left-[66%] -translate-x-1/2 text-center">
+                <div class="w-2.5 h-2.5 rounded-full bg-white/20 mx-auto mb-1.5"></div>
+                <div class="font-mono text-xs text-white/50">Adj. 2024</div>
+              </div>
+              <div class="absolute top-0 left-[95%] -translate-x-1/2 text-center">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 mx-auto mb-1.5 animate-pulse shadow-[0_0_8px_hsl(var(--primary) / 0.4)]"></div>
+                <div class="font-mono text-xs text-emerald-400">Est. Q2 2026</div>
+              </div>
+              <div class="absolute bottom-2 left-0 w-[33%] flex items-center justify-center h-4 border-l border-r border-white/5">
+                <span class="font-mono text-[9px] text-white/15">~24 meses</span>
+              </div>
+              <div class="absolute bottom-2 left-[33%] w-[33%] flex items-center justify-center h-4 border-l border-r border-white/5">
+                <span class="font-mono text-[9px] text-white/15">~24 meses</span>
+              </div>
+              <div class="absolute bottom-2 left-[66%] w-[29%] flex items-center justify-center h-4 border-l border-r border-emerald-500/20">
+                <span class="font-mono text-[9px] text-emerald-400/40">~24 meses</span>
+              </div>
+            </div>
+            <div class="font-mono text-xs text-white/50 mt-2 text-center">
+              Ejemplo: contrato de mantenimiento con ciclo bienal detectado
+            </div>
+          </div>
+
+          <p>
+            Todas las predicciones se identifican explícitamente. Nunca se presentan
+            como datos confirmados. La metodología se basa en:
+          </p>
+
+          <ul>
+            <li>Frecuencia histórica de renovación por organismo y CPV</li>
+            <li>Importes de adjudicaciones anteriores como referencia</li>
+            <li>Patrones estacionales cuando existen</li>
+          </ul>
+
+          <h2>Cobertura</h2>
+
+          <p>
+            <strong>elicita_</strong> cubre aproximadamente el <strong>95% de la contratación pública
+            española y europea</strong> relevante para empresas medianas y grandes.
+          </p>
+
+          <!-- Visual: barra de cobertura -->
+          <div class="not-prose my-8">
+            <div class="flex h-8 rounded-lg overflow-hidden border border-white/5">
+              <div class="w-[95%] bg-emerald-500/10 border-r border-emerald-500/30 flex items-center px-3">
+                <span class="font-mono text-xs text-emerald-400">~95% cubierto</span>
+              </div>
+              <div class="flex-1 flex items-center justify-center bg-white/[0.02]">
+                <span class="font-mono text-xs text-white/50">~5%</span>
+              </div>
+            </div>
+            <div class="flex gap-5 mt-2.5 flex-wrap">
+              <div class="flex items-center gap-1.5 text-xs text-white/50">
+                <span class="w-2 h-2 rounded-sm bg-emerald-500/40"></span>
+                Estatal + UE + CC.AA. + local agregado
+              </div>
+              <div class="flex items-center gap-1.5 text-xs text-white/50">
+                <span class="w-2 h-2 rounded-sm bg-white/10"></span>
+                Contratos menores (&lt;15K€) + municipal disperso
+              </div>
+            </div>
+          </div>
+
+          <p>
+            Esto incluye la totalidad de la contratación estatal, la publicada en
+            diarios oficiales europeos, y la mayor parte de la contratación autonómica
+            y local que se canaliza a través de plataformas centralizadas.
+          </p>
+
+          <p>
+            El porcentaje restante corresponde principalmente a:
+          </p>
+
+          <ul>
+            <li>
+              <strong>Contratos menores</strong> (inferiores a 15.000€ en servicios o
+              40.000€ en obras), que por normativa tienen requisitos de publicidad
+              reducidos y rara vez se publican en plataformas electrónicas.
+            </li>
+            <li>
+              <strong>Contratación municipal dispersa</strong> de ayuntamientos pequeños
+              que no utilizan plataformas de agregación y publican exclusivamente en
+              sus perfiles de contratante locales.
+            </li>
+          </ul>
+
+          <p>
+            En ambos casos, se trata de segmentos de escaso valor estratégico para el
+            tipo de empresa que utiliza herramientas de inteligencia competitiva. La
+            cobertura de <strong>elicita_</strong> está diseñada para capturar las oportunidades que
+            realmente importan.
+          </p>
+
+          <h2>Calidad y exclusiones</h2>
+
+          <p>
+            Ningún sector se publica sin pasar verificaciones automáticas que se archivan
+            junto a cada generación de snapshot. Las llamamos <em>receipt checks</em> y son
+            parte del contrato de datos, no una auditoría ocasional:
+          </p>
+
+          <ul>
+            <li><strong>Determinismo bit a bit</strong>: dos generaciones con parámetros idénticos producen el mismo snapshot — mismo <code>snapshot_id</code> y fecha.</li>
+            <li><strong>Cero duplicados</strong> por identificador y esquema validado en cada generación.</li>
+            <li><strong>Rankings determinísticos</strong>, sin identificadores de personas físicas.</li>
+            <li><strong>Exclusión con causa</strong>: toda fila excluida queda registrada y contada, nunca descartada en silencio.</li>
+          </ul>
+
+          <!-- Artifacts publicados por snapshot -->
+          <div class="not-prose my-8">
+            <p class="text-sm text-white/70 mb-3">
+              La trazabilidad no es una promesa: es un fichero. Los artifacts de cada snapshot
+              se publican tal cual se generan, con descarga directa y sin registro.
+            </p>
+            <div class="rounded-xl border border-white/10 overflow-x-auto">
+              <table class="w-full text-sm min-w-[620px]">
+                <thead>
+                  <tr class="bg-white/[0.03] border-b border-white/10 text-left">
+                    <th class="px-4 py-3 font-medium text-white/50">Sector</th>
+                    <th class="px-4 py-3 font-mono text-xs text-white/50">coverage.csv</th>
+                    <th class="px-4 py-3 font-mono text-xs text-white/50">exclusions.csv</th>
+                    <th class="px-4 py-3 font-mono text-xs text-white/50">generation-receipt.json</th>
+                  </tr>
+                </thead>
+                <tbody class="font-mono text-xs">
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Construcción</td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/construction/latest/coverage.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/construction/latest/exclusions.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/construction/latest/generation-receipt.json" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                  </tr>
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Defensa</td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/defensa/latest/coverage.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/defensa/latest/exclusions.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/defensa/latest/generation-receipt.json" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                  </tr>
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Energía</td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/energia/latest/coverage.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/energia/latest/exclusions.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/energia/latest/generation-receipt.json" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                  </tr>
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Limpieza</td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/limpieza/latest/coverage.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/limpieza/latest/exclusions.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/limpieza/latest/generation-receipt.json" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                  </tr>
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Salud</td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/salud/latest/coverage.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/salud/latest/exclusions.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/salud/latest/generation-receipt.json" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                  </tr>
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Tecnología</td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/technology/latest/coverage.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/technology/latest/exclusions.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/technology/latest/generation-receipt.json" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-2.5 font-sans text-white/80">Transporte</td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/transporte/latest/coverage.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/transporte/latest/exclusions.csv" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                    <td class="px-4 py-2.5"><a href="/data/market-intelligence/transporte/latest/generation-receipt.json" download class="text-emerald-400 hover:text-emerald-300 hover:underline">descargar</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-xs text-white/50 mt-2 font-mono">
+              Cada fichero lleva su sha256 en checksums.sha256 junto a los artifacts
+              (<a href="/data/market-intelligence/technology/latest/checksums.sha256" class="text-emerald-400 hover:text-emerald-300 hover:underline">ejemplo: tecnología</a>)
+              · licencia <a href="https://creativecommons.org/licenses/by/4.0/" class="text-emerald-400 hover:text-emerald-300 hover:underline">CC BY 4.0</a>
+              · se regeneran con cada snapshot del pipeline.
+            </p>
+          </div>
+
+          <!-- Visual: tabla de calidad por sector -->
+          <div class="not-prose my-8">
+            <div class="rounded-xl border border-white/10 overflow-x-auto">
+              <table class="w-full text-sm min-w-[540px]">
+                <thead>
+                  <tr class="bg-white/[0.03] border-b border-white/10 text-left">
+                    <th class="px-4 py-3 font-medium text-white/50">Sector (CPV)</th>
+                    <th class="px-4 py-3 text-right font-mono text-xs text-white/50">Filas</th>
+                    <th class="px-4 py-3 text-right font-mono text-xs text-white/50">Importe válido</th>
+                    <th class="px-4 py-3 text-right font-mono text-xs text-white/50">NIF válido</th>
+                    <th class="px-4 py-3 text-right font-mono text-xs text-white/50">Adjudicatario resuelto</th>
+                  </tr>
+                </thead>
+                <tbody class="font-mono text-xs">
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Energía (31+65)</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">32.869</td>
+                    <td class="px-4 py-2.5 text-right text-emerald-400">92,16 %</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">98,20 %</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">97,95 %</td>
+                  </tr>
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Salud (33+85)</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">143.143</td>
+                    <td class="px-4 py-2.5 text-right text-emerald-400">91,49 %</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">98,64 %</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">98,40 %</td>
+                  </tr>
+                  <tr class="border-b border-white/5">
+                    <td class="px-4 py-2.5 font-sans text-white/80">Limpieza (90)</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">44.047</td>
+                    <td class="px-4 py-2.5 text-right text-emerald-400">85,49 %</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">98,43 %</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">97,36 %</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-2.5 font-sans text-white/80">Tecnología (48+72)</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">79.681</td>
+                    <td class="px-4 py-2.5 text-right text-emerald-400">88,92 %</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">97,00 %</td>
+                    <td class="px-4 py-2.5 text-right text-white/80">95,40 %</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-xs text-white/50 mt-2 font-mono">Última revisión por id de expediente · comprador canónico resuelto: 100 % en los cuatro sectores.</p>
+          </div>
+
+          <p>
+            Las exclusiones se declaran por causa. En el snapshot de limpieza y medio
+            ambiente, <strong>6.393 filas (14,51 %)</strong> se excluyeron por importe inválido
+            y ninguna por anomalía de clasificación CPV. Que la validez de importes sea
+            menor en limpieza (85,5 %) que en energía (92,2 %) no es un fallo del pipeline:
+            es el perfil municipal del sector, con más contratos menores y expedientes
+            incompletos en las plataformas fuente.
+          </p>
+
+          <p>
+            Y declaramos también lo que no está resuelto: la resolución de grupos
+            empresariales es marginal — <strong>0 %</strong> en energía, salud y limpieza;
+            <strong>1,65 %</strong> en tecnología, con seis grupos con evidencia versionada —
+            y entre el <strong>5,6 % y el 6,4 %</strong> del importe corresponde a UTEs sin
+            reparto oficial entre socios, según el sector. La confianza se construye sobre
+            los vacíos declarados, no sobre los ocultos.
+          </p>
+
+          <h2>Compromiso con los datos</h2>
+
+          <p>
+            Cada dato que aparece en tu dashboard proviene de una fuente oficial
+            verificable. Si un campo no tiene dato real, se muestra vacío.
+            Nunca se estima o infiere.
+          </p>
+
+          <p>
+            La actualización de los datos es exhaustiva y continua. La mayoría de fuentes
+            se consultan cada cuatro horas, de forma que cualquier nueva publicación
+            queda disponible en tu dashboard en cuestión de horas — no de días.
+            Las fuentes con menor cadencia de publicación se actualizan al menos
+            una vez al día. El resultado es que <strong>elicita_</strong> refleja siempre el estado
+            más reciente del mercado, con la misma información que tiene la
+            administración en el momento en que la hace pública.
+          </p>
+
+        </div>
+
+        <!-- Author section -->
+        <div class="mt-14 pt-8 border-t border-white/10">
+          <div class="flex items-center gap-4">
+            <div class="h-12 w-12 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-white">Equipo Elicita</p>
+              <p class="text-sm text-white/50">Inteligencia sobre contratación pública española</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA Banner -->
+        <div class="mt-14 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-8 text-center">
+          <h3 class="text-2xl font-bold mb-2 text-white">Prueba Elicita gratis</h3>
+          <p class="text-white/50 mb-6">63M registros oficiales. Predicción de renovaciones. Inteligencia competitiva.</p>
+          <a
+            href="/sign-up"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition-colors"
+          >
+            Empezar gratis
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </article>
+
+</Layout>
+
+<style>
+  @keyframes scan {
+    0% { left: -30%; }
+    100% { left: 100%; }
+  }
+</style>

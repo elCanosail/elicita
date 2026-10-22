@@ -1,0 +1,272 @@
+---
+import DashboardLayout from '../../layouts/dashboard.astro';
+import { clerkClient } from '@clerk/astro/server';
+import { titleCase } from '../../lib/format';
+import fs from 'node:fs';
+import path from 'node:path';
+import { query } from '../../lib/duckdb';
+import { getUserPlan } from '../../lib/plan';
+
+const PROFILES_DIR = path.resolve(process.cwd(), '..', 'ingesta', 'data', 'profiles');
+
+let cif = '';
+let profile: Record<string, any> | null = null;
+let cpvDict: Record<string, string> = {};
+let isFree = false;
+
+try {
+  const auth = (Astro.locals as any).auth?.();
+  const userId = auth?.userId;
+  if (userId) {
+    const client = clerkClient({ secretKey: import.meta.env.CLERK_SECRET_KEY });
+    const user = await client.users.getUser(userId);
+    cif = (user.publicMetadata as any)?.cif || '';
+    isFree = getUserPlan(user.publicMetadata || {}, user.username || undefined, userId).plan === 'free';
+  }
+} catch {}
+
+const hasCif = !!cif;
+
+// Load profile
+try {
+  const profilePath = path.join(PROFILES_DIR, `${cif}.json`);
+  if (fs.existsSync(profilePath)) {
+    profile = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
+  }
+} catch {}
+
+// Load CPV dict
+try {
+  const cpvModule = await import('../../data/cpv_es.json');
+  cpvDict = (cpvModule.default || cpvModule) as Record<string, string>;
+} catch {}
+
+const rawCompetidores: any[] = (profile?.competidores || []).slice(0, 30);
+
+// Query calidad scores for all competitors in one go
+interface CompetidorRow {
+  nif: string;
+  score: number | null;
+  total: number;
+}
+
+let competidorScores: Record<string, { score: number | null; total: number }> = {};
+
+if (!isFree && rawCompetidores.length > 0) {
+  const nifs = rawCompetidores.map((c: any) => c.nif).filter(Boolean);
+
+  if (nifs.length > 0) {
+    try {
+      // Build a UNION query for all NIFs at once
+      const nifsLiteral = nifs.map(n => `'${n.replace(/'/g, "''")}'`).join(',');
+      const rows = await query(`
+        SELECT nif_adjudicatario AS nif,
+               AVG(score_calidad) AS score,
+               CAST(COUNT(*) AS INTEGER) AS total
+        FROM calidad
+        WHERE nif_adjudicatario IN (${nifsLiteral})
+        GROUP BY nif_adjudicatario
+      `);
+
+      for (const r of rows) {
+        competidorScores[r.nif] = {
+          score: r.score !== null ? Math.round(r.score * 10) / 10 : null,
+          total: r.total || 0,
+        };
+      }
+    } catch (e: any) {
+      console.error('[competidores] calidad query error:', e?.message);
+    }
+  }
+}
+
+// Merge
+interface Competidor {
+  nombre: string;
+  nif: string;
+  coincidencias: number;
+  volumen: number;
+  cpvs_comunes: string[];
+  score: number | null;
+  total: number;
+}
+
+const competidores: Competidor[] = !isFree
+  ? rawCompetidores.map((c: any) => {
+      const sc = competidorScores[c.nif] || { score: null, total: 0 };
+      return {
+        nombre: titleCase(c.nombre) || c.nombre || c.nif || '—',
+        nif: c.nif || '',
+        coincidencias: c.coincidencias || c.adjudicaciones || 0,
+        volumen: c.volumen || 0,
+        cpvs_comunes: (c.cpvs_comunes || []).slice(0, 4),
+        score: sc.score,
+        total: sc.total,
+      };
+    })
+  : [];
+
+function fmtVolumen(v: number): string {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M€';
+  if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K€';
+  return v.toFixed(0) + '€';
+}
+
+const gridRows = competidores.map((c) => ({
+  nombre: c.nombre,
+  nif: c.nif,
+  coincidencias: c.coincidencias,
+  volumen: c.volumen,
+  score: c.score,
+  total: c.total,
+  cpvs_comunes: c.cpvs_comunes,
+  cpvNames: Object.fromEntries(c.cpvs_comunes.map(code => [code.replace('.0', ''), cpvDict[code.replace('.0', '')]])),
+}));
+
+const emptyMessage = !hasCif
+  ? 'Configura tu empresa para ver competidores'
+  : 'No hay datos de competidores';
+---
+
+<DashboardLayout title="Competidores — elicita_">
+
+<div class="comp-wrap">
+  <div class="comp-header">
+    <h1 class="comp-title" data-help="th_competidor">Competidores</h1>
+    <p class="comp-subtitle">Empresas que han concurrido en los mismos contratos que <strong>{profile?.empresa || cif}</strong></p>
+  </div>
+
+  <div class="comp-table-wrap" id="grid-mount">
+    {!isFree && competidores.length === 0 && (
+      <div class="empty-state">
+        <div class="empty-icon">🏢</div>
+        <div class="empty-text">{emptyMessage}</div>
+        {!hasCif && (
+          <a href="/cuenta/onboard" class="empty-cta">Configurar empresa →</a>
+        )}
+      </div>
+    )}
+    {!isFree && competidores.length > 0 && (
+      <CompetidoresGrid client:load rows={gridRows} />
+    )}
+  </div>
+
+  {isFree && (
+    <div class="pro-cta-section">
+      <div class="pro-cta-glass">
+        <div class="pro-cta-icon">🔒</div>
+        <div class="pro-cta-title">El perfil de competidores requiere Pro</div>
+        <div class="pro-cta-desc">
+          Sube de plan para desbloquear el perfil de competidores y el resto de funciones Pro.
+        </div>
+        <a href="/precios" class="pro-cta-btn">Desbloquear con Pro →</a>
+      </div>
+    </div>
+  )}
+
+  {!isFree && (
+    <div class="comp-meta">
+      <span>Datos de calidad: tabla <code>calidad</code> (8.7M registros PLACE/TED) · Score 0–100</span>
+    </div>
+  )}
+</div>
+
+</DashboardLayout>
+
+<script is:inline>
+window.__competidores = { hasData: true };
+</script>
+
+<style is:global>
+  .comp-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+  .comp-header {
+    margin-bottom: 28px;
+  }
+  .comp-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: hsl(var(--foreground) / 0.9);
+    margin-bottom: 6px;
+  }
+  .comp-subtitle {
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+  .comp-subtitle strong {
+    color: hsl(var(--foreground) / 0.5);
+    font-weight: 400;
+  }
+
+  .comp-table-wrap {
+    overflow-x: auto;
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 8px;
+    margin-bottom: 24px;
+  }
+
+  .comp-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.2);
+    text-align: right;
+  }
+
+  .empty-state {
+    text-align: center; padding: 60px 24px;
+  }
+  .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.6; }
+  .empty-text { font-size: 1rem; color: hsl(var(--foreground) / 0.7); margin-bottom: 8px; }
+  .empty-cta {
+    display: inline-block; margin-top: 16px; padding: 8px 20px;
+    background: hsl(var(--primary) / 0.1); border: 1px solid hsl(var(--primary) / 0.3);
+    border-radius: 6px; color: hsl(var(--primary)); font-size: 0.875rem; text-decoration: none;
+  }
+
+  .pro-cta-section {
+    padding: 48px 24px;
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 8px;
+    background: hsl(var(--foreground) / 0.02);
+    margin-bottom: 24px;
+  }
+  .pro-cta-glass { text-align: center; max-width: 420px; margin: 0 auto; }
+  .pro-cta-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.8; }
+  .pro-cta-title { font-size: 1.125rem; font-weight: 500; color: hsl(var(--foreground) / 0.85); margin-bottom: 8px; }
+  .pro-cta-desc { font-size: 0.875rem; color: hsl(var(--foreground) / 0.45); line-height: 1.5; margin-bottom: 20px; }
+  .pro-cta-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 24px;
+    background: hsl(var(--primary) / 0.12); border: 1px solid hsl(var(--primary) / 0.35);
+    border-radius: 6px; color: hsl(var(--primary));
+    font-size: 0.875rem; font-weight: 500; text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pro-cta-btn:hover { background: hsl(var(--primary) / 0.2); border-color: hsl(var(--primary) / 0.5); }
+
+  .comp-name { font-size: 14px; color: hsl(var(--foreground) / 0.75); font-weight: 500; line-height: 1.35; }
+  .comp-nif { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: hsl(var(--foreground) / 0.3); }
+  .score-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+    background: hsl(var(--foreground) / 0.03); border: 1px solid;
+  }
+  .score-null { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: hsl(var(--foreground) / 0.2); }
+  .cpv-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .cpv-chip {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    background: hsl(var(--primary) / 0.08); border: 1px solid hsl(var(--primary) / 0.18);
+    color: hsl(var(--primary) / 0.7); font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 767px) {
+    .comp-wrap { padding: 16px; }
+  }
+</style>

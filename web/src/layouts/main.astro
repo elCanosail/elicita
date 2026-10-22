@@ -1,0 +1,96 @@
+---
+import '../styles/global.css';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { CommandPalette } from '@/components/CommandPalette';
+import { CookieConsent } from '@/components/CookieConsent';
+
+const { title = "elicita_ — Sistema de inteligencia sobre contratación pública", description: description = "Sistema de análisis continuo sobre contratación pública española. 63M+ registros. Predicción de renovaciones. Inteligencia competitiva.", staticHtml = false, canonical: canonicalProp = null } = Astro.props;
+// Canonical autocanónico por defecto (URL pedida); una página puede consolidar
+// formas alternativas de la misma URL pasando `canonical` absoluto (p. ej. la
+// ficha /licitacion normaliza RAW/encoded — tarea 39).
+const canonicalUrl = canonicalProp ?? new URL(Astro.url.pathname, 'https://elicita.es').href;
+const ogImage = 'https://elicita.es/og-image.png';
+---
+
+<html lang="es" class:list={{ dark: staticHtml }}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+
+		<!-- Theme init — dark mode permanente -->
+		{!staticHtml && (
+			<script is:inline>
+				document.documentElement.classList.add('dark');
+			</script>
+		)}
+		<meta name="ai-purpose" content="search=yes,ai-train=no,ai-input=no" />
+		<link rel="canonical" href={canonicalUrl} />
+		<link rel="alternate" hreflang="es" href={canonicalUrl} />
+		<link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+		<link rel="alternate" type="application/rss+xml" title="Elicita — Análisis" href="/rss.xml" />
+		<link rel="api-catalog" href="/.well-known/api-catalog" type="application/json" />
+		<link rel="agent-json" href="/.well-known/agent.json" type="application/json" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:site_name" content="elicita_" />
+		<meta property="og:locale" content="es_ES" />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="elicita_ · 63M+ registros oficiales de contratación pública — actualizado cada 4 horas" />
+		<!-- Twitter Card -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImage} />
+		<!-- JSON-LD Organization -->
+		<script type="application/ld+json" set:html={JSON.stringify({
+			"@context": "https://schema.org",
+			"@type": "Organization",
+			"name": "elicita_",
+			"url": "https://elicita.es",
+			"description": description,
+			"logo": "https://elicita.es/favicon.svg"
+		})} />
+		<!-- JSON-LD WebApplication -->
+		<script type="application/ld+json" set:html={JSON.stringify({
+			"@context": "https://schema.org",
+			"@type": "WebApplication",
+			"name": "elicita_",
+			"url": "https://elicita.es",
+			"description": description,
+			"applicationCategory": "BusinessApplication",
+			"operatingSystem": "Web",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "EUR",
+				"description": "Plan gratuito con acceso limitado"
+			}
+		})} />
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+		<title>{title}</title>
+		<!-- Plausible Analytics -->
+		{!staticHtml && (
+			<script defer data-domain="elicita.es" src="https://analytics.elicita.es/js/script.js"></script>
+		)}
+		<slot name="head" />
+	</head>
+	<body>
+		{staticHtml ? <Header /> : <Header client:load />}
+		<main>
+			<slot />
+		</main>
+		<Footer />
+		{!staticHtml && <CommandPalette client:only="react" />}
+		{/* <CookieConsent client:load /> */}
+	</body>
+</html>

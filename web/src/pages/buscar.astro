@@ -1,0 +1,1438 @@
+---
+import Layout from '../layouts/main.astro';
+import { clerkClient } from '@clerk/astro/server';
+
+const metadata = {
+  title: "Buscador público — elicita_",
+  description: "Busca contratos públicos españoles sin registro. 63M+ registros de PLACSP, TED y comunidades autónomas. 3 búsquedas diarias gratis.",
+};
+
+let savedSearches: any[] = [];
+let isAuthenticated = false;
+try {
+  const auth = (Astro.locals as any).auth?.();
+  if (auth?.userId) {
+    const client = clerkClient({ secretKey: import.meta.env.CLERK_SECRET_KEY });
+    const user = await client.users.getUser(auth.userId);
+    const meta = (user.publicMetadata || {}) as Record<string, any>;
+    savedSearches = Array.isArray(meta?.savedSearches) ? meta.savedSearches : [];
+    isAuthenticated = true;
+  }
+} catch { /* non-fatal */ }
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+  <div class="search-wrap mx-auto px-6 py-12 max-w-6xl">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-light text-white tracking-tight">Busca contratos públicos</h1>
+        <p class="text-white/50 mt-2 text-sm max-w-xl">
+          Acceso público a 63M+ registros de contratación pública: PLACSP, TED, Galicia, Andalucía, Euskadi, Catalunya y Madrid.
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/precios" class="hidden md:inline-flex items-center text-sm text-white/50 hover:text-white/70 transition-colors font-mono">Precios</a>
+        <a href="/sign-up" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-mono px-5 py-2.5 rounded transition-colors">Registrarse →</a>
+      </div>
+    </div>
+
+    <!-- Tabs: búsqueda clásica / búsqueda IA -->
+    <div class="search-tabs" id="search-tabs">
+      <button type="button" class="search-tab active" data-tab="classic">Búsqueda clásica</button>
+      <button type="button" class="search-tab" data-tab="ai">Búsqueda IA</button>
+    </div>
+
+    <!-- Classic search bar -->
+    <div id="classic-search" class="search-tab-panel active">
+      <div class="search-bar">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search-input" type="text" placeholder="Buscar licitaciones… (ej: consultoría, climatización, software hospital)" autocomplete="off" spellcheck="false" />
+        <button id="search-btn" type="button">Buscar</button>
+        {isAuthenticated && (
+          <button id="save-search-btn" type="button" class="save-search-btn" title="Guardar búsqueda">☆ Guardar</button>
+        )}
+      </div>
+    </div>
+
+    <!-- AI search -->
+    <div id="ai-search" class="search-tab-panel">
+      <div class="search-bar ai-search-bar">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12 2.5 7.5"/><path d="M12 12v9"/></svg>
+        <input id="ai-search-input" type="text" placeholder="Pregunta en lenguaje natural… ej: licitaciones de software en Madrid" autocomplete="off" spellcheck="false" />
+        <button id="ai-search-btn" type="button">Preguntar a la IA</button>
+      </div>
+      <p class="ai-search-hint">La IA genera una consulta SQL y la ejecuta sobre 63M+ registros. Resultado experimental: revisa la SQL antes de tomar decisiones.</p>
+      <div id="ai-sql-block" class="ai-sql-block hidden">
+        <button type="button" id="ai-sql-toggle" class="ai-sql-toggle">
+          <span>Ver consulta SQL</span>
+          <span id="ai-sql-chevron" class="ai-sql-chevron">▾</span>
+        </button>
+        <pre id="ai-sql-code" class="ai-sql-code hidden"></pre>
+        <button type="button" id="ai-use-filters-btn" class="ai-use-filters-btn">Usar en buscador avanzado</button>
+      </div>
+    </div>
+
+    <!-- Saved searches panel -->
+    {isAuthenticated && savedSearches.length > 0 && (
+      <div id="saved-searches-panel" class="saved-searches-panel">
+        <button type="button" id="saved-searches-toggle" class="saved-searches-toggle">
+          <span>🔖 Búsquedas guardadas</span>
+          <span class="saved-chevron">▾</span>
+        </button>
+        <div id="saved-searches-list" class="saved-searches-list">
+          {savedSearches.map(s => (
+            <button type="button" class="saved-search-item" data-saved={JSON.stringify(s)}>
+              <span class="saved-name">{s.name}</span>
+              <span class="saved-query">{s.query || 'Sin término'}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- Remaining + CTA -->
+    <div class="flex items-center justify-between mt-3 mb-1">
+      <span id="search-counter" class="font-mono text-xs text-white/50">Te quedan 3 búsquedas hoy</span>
+      <a href="/precios" class="font-mono text-xs text-emerald-400 hover:text-emerald-400 transition-colors">Ver planes →</a>
+    </div>
+
+    <!-- Limit reached CTA -->
+    <div id="limit-cta" class="hidden mt-4">
+      <div class="border border-emerald-500/20 bg-emerald-500/5 rounded-lg p-5 text-center">
+        <p class="text-white/80 text-sm mb-3">Has agotado tus búsquedas gratuitas de hoy.</p>
+        <a href="/sign-up" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-mono px-5 py-2.5 rounded transition-colors">Regístrate gratis para más búsquedas →</a>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters" id="filters">
+      <button type="button" class="filter-toggle" id="filter-toggle">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+        Filtros
+      </button>
+
+      <div class="filter-panel hidden" id="filter-panel">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Fuente</label>
+            <select id="f-fuente">
+              <option value="todas">Todas</option>
+              <option value="PLACE">PLACE (Nacional)</option>
+              <option value="TED">TED (Europa)</option>
+              <option value="Galicia">Galicia</option>
+              <option value="Andalucía">Andalucía</option>
+              <option value="Euskadi">Euskadi</option>
+              <option value="Madrid">Madrid</option>
+              <option value="Catalunya">Catalunya</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Importe mín.</label>
+            <input id="f-min" type="number" placeholder="0" />
+          </div>
+          <div class="filter-group">
+            <label>Importe máx.</label>
+            <input id="f-max" type="number" placeholder="Sin límite" />
+          </div>
+          <div class="filter-group">
+            <label>Estado</label>
+            <select id="f-estado">
+              <option value="">Todos</option>
+              <option value="Adjudicada">Adjudicada</option>
+              <option value="Publicada">Publicada</option>
+              <option value="En plazo">En plazo</option>
+              <option value="Evaluación">En evaluación</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Año desde</label>
+            <input id="f-desde" type="number" placeholder="2000" min="2000" max="2026" />
+          </div>
+          <div class="filter-group">
+            <label>Año hasta</label>
+            <input id="f-hasta" type="number" placeholder="2026" min="2000" max="2026" />
+          </div>
+          <div class="filter-group">
+            <label>CPV</label>
+            <input id="f-cpv" type="text" placeholder="71310000" />
+          </div>
+          <div class="filter-group">
+            <label>CIF adjudicatario</label>
+            <input id="f-nif" type="text" placeholder="B12345678" maxlength="9" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-header hidden" id="results-header">
+      <div class="results-header-left">
+        <span id="results-count"></span>
+        <span id="results-time" class="results-time"></span>
+      </div>
+      <button id="export-csv-btn" type="button" class="export-csv-btn hidden" title="Exportar a CSV (requiere Pro)">↓ CSV</button>
+    </div>
+
+    <div id="results" class="results" data-authed={isAuthenticated ? "1" : "0"}></div>
+
+    <!-- Muro suave de registro (solo visitante anónimo): esqueleto difuminado + CTA.
+         Los resultados ocultos NO se cargan: el API devuelve solo la primera página;
+         este bloque es un esqueleto estático sin datos. -->
+    {!isAuthenticated && (
+      <div id="search-wall" class="search-wall hidden" role="region" aria-label="Resultados adicionales disponibles al registrarte">
+        <div class="wall-rows" aria-hidden="true">
+          <table class="results-table">
+            <tbody>
+              <tr>
+                <td class="col-titulo"><div class="wall-bar" style="width:86%"></div></td>
+                <td class="col-org"><div class="wall-bar" style="width:72%"></div></td>
+                <td class="col-adj"><div class="wall-bar" style="width:58%"></div></td>
+                <td class="col-importe"><div class="wall-bar wall-bar-r" style="width:78%"></div></td>
+                <td class="col-fecha"><div class="wall-bar wall-bar-r" style="width:64%"></div></td>
+                <td class="col-fuente"><div class="wall-bar wall-bar-r" style="width:52%"></div></td>
+              </tr>
+              <tr>
+                <td class="col-titulo"><div class="wall-bar" style="width:74%"></div></td>
+                <td class="col-org"><div class="wall-bar" style="width:64%"></div></td>
+                <td class="col-adj"><div class="wall-bar" style="width:66%"></div></td>
+                <td class="col-importe"><div class="wall-bar wall-bar-r" style="width:62%"></div></td>
+                <td class="col-fecha"><div class="wall-bar wall-bar-r" style="width:70%"></div></td>
+                <td class="col-fuente"><div class="wall-bar wall-bar-r" style="width:46%"></div></td>
+              </tr>
+              <tr>
+                <td class="col-titulo"><div class="wall-bar" style="width:91%"></div></td>
+                <td class="col-org"><div class="wall-bar" style="width:58%"></div></td>
+                <td class="col-adj"><div class="wall-bar" style="width:49%"></div></td>
+                <td class="col-importe"><div class="wall-bar wall-bar-r" style="width:84%"></div></td>
+                <td class="col-fecha"><div class="wall-bar wall-bar-r" style="width:58%"></div></td>
+                <td class="col-fuente"><div class="wall-bar wall-bar-r" style="width:60%"></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="wall-fade" aria-hidden="true"></div>
+        <div class="wall-cta">
+          <p class="wall-cta-text" id="wall-text">Hay más resultados para esta búsqueda</p>
+          <a href="/sign-up" class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-mono px-5 py-2.5 rounded transition-colors">Regístrate gratis →</a>
+        </div>
+      </div>
+    )}
+
+    <!-- Pagination -->
+    <div class="pagination hidden" id="pagination">
+      <button id="prev-btn" disabled>← Anterior</button>
+      <span id="page-info"></span>
+      <button id="next-btn">Siguiente →</button>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">63M+ contratos públicos</div>
+      <div class="empty-sub">Introduce un término para empezar. 3 búsquedas gratuitas al día.</div>
+    </div>
+
+  </div>
+
+  <!-- Public footer -->
+  <footer class="border-t border-white/5 mt-16 py-10">
+    <div class="container mx-auto px-6 max-w-6xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <span class="font-mono text-sm text-white/50">elicita_</span>
+      <div class="flex items-center gap-6 font-mono text-xs text-white/50">
+        <a href="/precios" class="hover:text-white/60 transition-colors">Precios</a>
+        <a href="/docs/metodologia" class="hover:text-white/60 transition-colors">Metodología</a>
+        <a href="/sign-up" class="text-emerald-400 hover:text-emerald-400 transition-colors">Registrarse →</a>
+      </div>
+    </div>
+  </footer>
+</Layout>
+
+<style is:global>
+.search-wrap { padding: 24px; max-width: 1100px; }
+
+/* Search tabs */
+.search-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid hsl(var(--foreground) / 0.08);
+  margin-bottom: 16px;
+}
+.search-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.search-tab:hover { color: hsl(var(--foreground) / 0.7); }
+.search-tab.active {
+  color: hsl(var(--primary));
+  border-bottom-color: hsl(var(--primary));
+}
+.search-tab-panel { display: none; }
+.search-tab-panel.active { display: block; }
+
+.ai-search-bar { border-color: hsl(var(--primary) / 0.15); }
+.ai-search-hint {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  font-family: 'JetBrains Mono', monospace;
+}
+.ai-sql-block {
+  margin-top: 12px;
+  border: 1px solid hsl(var(--foreground) / 0.08);
+  border-radius: 6px;
+  background: hsl(var(--foreground) / 0.02);
+  overflow: hidden;
+}
+.ai-sql-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.ai-sql-toggle:hover { color: hsl(var(--foreground) / 0.75); }
+.ai-sql-chevron { font-size: 10px; transition: transform 0.15s; }
+.ai-sql-block.collapsed .ai-sql-chevron { transform: rotate(-90deg); }
+.ai-sql-code {
+  margin: 0;
+  padding: 12px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  color: hsl(var(--foreground) / 0.65);
+  background: hsl(var(--foreground) / 0.03);
+  border-top: 1px solid hsl(var(--foreground) / 0.06);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ai-use-filters-btn {
+  margin: 0 14px 12px;
+  background: hsl(var(--primary) / 0.08);
+  border: 1px solid hsl(var(--primary) / 0.2);
+  border-radius: 4px;
+  color: hsl(var(--primary));
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ai-use-filters-btn:hover {
+  background: hsl(var(--primary) / 0.14);
+  border-color: hsl(var(--primary) / 0.4);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: hsl(var(--foreground) / 0.03);
+  border: 1px solid hsl(var(--foreground) / 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.search-bar:focus-within { border-color: hsl(var(--primary) / 0.4); }
+.search-icon { margin-left: 14px; color: hsl(var(--foreground) / 0.5); flex-shrink: 0; }
+.search-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: hsl(var(--foreground) / 0.85);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 15px;
+  padding: 14px 12px;
+}
+.search-bar input::placeholder { color: hsl(var(--foreground) / 0.5); }
+#search-btn {
+  background: hsl(var(--primary) / 0.8);
+  color: hsl(var(--foreground));
+  border: none;
+  padding: 14px 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#search-btn:hover { background: hsl(var(--primary)); }
+.save-search-btn {
+  background: transparent;
+  border: none;
+  border-left: 1px solid hsl(var(--foreground) / 0.08);
+  padding: 14px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.save-search-btn:hover {
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.05);
+}
+.save-search-btn.saved {
+  color: hsl(var(--primary));
+}
+
+/* Saved searches panel */
+.saved-searches-panel {
+  margin-top: 10px;
+  border: 1px solid hsl(var(--foreground) / 0.06);
+  border-radius: 6px;
+  background: hsl(var(--foreground) / 0.015);
+  overflow: hidden;
+}
+.saved-searches-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.saved-searches-toggle:hover { color: hsl(var(--foreground) / 0.7); }
+.saved-chevron { font-size: 10px; transition: transform 0.15s; }
+.saved-searches-panel.collapsed .saved-chevron { transform: rotate(-90deg); }
+.saved-searches-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid hsl(var(--foreground) / 0.05);
+}
+.saved-searches-panel.collapsed .saved-searches-list { display: none; }
+.saved-search-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid hsl(var(--foreground) / 0.03);
+  padding: 9px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+}
+.saved-search-item:last-child { border-bottom: none; }
+.saved-search-item:hover { background: hsl(var(--primary) / 0.04); }
+.saved-name {
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.75);
+  font-weight: 500;
+}
+.saved-query {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+}
+.saved-delete {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: hsl(var(--foreground) / 0.5);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+.saved-delete:hover { color: hsl(var(--destructive)); background: hsl(var(--destructive) / 0.06); }
+
+/* Filters */
+.filters { margin-top: 10px; }
+.filter-toggle {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; color: hsl(var(--foreground) / 0.5);
+  font-size: 12px; cursor: pointer; padding: 4px 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.filter-toggle:hover { color: hsl(var(--foreground) / 0.6); }
+.filter-panel {
+  margin-top: 10px;
+  background: hsl(var(--foreground) / 0.02);
+  border: 1px solid hsl(var(--foreground) / 0.06);
+  border-radius: 6px;
+  padding: 14px;
+}
+.filter-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.filter-row:last-child { margin-bottom: 0; }
+.filter-group { flex: 1; min-width: 140px; }
+.filter-group label {
+  display: block; font-size: 12px; color: hsl(var(--foreground) / 0.5);
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.filter-group input, .filter-group select {
+  width: 100%;
+  background: hsl(var(--foreground) / 0.04);
+  border: 1px solid hsl(var(--foreground) / 0.08);
+  border-radius: 4px;
+  color: hsl(var(--foreground) / 0.75);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 7px 8px;
+  outline: none;
+}
+.filter-group input:focus, .filter-group select:focus { border-color: hsl(var(--primary) / 0.4); }
+.filter-group select option { background: hsl(var(--card)); }
+
+/* Results */
+.results-header {
+  display: flex; align-items: center; gap: 12px;
+  margin: 16px 0 8px; font-family: 'JetBrains Mono', monospace;
+}
+.results-header { display: flex; align-items: center; justify-content: space-between; }
+.results-header-left { display: flex; align-items: center; gap: 12px; }
+.results-header span:first-child { font-size: 13px; color: hsl(var(--foreground) / 0.6); }
+.results-time { font-size: 12px; color: hsl(var(--foreground) / 0.5); }
+.export-csv-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.05);
+  border: 1px solid hsl(var(--primary) / 0.2);
+  border-radius: 4px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.export-csv-btn:hover {
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary) / 0.4);
+}
+.export-csv-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.results { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.results-table th {
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 8px 10px;
+  border-bottom: 1px solid hsl(var(--foreground) / 0.06);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.results-table th:hover { color: hsl(var(--foreground) / 0.5); }
+.results-table th.sort-active { color: hsl(var(--primary)); }
+.results-table th.text-right { text-align: right; }
+
+.results-table td {
+  padding: 10px 10px;
+  font-size: 13px;
+  color: hsl(var(--foreground) / 0.75);
+  border-bottom: 1px solid hsl(var(--foreground) / 0.03);
+  vertical-align: top;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.results-table tbody tr { cursor: pointer; transition: background 0.1s; }
+.results-table tbody tr:hover { background: hsl(var(--foreground) / 0.03); }
+.results-table tbody tr:nth-child(even) { background: hsl(var(--foreground) / 0.015); }
+.results-table tbody tr:nth-child(even):hover { background: hsl(var(--foreground) / 0.04); }
+.results-table tbody tr.result-expanded { background: hsl(var(--primary) / 0.04); }
+
+.results-table .col-titulo { width: 35%; }
+.results-table .col-org { width: 20%; }
+.results-table .col-adj { width: 18%; }
+.results-table .col-importe { width: 9%; text-align: right; }
+.results-table .col-fecha { width: 10%; text-align: right; }
+.results-table .col-fuente { width: 8%; text-align: right; }
+
+.results-table td.col-org,
+.results-table td.col-adj {
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.50);
+}
+.results-table td.col-importe {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  text-align: right;
+  white-space: nowrap;
+}
+.results-table td.col-fecha {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  text-align: right;
+  white-space: nowrap;
+}
+.results-table td.col-fuente {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--primary) / 0.85);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.results-table td.col-titulo {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.ai-resumen {
+  margin-top: 4px;
+  font-size: 12px;
+  color: hsl(var(--primary) / 0.85);
+  line-height: 1.3;
+  font-style: italic;
+}
+
+/* Detail row spans full width */
+.results-table tr.detail-row td {
+  padding: 16px 16px 16px 24px;
+  background: hsl(var(--foreground) / 0.015);
+  border-bottom: 1px solid hsl(var(--foreground) / 0.04);
+  white-space: normal;
+  overflow: visible;
+}
+
+/* Detail grid (expand panel) */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+.detail-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(var(--foreground) / 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.detail-value {
+  font-size: 13px;
+  color: hsl(var(--foreground) / 0.7);
+  line-height: 1.4;
+  word-break: break-word;
+}
+.detail-cta {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid hsl(var(--foreground) / 0.04);
+}
+.btn-pub-original {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary) / 0.25);
+  padding: 8px 18px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.btn-pub-original:hover {
+  border-color: hsl(var(--primary) / 0.5);
+  background: hsl(var(--primary) / 0.06);
+}
+
+/* Enlace al perfil del adjudicatario (tarea 48): mismo tamaño y tono que la
+   celda (12px, white/50 — suelo a11y 6-bis), hover esmeralda 120ms, foco visible. */
+.adj-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--foreground) / 0.25);
+  text-underline-offset: 2px;
+  transition: color 120ms ease-out, text-decoration-color 120ms ease-out;
+}
+.adj-link:hover {
+  color: hsl(var(--emerald) / 0.9);
+  text-decoration-color: hsl(var(--emerald) / 0.5);
+}
+.adj-link:focus-visible {
+  outline: 1px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  margin-top: 16px; padding: 12px 0;
+}
+.pagination button {
+  background: hsl(var(--foreground) / 0.05); border: 1px solid hsl(var(--foreground) / 0.1);
+  border-radius: 4px; color: hsl(var(--foreground) / 0.5); padding: 6px 14px;
+  font-size: 12px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+}
+.pagination button:hover:not(:disabled) { background: hsl(var(--foreground) / 0.08); }
+.pagination button:disabled { opacity: 0.3; cursor: default; }
+#page-info { font-size: 12px; color: hsl(var(--foreground) / 0.5); font-family: 'JetBrains Mono', monospace; }
+
+/* Muro suave de registro (visitante anónimo, /buscar) */
+.search-wall { position: relative; overflow: hidden; }
+.wall-rows {
+  filter: blur(5px);
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
+.wall-rows tbody tr { cursor: default; }
+.wall-bar {
+  height: 12px;
+  border-radius: 4px;
+  background: hsl(var(--foreground) / 0.14);
+}
+.wall-bar-r { margin-left: auto; }
+.wall-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--background) / 0) 0%,
+    hsl(var(--background) / 0.5) 40%,
+    hsl(var(--background) / 0.92) 100%
+  );
+  pointer-events: none;
+}
+.wall-cta {
+  position: relative;
+  text-align: center;
+  padding: 26px 16px 18px;
+}
+.wall-cta-text {
+  font-size: 14px;
+  color: hsl(var(--foreground) / 0.8);
+  margin: 0 0 14px;
+}
+
+/* Empty state */
+.empty-state { text-align: center; padding: 80px 20px; max-width: 400px; margin: 0 auto; }
+.empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.6; }
+.empty-title { font-size: 1.25rem; font-weight: 500; color: hsl(var(--foreground) / 0.5); margin-bottom: 8px; }
+.empty-sub { font-size: 0.875rem; color: hsl(var(--foreground) / 0.5); line-height: 1.5; }
+
+.hidden { display: none !important; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: hsl(var(--foreground) / 0.5); font-size: 13px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .results-table .col-org,
+  .results-table .col-adj,
+  .results-table .col-fuente { display: none; }
+  .results-table .col-titulo { width: 55%; }
+  .results-table .col-importe { width: 22%; }
+  .results-table .col-fecha { width: 23%; }
+  .filter-row { flex-direction: column; }
+  .save-search-btn { padding: 14px 12px; }
+}
+</style>
+
+<script>
+  const input = document.getElementById('search-input') as HTMLInputElement;
+  const btn = document.getElementById('search-btn')!;
+  const aiInput = document.getElementById('ai-search-input') as HTMLInputElement;
+  const aiBtn = document.getElementById('ai-search-btn')!;
+  const aiSqlBlock = document.getElementById('ai-sql-block')!;
+  const aiSqlToggle = document.getElementById('ai-sql-toggle')!;
+  const aiSqlCode = document.getElementById('ai-sql-code')!;
+  const aiSqlChevron = document.getElementById('ai-sql-chevron')!;
+  const aiUseFiltersBtn = document.getElementById('ai-use-filters-btn')!;
+  const searchTabs = document.querySelectorAll('.search-tab');
+  const tabPanels = document.querySelectorAll('.search-tab-panel');
+  const filterToggle = document.getElementById('filter-toggle')!;
+  const filterPanel = document.getElementById('filter-panel')!;
+  const resultsDiv = document.getElementById('results')!;
+  const resultsHeader = document.getElementById('results-header')!;
+  const resultsCount = document.getElementById('results-count')!;
+  const resultsTime = document.getElementById('results-time')!;
+  const pagination = document.getElementById('pagination')!;
+  const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
+  const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
+  const pageInfo = document.getElementById('page-info')!;
+  const emptyState = document.getElementById('empty-state')!;
+  const searchCounter = document.getElementById('search-counter')!;
+  const limitCta = document.getElementById('limit-cta')!;
+  const searchWall = document.getElementById('search-wall') as HTMLElement | null;
+  const wallText = document.getElementById('wall-text') as HTMLElement | null;
+  const isAnon = resultsDiv.dataset.authed !== '1';
+  // Saved searches (guard con null — ver wiring en «Saved searches toggle»)
+  const savedToggle = document.getElementById('saved-searches-toggle') as HTMLButtonElement | null;
+  const savedPanel = document.getElementById('saved-searches-panel') as HTMLElement | null;
+  const saveBtn = document.getElementById('save-search-btn') as HTMLButtonElement | null;;
+
+  let currentOffset = 0;
+  // Primera página del anónimo: el API (/api/public/search) tiene cap propio
+  // (default 10, clamp 20); pedimos el default y el muro cubre el resto.
+  let currentLimit = 10;
+  let hasMore = false;
+  let sortCol = 'fecha';
+  let sortDir = 'desc';
+  let lastAiQuery = '';
+  let lastAiFilters: Record<string, any> = {};
+
+  function switchTab(tabName: string) {
+    searchTabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === tabName));
+    tabPanels.forEach(p => p.classList.toggle('active', p.id === `${tabName}-search`));
+  }
+
+  searchTabs.forEach(t => {
+    t.addEventListener('click', () => switchTab(t.getAttribute('data-tab') || 'classic'));
+  });
+
+  function esc(s: string): string {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Enlace al perfil público /perfil/<nif> solo con NIF resuelto y válido (tarea 48).
+  // El href se construye exclusivamente del NIF que pasa el guard (nunca texto crudo);
+  // el texto visible siempre pasa por esc(). Sin NIF válido → sin enlace, sin href vacío.
+  const NIF_RE = /^[A-Z0-9]{9}$/;
+  function perfilHref(nif: unknown): string | null {
+    return typeof nif === 'string' && NIF_RE.test(nif) ? `/perfil/${nif}` : null;
+  }
+
+  function showAiSql(sql: string) {
+    aiSqlCode.textContent = sql;
+    aiSqlBlock.classList.remove('hidden');
+    aiSqlCode.classList.add('hidden');
+    aiSqlBlock.classList.add('collapsed');
+    aiSqlChevron.textContent = '▾';
+  }
+
+  aiSqlToggle.addEventListener('click', () => {
+    const collapsed = aiSqlCode.classList.contains('hidden');
+    aiSqlCode.classList.toggle('hidden', !collapsed);
+    aiSqlBlock.classList.toggle('collapsed', !collapsed);
+    aiSqlChevron.textContent = collapsed ? '▴' : '▾';
+  });
+
+  function normalizeAiRow(r: any) {
+    return {
+      titulo: r.objeto || r.titulo || '—',
+      organismo: r.organismo || '—',
+      adjudicatario: r.adjudicatario || '—',
+      importe: r.importe_licitacion ?? r.importe ?? null,
+      fecha: r.fecha_publicacion || r.fecha,
+      fuente: r.fuente || '—',
+      nif_adj: r.nif_adjudicatario || r.nif_adj,
+      cpv: r.cpv,
+      estado: r.estado,
+      url_pub: r.url,
+    };
+  }
+
+  function inferFiltersFromQuery(query: string): Record<string, any> {
+    const lower = query.toLowerCase();
+    const filters: Record<string, any> = {};
+    const comunidadMap: Record<string, string> = {
+      madrid: 'Madrid', andalucia: 'Andalucia', andalucia2: 'Andalucia',
+      asturias: 'Asturias', euskadi: 'Euskadi', pais_vasco: 'Euskadi',
+      catalunya: 'Catalunya', cataluna: 'Catalunya', valencia: 'Valencia',
+      galicia: 'Galicia', aragon: 'Aragon',
+    };
+    for (const [key, value] of Object.entries(comunidadMap)) {
+      if (lower.includes(key)) { filters.fuente = value; break; }
+    }
+    const amountMatch = query.match(/(\d+(?:[.,]?\d*)?)\s*(mil|miles|millon|millones|m)?\s*(?:euros?|€)?/i);
+    if (amountMatch) {
+      let num = parseFloat(amountMatch[1].replace(',', '.'));
+      const unit = (amountMatch[2] || '').toLowerCase();
+      if (unit.startsWith('mill')) num *= 1_000_000;
+      else if (unit.startsWith('mil')) num *= 1_000;
+      filters.importeMin = Math.floor(num).toString();
+    }
+    const yearMatch = query.match(/\b(20\d{2})\b/);
+    if (yearMatch) {
+      filters.desde = yearMatch[1];
+      filters.hasta = yearMatch[1];
+    }
+    if (/adjudicacion|adjudicado|adjudicada/.test(lower)) filters.estado = 'Adjudicada';
+    if (/publicado|publicada|en plazo/.test(lower)) filters.estado = 'Publicada';
+    return filters;
+  }
+
+  aiUseFiltersBtn.addEventListener('click', () => {
+    input.value = lastAiQuery;
+    setFilters(lastAiFilters);
+    switchTab('classic');
+    doSearch(0);
+  });
+
+  async function doAiSearch() {
+    const query = aiInput.value.trim();
+    if (!query) return;
+
+    lastAiQuery = query;
+    lastAiFilters = inferFiltersFromQuery(query);
+
+    emptyState.classList.add('hidden');
+    if (searchWall) searchWall.classList.add('hidden');
+    resultsDiv.innerHTML = '<div class="loading">La IA está traduciendo tu pregunta a SQL…</div>';
+    resultsHeader.classList.remove('hidden');
+    resultsCount.textContent = 'Generando consulta…';
+    resultsTime.textContent = '';
+
+    const t0 = performance.now();
+
+    try {
+      const res = await fetch(`/api/ai/asistente?query=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      const t1 = performance.now();
+
+      if (!res.ok || !data.ok) {
+        aiSqlBlock.classList.add('hidden');
+        resultsDiv.innerHTML = `<div class="loading" style="color:hsl(var(--destructive) / 0.6)">Error: ${data.error || 'Error desconocido'}${data.detail ? `<br><small>${esc(String(data.detail))}</small>` : ''}</div>`;
+        resultsCount.textContent = 'Error';
+        pagination.classList.add('hidden');
+        return;
+      }
+
+      showAiSql(data.sql);
+
+      const rows = (data.results || []).map(normalizeAiRow);
+      hasMore = false;
+      currentOffset = 0;
+      exportCsvBtn.classList.add('hidden');
+
+      resultsCount.textContent = `${rows.length} resultados`;
+      resultsTime.textContent = `${((t1-t0)/1000).toFixed(2)}s`;
+
+      if (!rows.length) {
+        resultsDiv.innerHTML = '<div class="loading">Sin resultados. Prueba con otros términos.</div>';
+        pagination.classList.add('hidden');
+        return;
+      }
+
+      const cols = [
+        { key: 'titulo', label: 'Título', align: false },
+        { key: 'organismo', label: 'Organismo', align: false },
+        { key: 'adjudicatario', label: 'Adjudicatario', align: false },
+        { key: 'importe', label: 'Importe', align: true },
+        { key: 'fecha', label: 'Fecha', align: true },
+        { key: 'fuente', label: 'Fuente', align: true },
+      ];
+
+      let html = `<table class="results-table"><thead><tr>`;
+      for (const c of cols) {
+        html += `<th class="col-${c.key}${c.align ? ' text-right' : ''}">${c.label}</th>`;
+      }
+      html += `</tr></thead><tbody>`;
+
+      for (const r of rows) {
+        const safeTitle = esc(r.titulo || '—');
+        const safeOrg = esc(r.organismo || '');
+        const safeAdj = esc(r.adjudicatario || '');
+        const hrefAdj = perfilHref(r.nif_adj);
+        const safeNif = hrefAdj ? esc(r.nif_adj) : '';
+        const adjCell = hrefAdj
+          ? `<a class="adj-link" href="${hrefAdj}" title="Ver perfil de ${safeAdj || safeNif}">${safeAdj || safeNif}</a>`
+          : (safeAdj || '—');
+        html += `<tr class="data-row" data-expanded="false">
+          <td class="col-titulo" title="${safeTitle}">${safeTitle}</td>
+          <td class="col-org" title="${safeOrg}">${safeOrg || '—'}</td>
+          <td class="col-adj" title="${safeAdj || safeNif}">${adjCell}</td>
+          <td class="col-importe">${formatImporte(r.importe)}</td>
+          <td class="col-fecha">${formatDate(r.fecha)}</td>
+          <td class="col-fuente">${r.fuente || '—'}</td>
+        </tr>
+        <tr class="detail-row" style="display:none">
+          <td colspan="6">
+            <div class="detail-grid">
+              <div class="detail-field"><div class="detail-label">Título completo</div><div class="detail-value">${safeTitle}</div></div>
+              <div class="detail-field"><div class="detail-label">Organismo</div><div class="detail-value">${safeOrg || '—'}</div></div>
+              <div class="detail-field"><div class="detail-label">Adjudicatario</div><div class="detail-value">${hrefAdj ? `<a class="adj-link" href="${hrefAdj}">${safeAdj || safeNif}</a>` : (safeAdj || '—')}</div></div>
+              ${r.nif_adj ? `<div class="detail-field"><div class="detail-label">NIF Adjudicatario</div><div class="detail-value">${hrefAdj ? `<a class="adj-link" href="${hrefAdj}">${safeNif}</a>` : esc(r.nif_adj)}</div></div>` : ''}
+              <div class="detail-field"><div class="detail-label">Importe</div><div class="detail-value">${formatImporte(r.importe)}</div></div>
+              ${r.cpv ? `<div class="detail-field"><div class="detail-label">CPV</div><div class="detail-value">${r.cpv}</div></div>` : ''}
+              ${r.estado ? `<div class="detail-field"><div class="detail-label">Estado</div><div class="detail-value">${r.estado}</div></div>` : ''}
+              <div class="detail-field"><div class="detail-label">Fecha</div><div class="detail-value">${formatDate(r.fecha)}</div></div>
+              <div class="detail-field"><div class="detail-label">Fuente</div><div class="detail-value">${r.fuente || '—'}</div></div>
+            </div>
+            ${r.url_pub ? `<div class="detail-cta"><a href="${r.url_pub}" target="_blank" rel="noopener noreferrer" class="btn-pub-original" title="Disponibilidad sujeta al organismo de destino">Ver publicación original →</a></div>` : ''}
+          </td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+
+      resultsDiv.innerHTML = html;
+
+      resultsDiv.querySelectorAll('.data-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const detail = row.nextElementSibling as HTMLElement;
+          if (!detail || !detail.classList.contains('detail-row')) return;
+          const isOpen = detail.style.display !== 'none';
+          resultsDiv.querySelectorAll('.detail-row').forEach(d => (d as HTMLElement).style.display = 'none');
+          resultsDiv.querySelectorAll('.data-row').forEach(r => r.classList.remove('result-expanded'));
+          if (!isOpen) {
+            detail.style.display = 'table-row';
+            row.classList.add('result-expanded');
+          }
+        });
+      });
+
+      pagination.classList.add('hidden');
+    } catch (e: any) {
+      resultsDiv.innerHTML = `<div class="loading" style="color:hsl(var(--destructive) / 0.6)">Error de conexión</div>`;
+    }
+  }
+
+  aiBtn.addEventListener('click', () => doAiSearch());
+  aiInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doAiSearch(); });
+
+  filterToggle.addEventListener('click', () => {
+    filterPanel.classList.toggle('hidden');
+  });
+
+  // Saved searches toggle
+  if (savedToggle && savedPanel) {
+    savedToggle.addEventListener('click', () => {
+      savedPanel.classList.toggle('collapsed');
+    });
+  }
+
+  function getCurrentFilters(): Record<string, any> {
+    return {
+      fuente: (document.getElementById('f-fuente') as HTMLSelectElement).value,
+      cpv: (document.getElementById('f-cpv') as HTMLInputElement).value.trim(),
+      importeMin: (document.getElementById('f-min') as HTMLInputElement).value,
+      importeMax: (document.getElementById('f-max') as HTMLInputElement).value,
+      nif: (document.getElementById('f-nif') as HTMLInputElement).value.trim(),
+      desde: (document.getElementById('f-desde') as HTMLInputElement).value,
+      hasta: (document.getElementById('f-hasta') as HTMLInputElement).value,
+      estado: (document.getElementById('f-estado') as HTMLSelectElement).value,
+    };
+  }
+
+  function setFilters(filters: Record<string, any>) {
+    const map: Record<string, string> = {
+      fuente: 'f-fuente',
+      cpv: 'f-cpv',
+      importeMin: 'f-min',
+      importeMax: 'f-max',
+      nif: 'f-nif',
+      desde: 'f-desde',
+      hasta: 'f-hasta',
+      estado: 'f-estado',
+    };
+    for (const [key, elId] of Object.entries(map)) {
+      const el = document.getElementById(elId) as HTMLInputElement | HTMLSelectElement | null;
+      if (el && filters[key] !== undefined) {
+        el.value = String(filters[key] ?? '');
+      }
+    }
+  }
+
+  function loadSavedSearch(item: any) {
+    if (!item) return;
+    input.value = item.query || '';
+    setFilters(item.filters || {});
+    doSearch(0);
+  }
+
+  // Wire saved search items
+  document.querySelectorAll('.saved-search-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.saved-delete')) return;
+      const data = (el as HTMLElement).dataset.saved;
+      if (data) {
+        try { loadSavedSearch(JSON.parse(data)); } catch {}
+      }
+    });
+  });
+
+  // Save search button
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const name = prompt('Nombre para guardar esta búsqueda:', input.value.trim() || 'Búsqueda guardada');
+      if (!name || !name.trim()) return;
+      const payload = {
+        name: name.trim(),
+        query: input.value.trim(),
+        filters: getCurrentFilters(),
+      };
+      saveBtn.disabled = true;
+      try {
+        const res = await fetch('/api/saved-searches', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          saveBtn.classList.add('saved');
+          saveBtn.textContent = '★ Guardada';
+          setTimeout(() => {
+            saveBtn.classList.remove('saved');
+            saveBtn.textContent = '☆ Guardar';
+          }, 1500);
+          renderSavedSearches(data.savedSearches || []);
+        } else if (res.status === 403) {
+          if (confirm((data.error || 'Límite alcanzado') + ' ¿Ver planes?')) {
+            window.location.href = data.upgrade || '/precios';
+          }
+        }
+      } catch (e) {
+        console.error('[saved-searches] error saving:', e);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+  }
+
+  function renderSavedSearches(saved: any[]) {
+    if (!savedPanel) return;
+    const list = savedPanel.querySelector('.saved-searches-list') as HTMLElement | null;
+    if (!list) return;
+    if (saved.length === 0) {
+      savedPanel.style.display = 'none';
+      return;
+    }
+    savedPanel.style.display = '';
+    list.innerHTML = saved.map(s => `
+      <button type="button" class="saved-search-item" data-saved='${JSON.stringify(s).replace(/'/g, "&#39;")}'>
+        <span class="saved-name">${String(s.name || '').replace(/</g,'&lt;')}</span>
+        <div style="display:flex;align-items:center;width:100%;gap:8px;">
+          <span class="saved-query">${String(s.query || 'Sin término').replace(/</g,'&lt;')}</span>
+          <button type="button" class="saved-delete" data-id="${s.id}" title="Eliminar">×</button>
+        </div>
+      </button>
+    `).join('');
+
+    list.querySelectorAll('.saved-search-item').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('.saved-delete')) return;
+        const data = (el as HTMLElement).dataset.saved;
+        if (data) {
+          try { loadSavedSearch(JSON.parse(data)); } catch {}
+        }
+      });
+    });
+
+    list.querySelectorAll('.saved-delete').forEach(el => {
+      el.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = (el as HTMLElement).dataset.id;
+        if (!id || !confirm('¿Eliminar esta búsqueda guardada?')) return;
+        try {
+          const res = await fetch(`/api/saved-searches?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+          const data = await res.json();
+          if (res.ok) renderSavedSearches(data.savedSearches || []);
+        } catch (err) {
+          console.error('[saved-searches] error deleting:', err);
+        }
+      });
+    });
+  }
+
+  function formatImporte(v: any): string {
+    if (!v && v !== 0) return '—';
+    const n = Number(v);
+    if (isNaN(n)) return '—';
+    if (n >= 1_000_000) return `${(n/1_000_000).toFixed(1)}M €`;
+    if (n >= 1_000) return `${(n/1_000).toFixed(0)}K €`;
+    return `${n.toFixed(0)} €`;
+  }
+
+  function formatDate(d: any): string {
+    if (!d) return '';
+    try { return new Date(d).toISOString().slice(0, 10); } catch { return ''; }
+  }
+
+  function updateCounter(remaining: number, limit: number) {
+    searchCounter.textContent = `Te quedan ${remaining} búsqueda${remaining === 1 ? '' : 's'} hoy`;
+    if (remaining === 0) {
+      limitCta.classList.remove('hidden');
+    } else {
+      limitCta.classList.add('hidden');
+    }
+  }
+
+  async function doSearch(offset = 0) {
+    const q = input.value.trim();
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    params.set('limit', String(currentLimit));
+    params.set('offset', String(offset));
+
+    const fuente = (document.getElementById('f-fuente') as HTMLSelectElement).value;
+    const cpv = (document.getElementById('f-cpv') as HTMLInputElement).value.trim();
+    const min = (document.getElementById('f-min') as HTMLInputElement).value;
+    const max = (document.getElementById('f-max') as HTMLInputElement).value;
+    const nif = (document.getElementById('f-nif') as HTMLInputElement).value.trim();
+    const desde = (document.getElementById('f-desde') as HTMLInputElement).value;
+    const hasta = (document.getElementById('f-hasta') as HTMLInputElement).value;
+    const estado = (document.getElementById('f-estado') as HTMLSelectElement).value;
+
+    if (fuente && fuente !== 'todas') params.set('fuente', fuente);
+    if (cpv) params.set('cpv', cpv);
+    if (min) params.set('importeMin', min);
+    if (max) params.set('importeMax', max);
+    if (nif) params.set('nif', nif);
+    if (desde) params.set('desde', desde);
+    if (hasta) params.set('hasta', hasta);
+    if (estado) params.set('estado', estado);
+    params.set('sort', sortCol);
+    params.set('dir', sortDir);
+
+    if (saveBtn) {
+      saveBtn.classList.remove('saved');
+      saveBtn.textContent = '☆ Guardar';
+    }
+
+    if (!q && !cpv && !nif && fuente === 'todas' && !min && !max && !desde && !hasta && !estado) {
+      return;
+    }
+
+    emptyState.classList.add('hidden');
+    if (searchWall) searchWall.classList.add('hidden');
+    resultsDiv.innerHTML = '<div class="loading">Buscando en 63M+ registros…</div>';
+    resultsHeader.classList.remove('hidden');
+    resultsCount.textContent = 'Buscando…';
+    resultsTime.textContent = '';
+
+    const t0 = performance.now();
+
+    try {
+      const res = await fetch(`/api/public/search?${params}`);
+      const data = await res.json();
+      const t1 = performance.now();
+
+      const limit = parseInt(res.headers.get('X-RateLimit-Limit') || '10');
+      const remaining = parseInt(res.headers.get('X-RateLimit-Remaining') ?? String(data.meta?.rate_limit_remaining ?? ''));
+      if (!isNaN(remaining)) {
+        updateCounter(remaining, limit);
+      }
+
+      if (res.status === 429) {
+        resultsDiv.innerHTML = `<div class="loading" style="color:hsl(var(--destructive) / 0.8)">${data.error || 'Límite alcanzado'}</div>`;
+        resultsCount.textContent = 'Límite alcanzado';
+        limitCta.classList.remove('hidden');
+        pagination.classList.add('hidden');
+        return;
+      }
+
+      if (!res.ok || !data.ok) {
+        resultsDiv.innerHTML = `<div class="loading" style="color:hsl(var(--destructive) / 0.6)">Error: ${data.error || 'Error desconocido'}</div>`;
+        resultsCount.textContent = 'Error';
+        pagination.classList.add('hidden');
+        return;
+      }
+
+      hasMore = data.pagination?.has_more || false;
+      currentOffset = offset;
+
+      // Show export button for authenticated users (Pro+)
+      // The endpoint will check auth and plan; button is always visible when results exist
+      exportCsvBtn.classList.remove('hidden');
+
+      const total = data.meta?.total;
+      if (total !== null && total !== undefined && total >= 0) {
+        resultsCount.textContent = `${total.toLocaleString('es-ES')} resultados`;
+      } else {
+        const n = data.results?.length || 0;
+        resultsCount.textContent = hasMore ? `${n}+ resultados` : `${n} resultados`;
+      }
+      resultsTime.textContent = `${((t1-t0)/1000).toFixed(2)}s`;
+
+      if (!data.results?.length) {
+        resultsDiv.innerHTML = '<div class="loading">Sin resultados. Prueba con otros términos.</div>';
+        pagination.classList.add('hidden');
+        return;
+      }
+
+      const cols = [
+        { key: 'titulo', label: 'Título', align: false },
+        { key: 'organismo', label: 'Organismo', align: false },
+        { key: 'adjudicatario', label: 'Adjudicatario', align: false },
+        { key: 'importe', label: 'Importe', align: true },
+        { key: 'fecha', label: 'Fecha', align: true },
+        { key: 'fuente', label: 'Fuente', align: true },
+      ];
+
+      // Honest no-match signal lives in the API (data.no_clear_match);
+      // decision de Chema: la UI no muestra banner, resultados tal cual.
+      let html = `<table class="results-table"><thead><tr>`;
+      for (const c of cols) {
+        const arrow = sortCol === c.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+        const cls = sortCol === c.key ? ' sort-active' : '';
+        const alignCls = c.align ? ' text-right' : '';
+        html += `<th class="col-${c.key}${cls}${alignCls}" data-sort="${c.key}">${c.label}${arrow}</th>`;
+      }
+      html += `</tr></thead><tbody>`;
+
+      for (const r of data.results) {
+        const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const safeTitle = esc(r.titulo || '—');
+        const safeOrg = esc(r.organismo || '');
+        const safeAdj = esc(r.adjudicatario || '');
+        const hrefAdj = perfilHref(r.nif_adj);
+        const safeNif = hrefAdj ? esc(r.nif_adj) : '';
+        const adjCell = hrefAdj
+          ? `<a class="adj-link" href="${hrefAdj}" title="Ver perfil de ${safeAdj || safeNif}">${safeAdj || safeNif}</a>`
+          : (safeAdj || '—');
+        const aiResumen = r.ai_resumen ? esc(r.ai_resumen) : null;
+        const aiBadge = aiResumen
+          ? `<div class="ai-resumen" title="Resumen generado por IA">🤖 ${aiResumen}</div>`
+          : '';
+        html += `<tr class="data-row" data-expanded="false">
+          <td class="col-titulo" title="${safeTitle}">${safeTitle}${aiBadge}</td>
+          <td class="col-org" title="${safeOrg}">${safeOrg || '—'}</td>
+          <td class="col-adj" title="${safeAdj}">${safeAdj || '—'}</td>
+          <td class="col-importe">${formatImporte(r.importe)}</td>
+          <td class="col-fecha">${formatDate(r.fecha)}</td>
+          <td class="col-fuente">${r.fuente || '—'}</td>
+        </tr>
+        <tr class="detail-row" style="display:none">
+          <td colspan="6">
+            <div class="detail-grid">
+              <div class="detail-field"><div class="detail-label">Título completo</div><div class="detail-value">${safeTitle}</div></div>
+              <div class="detail-field"><div class="detail-label">Organismo</div><div class="detail-value">${safeOrg || '—'}</div></div>
+              <div class="detail-field"><div class="detail-label">Adjudicatario</div><div class="detail-value">${hrefAdj ? `<a class="adj-link" href="${hrefAdj}">${safeAdj || safeNif}</a>` : (safeAdj || '—')}</div></div>
+              ${r.nif_adj ? `<div class="detail-field"><div class="detail-label">NIF Adjudicatario</div><div class="detail-value">${hrefAdj ? `<a class="adj-link" href="${hrefAdj}">${safeNif}</a>` : esc(r.nif_adj)}</div></div>` : ''}
+              <div class="detail-field"><div class="detail-label">Importe</div><div class="detail-value">${formatImporte(r.importe)}</div></div>
+              ${r.cpv ? `<div class="detail-field"><div class="detail-label">CPV</div><div class="detail-value">${r.cpv}</div></div>` : ''}
+              ${r.estado ? `<div class="detail-field"><div class="detail-label">Estado</div><div class="detail-value">${r.estado}</div></div>` : ''}
+              <div class="detail-field"><div class="detail-label">Fecha</div><div class="detail-value">${formatDate(r.fecha)}</div></div>
+              <div class="detail-field"><div class="detail-label">Fuente</div><div class="detail-value">${r.fuente || '—'}</div></div>
+            </div>
+            ${r.url_pub ? `<div class="detail-cta"><a href="${r.url_pub}" target="_blank" rel="noopener noreferrer" class="btn-pub-original" title="Disponibilidad sujeta al organismo de destino">Ver publicación original →</a></div>` : ''}
+          </td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+
+      resultsDiv.innerHTML = html;
+
+      resultsDiv.querySelectorAll('.data-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const detail = row.nextElementSibling as HTMLElement;
+          if (!detail || !detail.classList.contains('detail-row')) return;
+          const isOpen = detail.style.display !== 'none';
+          resultsDiv.querySelectorAll('.detail-row').forEach(d => (d as HTMLElement).style.display = 'none');
+          resultsDiv.querySelectorAll('.data-row').forEach(r => r.classList.remove('result-expanded'));
+          if (!isOpen) {
+            detail.style.display = 'table-row';
+            row.classList.add('result-expanded');
+          }
+        });
+      });
+
+      resultsDiv.querySelectorAll('.results-table th[data-sort]').forEach(el => {
+        el.addEventListener('click', () => {
+          const col = (el as HTMLElement).dataset.sort!;
+          if (sortCol === col) {
+            sortDir = sortDir === 'desc' ? 'asc' : 'desc';
+          } else {
+            sortCol = col;
+            sortDir = col === 'fecha' || col === 'importe' ? 'desc' : 'asc';
+          }
+          doSearch(0);
+        });
+      });
+
+      // Muro suave (solo anónimo): los resultados extra no se cargan — el API
+      // entrega solo la primera página; el muro es esqueleto + CTA, sin datos.
+      const wallActive = !!(hasMore && isAnon && searchWall && wallText);
+      if (wallActive) {
+        const shown = data.results.length;
+        if (total !== null && total !== undefined && total > shown) {
+          wallText!.textContent = `Hay ${(total - shown).toLocaleString('es-ES')} resultados más para esta búsqueda`;
+        } else {
+          wallText!.textContent = 'Hay más resultados para esta búsqueda';
+        }
+        searchWall!.classList.remove('hidden');
+        pagination.classList.add('hidden');
+      } else {
+        if (searchWall) searchWall.classList.add('hidden');
+        if (hasMore || currentOffset > 0) {
+          pagination.classList.remove('hidden');
+          const currentPage = Math.floor(currentOffset / currentLimit) + 1;
+          pageInfo.textContent = `Página ${currentPage}`;
+          prevBtn.disabled = currentOffset <= 0;
+          nextBtn.disabled = !hasMore;
+        } else {
+          pagination.classList.add('hidden');
+        }
+      }
+
+    } catch (e: any) {
+      resultsDiv.innerHTML = `<div class="loading" style="color:hsl(var(--destructive) / 0.6)">Error de conexión</div>`;
+    }
+  }
+
+  // ── Export CSV ──────────────────────────────────────────────────────────
+  const exportCsvBtn = document.getElementById('export-csv-btn')!;
+
+  exportCsvBtn.addEventListener('click', () => {
+    const q = input.value.trim();
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+
+    const fuente = (document.getElementById('f-fuente') as HTMLSelectElement).value;
+    const cpv = (document.getElementById('f-cpv') as HTMLInputElement).value.trim();
+    const min = (document.getElementById('f-min') as HTMLInputElement).value;
+    const max = (document.getElementById('f-max') as HTMLInputElement).value;
+    const nif = (document.getElementById('f-nif') as HTMLInputElement).value.trim();
+    const desde = (document.getElementById('f-desde') as HTMLInputElement).value;
+    const hasta = (document.getElementById('f-hasta') as HTMLInputElement).value;
+    const estado = (document.getElementById('f-estado') as HTMLSelectElement).value;
+
+    if (fuente && fuente !== 'todas') params.set('fuente', fuente);
+    if (cpv) params.set('cpv', cpv);
+    if (min) params.set('importeMin', min);
+    if (max) params.set('importeMax', max);
+    if (nif) params.set('nif', nif);
+    if (desde) params.set('desde', desde);
+    if (hasta) params.set('hasta', hasta);
+    if (estado) params.set('estado', estado);
+    params.set('sort', sortCol);
+    params.set('dir', sortDir);
+
+    // Redirect to export endpoint (triggers download)
+    window.location.href = `/api/export?${params}`;
+  });
+
+  btn.addEventListener('click', () => doSearch(0));
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(0); });
+  prevBtn.addEventListener('click', () => doSearch(Math.max(0, currentOffset - currentLimit)));
+  nextBtn.addEventListener('click', () => doSearch(currentOffset + currentLimit));
+
+  // AI search already wired above
+</script>

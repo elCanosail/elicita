@@ -1,0 +1,604 @@
+---
+import Layout from '../../layouts/main.astro';
+import { CodeBlock } from '@/components/CodeBlock';
+import { MCP_ENDPOINT, MCP_PROTOCOL_VERSION, MCP_TOOLS } from '@/lib/mcp-catalog';
+
+const metadata = {
+  title: "API Docs — Elicita",
+  description: "Documentación pública de la API de Elicita: búsqueda de contratos públicos españoles, gestión de API keys y servidor MCP.",
+};
+
+const canonicalUrl = new URL('/docs/api', 'https://elicita.es').href;
+const baseUrl = 'https://elicita.es';
+
+const sections = [
+  { id: 'introduccion', title: 'Introducción' },
+  { id: 'autenticacion', title: 'Autenticación' },
+  { id: 'rate-limits', title: 'Rate Limits' },
+  { id: 'endpoints', title: 'Endpoints' },
+  { id: 'parametros', title: 'Parámetros de búsqueda' },
+  { id: 'respuesta', title: 'Ejemplo de respuesta' },
+  { id: 'org-nif', title: 'Perfil de organización' },
+  { id: 'mcp', title: 'MCP' },
+  { id: 'errores', title: 'Errores' },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebAPI',
+  name: 'Elicita API',
+  description: metadata.description,
+  url: canonicalUrl,
+  documentation: canonicalUrl,
+  termsOfService: `${baseUrl}/terms`,
+  provider: {
+    '@type': 'Organization',
+    name: 'elicita_',
+    url: baseUrl,
+  },
+  endpoint: [
+    {
+      '@type': 'EntryPoint',
+      urlTemplate: `${baseUrl}/api/public/search`,
+      httpMethod: 'GET',
+    },
+    {
+      '@type': 'EntryPoint',
+      urlTemplate: `${baseUrl}/api/v1/search`,
+      httpMethod: 'GET',
+    },
+    {
+      '@type': 'EntryPoint',
+      urlTemplate: `${baseUrl}/mcp`,
+      httpMethod: 'POST',
+    },
+  ],
+};
+
+const endpoints = [
+  {
+    method: 'GET',
+    path: '/api/public/search',
+    auth: false,
+    name: 'Búsqueda pública',
+    description: 'Búsqueda anónima en las fuentes públicas. Límite de 10 consultas/día por IP. No requiere autenticación.',
+  },
+  {
+    method: 'GET',
+    path: '/api/v1/search',
+    auth: true,
+    name: 'Búsqueda con API key',
+    description: 'Búsqueda autenticada con API key. Plan Pro: 1.000 consultas/mes.',
+  },
+  {
+    method: 'POST',
+    path: '/api/v1/keys',
+    auth: true,
+    name: 'Crear API key',
+    description: 'Crea una nueva API key. El secreto completo solo se muestra una vez. Requiere plan Pro.',
+  },
+  {
+    method: 'GET',
+    path: '/api/v1/keys',
+    auth: true,
+    name: 'Listar API keys',
+    description: 'Devuelve metadatos de las API keys activas (sin mostrar el secreto).',
+  },
+  {
+    method: 'DELETE',
+    path: '/api/v1/keys/:id',
+    auth: true,
+    name: 'Revocar API key',
+    description: 'Marca una API key como revocada. Las claves revocadas dejan de funcionar inmediatamente.',
+  },
+  {
+    method: 'GET',
+    path: '/api/v1/org/:nif',
+    auth: true,
+    name: 'Perfil de organización',
+    description: 'Ficha de proveedor: contratos, agregados y enriquecimiento BORME. Los agregados (volumen_total y los de la ficha pública) usan el importe corregido de errores de fuente verificados (issue #22 upstream); volumen_total_publicado conserva la suma publicada y cada contrato informa importe_corregido y correccion. Campos y motivos de corrección documentados en la sección «Perfil de organización». Requiere plan Pro.',
+  },
+  {
+    method: 'POST',
+    path: '/mcp',
+    auth: false,
+    name: 'MCP server',
+    description: 'Servidor MCP Streamable HTTP. Expone las cuatro tools estables, de solo lectura.',
+  },
+];
+
+const params = [
+  { name: 'q', type: 'string', required: 'Sí*', desc: 'Término de búsqueda. Se busca en título, organismo y adjudicatario. *Obligatorio si no se usa otro filtro.' },
+  { name: 'cpv', type: 'string', required: 'No', desc: 'Código CPV o prefijo (p. ej. 45230000). Filtra por CPV cuando la fuente lo publica.' },
+  { name: 'importeMin', type: 'number', required: 'No', desc: 'Importe mínimo de adjudicación (€).' },
+  { name: 'importeMax', type: 'number', required: 'No', desc: 'Importe máximo de adjudicación (€).' },
+  { name: 'estado', type: 'string', required: 'No', desc: 'Estado del contrato: Anuncio, Adjudicada, Formalizado, etc.' },
+  { name: 'fuente', type: 'string', required: 'No', desc: 'Fuente: PLACE, TED, Galicia, Andalucía, Euskadi, Madrid, Catalunya.' },
+  { name: 'nif', type: 'string', required: 'No', desc: 'NIF/CIF del adjudicatario.' },
+  { name: 'desde', type: 'string (YYYY)', required: 'No', desc: 'Año de inicio del rango de publicación.' },
+  { name: 'hasta', type: 'string (YYYY)', required: 'No', desc: 'Año de fin del rango de publicación.' },
+  { name: 'limit', type: 'number', required: 'No', desc: 'Máximo de resultados. Público: ≤20, v1: ≤100. Default: 10/20.' },
+  { name: 'offset', type: 'number', required: 'No', desc: 'Desplazamiento para paginación.' },
+  { name: 'sort', type: 'string', required: 'No', desc: 'Columna de ordenación: titulo, organismo, adjudicatario, importe, fuente, fecha.' },
+  { name: 'dir', type: 'string', required: 'No', desc: 'Dirección: asc o desc. Default: desc.' },
+];
+
+const errors = [
+  { code: 400, name: 'Bad Request', desc: 'Faltan parámetros obligatorios (p. ej. q) o son inválidos.' },
+  { code: 401, name: 'Unauthorized', desc: 'Falta API key, es inválida o la sesión de Clerk no está activa.' },
+  { code: 403, name: 'Forbidden', desc: 'El plan actual no tiene acceso a la API o al MCP.' },
+  { code: 429, name: 'Too Many Requests', desc: 'Se ha alcanzado el límite diario de consultas o de rate limit.' },
+  { code: 500, name: 'Internal Server Error', desc: 'Error inesperado. Reintentar o contactar soporte.' },
+];
+
+const responseExample = `{
+  "ok": true,
+  "query": {
+    "q": "ingeniería",
+    "filters": {
+      "cpv": "45230000",
+      "fuente": "PLACE",
+      "limit": "5"
+    }
+  },
+  "results": [
+    {
+      "titulo": "Servicios de ingeniería para red de saneamiento",
+      "organismo": "Ayuntamiento de Ejemplo",
+      "adjudicatario": "Construcciones del Norte S.L.",
+      "nif_adj": "B12345678",
+      "importe": 1245000.0,
+      "cpv": "45230000",
+      "estado": "Adjudicada",
+      "fecha": "2024-03-15T00:00:00.000Z",
+      "fuente": "PLACE",
+      "url_pub": "https://contrataciondelestado.es/..."
+    }
+  ],
+  "pagination": {
+    "limit": 5,
+    "offset": 0,
+    "has_more": true
+  },
+  "meta": {
+    "took_ms": 142,
+    "rate_limit_remaining": 9
+  }
+}`;
+
+const orgExample = `{
+  "ok": true,
+  "nif": "B95241154",
+  "nombre": "CONSTRUCCIONES URDINBERRI, S.L.",
+  "total_contratos": 18,
+  "total_all_time": 18,
+  "volumen_total": 24533856.18,
+  "volumen_total_publicado": 2379707990.51,
+  "contratos": [
+    {
+      "titulo": "Ejecución de la obra de rehabilitación de edificio para equipamiento para uso de alojamientos dotacionales, sito en c/ Kanpandegi 2 de Donostia / San Sebastian, y una serie de modificaciones en el hogar del jubilado “Kaialde\\".",
+      "organismo": "Entidad Pública Empresarial de Vivienda, Donostiako Etxegintza-Consejo de Administración",
+      "importe": 2357531666,
+      "importe_corregido": 2357531.666,
+      "correccion": "registro",
+      "fecha": "2024-06-10",
+      "fuente": "PLACSP-hist",
+      "cpv": "45211000",
+      "estado": "Resuelta",
+      "url_pub": "https://www.contratacion.euskadi.eus/webkpe00-kpeperfi/es/contenidos/anuncio_contratacion/expjaso522774/es_doc/index.html"
+    },
+    {
+      "titulo": "Proyecto de plataforma junto a la carretera GI-2131 para la conexión no motorizada entre Itsasondo y Arama (1-BI-1/2025-2LIC)",
+      "organismo": "Diputación Foral de Gipuzkoa-Diputado/a Foral de Infraestructuras Viarias",
+      "importe": 245319.69,
+      "importe_corregido": 245319.69,
+      "correccion": null,
+      "fecha": "2025-10-15",
+      "fuente": "PLACSP-hist"
+    }
+  ],
+  "borme": {
+    "provincia": "GIPUZKOA",
+    "fecha_borme": "2023-11-16"
+  },
+  "meta": {
+    "took_ms": 142
+  }
+}`;
+
+const curlPublic = `curl -X GET "https://elicita.es/api/public/search?q=ingeniería&cpv=45230000&limit=5" \\
+  -H "Accept: application/json"`;
+
+const curlAuth = `curl -X GET "https://elicita.es/api/v1/search?q=ingeniería&cpv=45230000&limit=20" \\
+  -H "Authorization: Bearer ELICITA_LIVE_..." \\
+  -H "Accept: application/json"`;
+
+const curlCreateKey = `curl -X POST "https://elicita.es/api/v1/keys" \\
+  -H "Content-Type: application/json" \\
+  -H "Cookie: __session=<tu_sesión_de_clerk>" \\
+  -d '{"name": "producción"}'`;
+
+const jsPublic = `const url = new URL('https://elicita.es/api/public/search');
+url.searchParams.set('q', 'ingeniería');
+url.searchParams.set('cpv', '45230000');
+url.searchParams.set('limit', '5');
+
+const res = await fetch(url.toString(), {
+  headers: { Accept: 'application/json' }
+});
+const data = await res.json();
+console.log(data.results);`;
+
+const jsAuth = `const url = new URL('https://elicita.es/api/v1/search');
+url.searchParams.set('q', 'seguridad');
+url.searchParams.set('fuente', 'TED');
+
+const res = await fetch(url.toString(), {
+  headers: {
+    'Authorization': 'Bearer ELICITA_LIVE_...',
+    'Accept': 'application/json'
+  }
+});
+const data = await res.json();
+console.log(data.pagination.has_more);`;
+
+const pythonAuth = `import requests
+
+url = "https://elicita.es/api/v1/search"
+headers = {
+    "Authorization": "Bearer ELICITA_LIVE_...",
+    "Accept": "application/json"
+}
+params = {
+    "q": "consultoría",
+    "importeMin": 50000,
+    "limit": 50
+}
+
+resp = requests.get(url, headers=headers, params=params)
+resp.raise_for_status()
+data = resp.json()
+print(data["results"])`;
+
+const mcpTools = MCP_TOOLS.map(({ name, summary }) => ({ name, desc: summary }));
+
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+
+  <div class="container mx-auto px-4 py-12 max-w-7xl">
+    <div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-12">
+
+      <!-- Sidebar -->
+      <aside class="hidden lg:block">
+        <nav class="sticky top-24 space-y-1 border-l border-border pl-4">
+          {sections.map((s) => (
+            <a
+              href={`#${s.id}`}
+              class="block text-sm text-muted-foreground hover:text-emerald-400 transition-colors py-1"
+            >
+              {s.title}
+            </a>
+          ))}
+        </nav>
+      </aside>
+
+      <!-- Content -->
+      <article class="space-y-16">
+
+        <!-- Introducción -->
+        <section id="introduccion">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">API Reference</p>
+          <h1 class="text-3xl md:text-4xl font-light text-foreground mb-4">Elicita API</h1>
+          <p class="text-muted-foreground leading-relaxed mb-6">
+            Accede programáticamente al dataset de contratación pública española más completo: 63M+ registros
+            agregados de PLACSP, TED, BOE, BORME y los boletines oficiales de las principales comunidades autónomas.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="border border-border rounded-lg p-4">
+              <div class="font-mono text-2xl text-emerald-400">63M+</div>
+              <div class="text-xs text-muted-foreground mt-1">registros indexados</div>
+            </div>
+            <div class="border border-border rounded-lg p-4">
+              <div class="font-mono text-2xl text-emerald-400">16</div>
+              <div class="text-xs text-muted-foreground mt-1">fuentes oficiales</div>
+            </div>
+            <div class="border border-border rounded-lg p-4">
+              <div class="font-mono text-2xl text-emerald-400">&lt;200ms</div>
+              <div class="text-xs text-muted-foreground mt-1">latencia media p95</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Autenticación -->
+        <section id="autenticacion">
+          <h2 class="text-2xl font-light text-foreground mb-4">Autenticación</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            Los endpoints de la API v1 utilizan autenticación <code>Bearer</code>. Incluye tu API key en el header
+            <code>Authorization</code>. Las API keys se generan y gestionan desde
+            <a href="/cuenta" class="text-emerald-400 hover:text-emerald-300">/cuenta</a>.
+          </p>
+          <div class="font-mono text-sm bg-muted/50 border border-border rounded-lg p-4 text-foreground">
+            Authorization: Bearer &lt;tu-api-key&gt;
+          </div>
+          <p class="text-sm text-muted-foreground mt-4">
+            También puedes usar <code>/api/v1/search</code> autenticado con tu sesión de Clerk (cookie <code>__session</code>)
+            mientras navegas por la aplicación.
+          </p>
+        </section>
+
+        <!-- Rate Limits -->
+        <section id="rate-limits">
+          <h2 class="text-2xl font-light text-foreground mb-4">Rate Limits</h2>
+          <p class="text-muted-foreground mb-6">Límites mensuales con token-bucket rate limiting por minuto.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-border">
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Plan</th>
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Consultas/mes</th>
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Rate limit</th>
+                  <th class="text-left py-2 font-medium text-muted-foreground">Notas</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 text-foreground">Free</td>
+                  <td class="py-3 pr-4 text-foreground font-mono">3/día (web)</td>
+                  <td class="py-3 pr-4 text-foreground font-mono">—</td>
+                  <td class="py-3 text-muted-foreground">Sin acceso API</td>
+                </tr>
+                <tr>
+                  <td class="py-3 pr-4 text-foreground">Pro</td>
+                  <td class="py-3 pr-4 text-foreground font-mono">1.000</td>
+                  <td class="py-3 pr-4 text-foreground font-mono">100 req/min</td>
+                  <td class="py-3 text-muted-foreground">Incluye API + MCP</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Endpoints -->
+        <section id="endpoints">
+          <h2 class="text-2xl font-light text-foreground mb-6">Endpoints</h2>
+          <div class="space-y-6">
+            {endpoints.map((ep) => (
+              <div class="border border-border rounded-lg p-5" id={ep.path.replace(/\//g, '-').replace(/:/g, '')}>
+                <div class="flex flex-wrap items-center gap-3 mb-2">
+                  <span class={`font-mono text-xs px-2 py-1 rounded ${ep.method === 'GET' ? 'bg-emerald-500/10 text-emerald-400' : ep.method === 'POST' ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                    {ep.method}
+                  </span>
+                  <code class="font-mono text-sm text-foreground">{ep.path}</code>
+                  {ep.auth && <span class="text-[10px] uppercase tracking-wider text-muted-foreground border border-border px-2 py-0.5 rounded">Auth</span>}
+                  {!ep.auth && <span class="text-[10px] uppercase tracking-wider text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">Público</span>}
+                </div>
+                <h3 class="text-lg font-medium text-foreground mb-1">{ep.name}</h3>
+                <p class="text-sm text-muted-foreground">{ep.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div class="mt-8 space-y-6">
+            <div>
+              <h3 class="text-sm font-medium text-foreground mb-2">cURL — búsqueda pública</h3>
+              <CodeBlock client:only="react" code={curlPublic} language="bash" />
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-foreground mb-2">cURL — búsqueda autenticada</h3>
+              <CodeBlock client:only="react" code={curlAuth} language="bash" />
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-foreground mb-2">cURL — crear API key</h3>
+              <CodeBlock client:only="react" code={curlCreateKey} language="bash" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-medium text-foreground mb-2">JavaScript (fetch)</h3>
+                <CodeBlock client:only="react" code={jsPublic} language="javascript" />
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-foreground mb-2">JavaScript (API key)</h3>
+                <CodeBlock client:only="react" code={jsAuth} language="javascript" />
+              </div>
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-foreground mb-2">Python (requests)</h3>
+              <CodeBlock client:only="react" code={pythonAuth} language="python" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Parámetros -->
+        <section id="parametros">
+          <h2 class="text-2xl font-light text-foreground mb-6">Parámetros de búsqueda</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-border">
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Parámetro</th>
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Tipo</th>
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Requerido</th>
+                  <th class="text-left py-2 font-medium text-muted-foreground">Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {params.map((p) => (
+                  <tr class="border-b border-border/50">
+                    <td class="py-3 pr-4 font-mono text-emerald-400">{p.name}</td>
+                    <td class="py-3 pr-4 text-foreground font-mono text-xs">{p.type}</td>
+                    <td class="py-3 pr-4 text-foreground text-xs">{p.required}</td>
+                    <td class="py-3 text-muted-foreground">{p.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Ejemplo respuesta -->
+        <section id="respuesta">
+          <h2 class="text-2xl font-light text-foreground mb-4">Ejemplo de respuesta</h2>
+          <p class="text-muted-foreground mb-4">Respuesta típica de <code>/api/public/search</code> y <code>/api/v1/search</code>:</p>
+          <CodeBlock client:only="react" code={responseExample} language="json" showLineNumbers />
+        </section>
+
+        <!-- Perfil de organización: importes corregidos -->
+        <section id="org-nif">
+          <h2 class="text-2xl font-light text-foreground mb-4">Perfil de organización</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            <code>GET /api/v1/org/:nif</code> devuelve la ficha del proveedor con dos contables: el importe <strong>publicado</strong> (tal cual figura en la fuente) y el <strong>corregido</strong>, que corrige errores de fuente verificados (issue #22 upstream de <a href="https://github.com/BquantFinance/licitaciones-espana/issues/22" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300">licitaciones-espana</a>). Los publicados se enseñan tal cual — que se publicara mal también es dato para la auditoría — y los agregados usan el corregido: sin adjudicación fiable, el contrato no suma.
+          </p>
+          <div class="overflow-x-auto mb-8">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-border">
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Campo</th>
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Tipo</th>
+                  <th class="text-left py-2 font-medium text-muted-foreground">Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">volumen_total</td>
+                  <td class="py-3 pr-4 text-foreground font-mono text-xs">number</td>
+                  <td class="py-3 text-muted-foreground">Suma de adjudicaciones con los errores de fuente corregidos (issue #22 upstream). Es el agregado canónico de la ficha: sin adjudicación fiable, el contrato no suma.</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">volumen_total_publicado</td>
+                  <td class="py-3 pr-4 text-foreground font-mono text-xs">number</td>
+                  <td class="py-3 text-muted-foreground">Suma de los importes tal cual los publicó la fuente. Difiere de <code>volumen_total</code> cuando hay correcciones aplicadas.</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">total_all_time</td>
+                  <td class="py-3 pr-4 text-foreground font-mono text-xs">number</td>
+                  <td class="py-3 text-muted-foreground">Nº de contratos tras deduplicar por <code>expediente|organismo</code> entre la ventana viva y el histórico PLACSP 2012-2026.</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">contratos[].importe</td>
+                  <td class="py-3 pr-4 text-foreground font-mono text-xs">number</td>
+                  <td class="py-3 text-muted-foreground">Adjudicación publicada, sin corregir. Los filtros y la ordenación por importe de <code>/api/v1/search</code> operan sobre este valor.</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">contratos[].importe_corregido</td>
+                  <td class="py-3 pr-4 text-foreground font-mono text-xs">number | null</td>
+                  <td class="py-3 text-muted-foreground">Adjudicación corregida con el mismo criterio que la ficha pública. Igual a <code>importe</code> cuando no hay corrección; <code>null</code> cuando no hay adjudicación publicada o el valor no es fiable y no existe corrección aplicable (motivo <code>inverosimil</code>).</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">contratos[].correccion</td>
+                  <td class="py-3 pr-4 text-foreground font-mono text-xs">string | null</td>
+                  <td class="py-3 text-muted-foreground">Motivo de la corrección aplicada (tabla siguiente). <code>null</code> si no se aplicó ninguna.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3 class="text-sm font-medium text-foreground mb-3">Motivos de corrección — <code>contratos[].correccion</code></h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-border">
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Motivo</th>
+                  <th class="text-left py-2 font-medium text-muted-foreground">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">registro</td>
+                  <td class="py-3 text-muted-foreground">Error verificado a mano con evidencia en el upstream (<code>errores_fuente.csv</code>, issue #22): el publicado se sustituye por el valor probable documentado. Manda sobre la escala.</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">escala_x100</td>
+                  <td class="py-3 text-muted-foreground">Coma decimal perdida en origen: adjudicación de ≥100× el presupuesto que dividida entre 100 recupera su orden (mismas cifras que el presupuesto, o entre el 50 % y el 105 % de él).</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">escala_x1000</td>
+                  <td class="py-3 text-muted-foreground">Ídem, dividida entre 1.000.</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">inverosimil</td>
+                  <td class="py-3 text-muted-foreground">Salto ≥100× sin corrección fiable: el importe publicado no suma en los agregados (<code>importe_corregido</code>: <code>null</code>).</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">no_comparable</td>
+                  <td class="py-3 text-muted-foreground">Presupuesto &lt; 1.000 € con salto ≥100× (precio unitario o simbólico, a menudo 1 €): el publicado se mantiene y el contrato queda marcado.</td>
+                </tr>
+                <tr class="border-b border-border/50">
+                  <td class="py-3 pr-4 font-mono text-emerald-400">null</td>
+                  <td class="py-3 text-muted-foreground">Sin salto detectado ni registro aplicable: el importe se usa tal cual.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted-foreground leading-relaxed mt-6 mb-3">
+            Ejemplo con el caso real del issue #22: la rehabilitación de c/ Kanpandegi 2 (Donostia) se publicó con <span class="font-mono">2.357.531.666 €</span> adjudicados a CONSTRUCCIONES URDINBERRI, S.L.; el valor probable documentado es <span class="font-mono">2.357.531,67 €</span>. Valores del dataset a 2026-09-29:
+          </p>
+          <CodeBlock client:only="react" code={orgExample} language="json" showLineNumbers />
+        </section>
+
+        <!-- MCP -->
+        <section id="mcp">
+          <h2 class="text-2xl font-light text-foreground mb-4">MCP</h2>
+          <p class="text-muted-foreground leading-relaxed mb-4">
+            Elicita expone un servidor <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300">Model Context Protocol</a> (MCP)
+            en <code>/mcp</code> con transporte Streamable HTTP y protocolo <code>{MCP_PROTOCOL_VERSION}</code>. Permite que agentes de IA
+            como Claude o Cursor busquen licitaciones, consulten estadísticas, cobertura y códigos CPV con un contrato público estable.
+          </p>
+          <div class="font-mono text-sm bg-muted/50 border border-border rounded-lg p-4 text-foreground mb-6">
+            POST {MCP_ENDPOINT}
+          </div>
+          <p class="text-sm text-muted-foreground mb-4">
+            Esta versión no ofrece OAuth público. Consulta el onboarding y las limitaciones del contrato antes de conectar un cliente.
+            <a href="/docs/mcp" class="text-emerald-400 hover:text-emerald-300"> Documentación completa del MCP →</a>
+          </p>
+
+          <p class="text-sm text-muted-foreground mb-4">Tools estables ({MCP_TOOLS.length}, todas read-only):</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-border">
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Tool</th>
+                  <th class="text-left py-2 font-medium text-muted-foreground">Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mcpTools.map((t) => (
+                  <tr class="border-b border-border/50">
+                    <td class="py-3 pr-4 font-mono text-emerald-400">{t.name}</td>
+                    <td class="py-3 text-muted-foreground">{t.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Errores -->
+        <section id="errores">
+          <h2 class="text-2xl font-light text-foreground mb-6">Errores</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-border">
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Código</th>
+                  <th class="text-left py-2 pr-4 font-medium text-muted-foreground">Nombre</th>
+                  <th class="text-left py-2 font-medium text-muted-foreground">Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {errors.map((e) => (
+                  <tr class="border-b border-border/50">
+                    <td class="py-3 pr-4 font-mono text-foreground">{e.code}</td>
+                    <td class="py-3 pr-4 text-foreground">{e.name}</td>
+                    <td class="py-3 text-muted-foreground">{e.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </article>
+    </div>
+  </div>
+</Layout>

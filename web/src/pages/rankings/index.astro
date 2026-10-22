@@ -1,0 +1,101 @@
+---
+import Layout from '../../layouts/main.astro';
+import { Trophy, Building2, Landmark, TrendingUp, ArrowRight } from 'lucide-react';
+
+const description = "Rankings de contratación pública española: top adjudicatarios por importe y volumen, top organismos por volumen e importe.";
+
+const rankings = [
+  {
+    title: "Top adjudicatarios por importe",
+    url: "/rankings/adjudicatarios-importe",
+    description: "Las empresas que más han facturado en contratos públicos. Ranking por importe total adjudicado.",
+    icon: Trophy,
+    metric: "€4.300M",
+    metricLabel: "líder (Navantia SA)",
+  },
+  {
+    title: "Top adjudicatarios por volumen",
+    url: "/rankings/adjudicatarios-volumen",
+    description: "Las empresas con más contratos públicos adjudicados. Ranking por número de contratos.",
+    icon: Building2,
+    metric: "25.155",
+    metricLabel: "contratos líder (Janssen Cilag)",
+  },
+  {
+    title: "Top organismos por importe",
+    url: "/rankings/organismos-importe",
+    description: "Los organismos que más presupuesto han destinado a contratación pública. Ranking por importe total adjudicado.",
+    icon: Landmark,
+    metric: "€37.700M",
+    metricLabel: "líder (Adq. Armamento, Min. Defensa)",
+  },
+  {
+    title: "Top organismos por volumen",
+    url: "/rankings/organismos-volumen",
+    description: "Los organismos con más contratos publicados. Ranking por número de expedientes.",
+    icon: TrendingUp,
+    metric: "1.658.971",
+    metricLabel: "contratos líder (Xunta de Galicia)",
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Rankings de contratación pública — Elicita',
+  description: description,
+  url: 'https://elicita.es/rankings',
+};
+---
+
+<Layout title="Rankings de contratación pública — Elicita" description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+
+  <section class="py-20 md:py-32">
+    <div class="container mx-auto px-4">
+      <div class="max-w-5xl mx-auto">
+        <div class="space-y-4 mb-16">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase">Rankings SEO</p>
+          <h1 class="text-4xl md:text-6xl font-light text-white">
+            Rankings de contratación pública
+          </h1>
+          <p class="text-xl text-white/50 max-w-2xl">
+            Top empresas y organismos en la contratación pública española.
+            Datos de <a href="/fuentes" class="text-emerald-400 hover:text-emerald-300">16 fuentes oficiales</a>,
+            63M+ registros oficiales. Actualización cada 4 horas.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {rankings.map((r) => (
+            <a href={r.url} class="group rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:bg-white/[0.04] hover:border-emerald-400/20 transition-all">
+              <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 mt-1">
+                  <r.icon class="h-6 w-6 text-emerald-400" />
+                </div>
+                <div class="flex-1 space-y-3">
+                  <h2 class="text-lg font-medium text-white group-hover:text-emerald-400 transition-colors">{r.title}</h2>
+                  <p class="text-sm text-white/50 leading-relaxed">{r.description}</p>
+                  <div class="flex items-baseline gap-2 pt-2 border-t border-white/5">
+                    <span class="text-2xl font-light text-emerald-400">{r.metric}</span>
+                    <span class="text-xs text-white/50">{r.metricLabel}</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-sm text-emerald-400 group-hover:text-emerald-400 transition-colors">
+                    Ver ranking <ArrowRight class="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <div class="mt-12 pt-8 border-t border-white/5">
+          <p class="text-sm text-white/50">
+            Datos extraídos de PLACSP, TED UE, boletines autonómicos y BORME. Estructurados por Elicita.
+            Licencia CC BY 4.0. <a href="/reutilizacion-y-atribucion" class="text-emerald-400 hover:text-emerald-300">Reutilización y atribución</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

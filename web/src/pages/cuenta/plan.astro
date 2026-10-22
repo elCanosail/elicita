@@ -1,0 +1,495 @@
+---
+// /cuenta/plan — Página de plan y suscripción
+import DashboardLayout from '../../layouts/dashboard.astro';
+import { clerkClient } from '@clerk/astro/server';
+import { getUserPlan } from '../../lib/plan';
+
+const auth = (Astro.locals as any).auth?.();
+const userId = auth?.userId;
+const success = Astro.url.searchParams.get('success') === 'true';
+
+let userPlan = { plan: 'free' as const, planName: 'Sin suscripción', hasAccess: true, interval: null as string | null, status: 'none' };
+if (userId) {
+  // Al volver de Stripe el webhook puede tardar unos segundos; sondear hasta
+  // 10s para no mostrar nunca "plan Sin suscripción" tras un pago real.
+  const maxAttempts = success ? 10 : 1;
+  const client = clerkClient({ secretKey: import.meta.env.CLERK_SECRET_KEY });
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const user = await client.users.getUser(userId);
+      userPlan = getUserPlan(
+        (user.publicMetadata as Record<string, any>) || {},
+        user.username || undefined,
+        userId
+      ) as any;
+      if (!success || userPlan.status === 'active') break;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } catch {
+      break;
+    }
+  }
+}
+---
+
+<DashboardLayout title="Facturación — elicita_">
+  <div class="plan-page">
+
+    {success && (
+      <div class="success-banner">
+        ✅ ¡Suscripción activada! Bienvenido al plan {userPlan.planName}.
+      </div>
+    )}
+
+
+    <div class="page-header">
+      <h1>Facturación</h1>
+      <span class={`plan-badge plan-badge--${userPlan.plan}`}>
+        {userPlan.planName}
+        {userPlan.interval && <span class="interval-tag">{userPlan.interval === 'year' ? 'Anual' : 'Mensual'}</span>}
+      </span>
+    </div>
+
+    {userPlan.plan !== 'free' && (
+      <div class="manage-subscription">
+        <button class="btn-manage" id="btn-manage-subscription">
+          Gestionar suscripción
+        </button>
+        <span class="manage-hint">Cambiar plan, actualizar tarjeta, facturas o cancelar</span>
+      </div>
+    )}
+
+    <!-- Billing toggle -->
+    <div class="billing-toggle" id="billing-toggle">
+      <button class="toggle-btn active" data-interval="month" id="btn-month">Mensual</button>
+      <button class="toggle-btn" data-interval="year" id="btn-year">
+        Anual
+        <span class="badge-savings">2 meses gratis</span>
+      </button>
+    </div>
+
+    <!-- Plan cards -->
+    <div class="plan-grid plan-grid--two">
+
+      <!-- Free -->
+      <div class={`plan-card ${userPlan.plan === 'free' ? 'plan-card--current' : ''}`}>
+        <div class="plan-card-header">
+          <div class="plan-name">Free</div>
+          {userPlan.plan === 'free' && <span class="current-tag">Plan actual</span>}
+          <div class="plan-price">
+            <span class="price-amount">€0</span>
+            <span class="price-period">/mes</span>
+          </div>
+          <div class="plan-desc">Para explorar la plataforma</div>
+        </div>
+        <ul class="feature-list">
+          <li class="feature-item feature-on">Monitor de licitaciones</li>
+          <li class="feature-item feature-on">Explorer (proyecciones)</li>
+          <li class="feature-item feature-on">Buscador limitado (3/día)</li>
+          <li class="feature-item feature-off">Alertas por email</li>
+          <li class="feature-item feature-off">Universo — grafo de relaciones</li>
+          <li class="feature-item feature-off">BORME — registro mercantil</li>
+          <li class="feature-item feature-off">API & MCP</li>
+        </ul>
+        <div class="plan-action">
+          {userPlan.plan === 'free'
+            ? <a href="/sign-up?plan=pro" class="btn-plan btn-upgrade" id="btn-upgrade-pro">Subir a Pro →</a>
+            : <a href="/cuenta/plan" class="btn-plan btn-secondary">Cambiar a Free</a>
+          }
+        </div>
+      </div>
+
+      <!-- Pro -->
+      <div class={`plan-card plan-card--featured ${userPlan.plan === 'pro' || userPlan.plan === 'empresa' || userPlan.plan === 'developer' ? 'plan-card--current' : ''}`}>
+        <div class="plan-card-header">
+          <div class="plan-name">Pro</div>
+          {(userPlan.plan === 'pro' || userPlan.plan === 'empresa' || userPlan.plan === 'developer') && <span class="current-tag">Plan actual</span>}
+          <div class="plan-price">
+            <span class="price-amount" id="pro-price">€29</span>
+            <span class="price-period">/mes</span>
+          </div>
+          <div class="price-annual" id="pro-annual-note" style="display:none">
+            €290/año · ahorra €58
+          </div>
+          <div class="plan-desc">Para profesionales que necesitan buscar, vigilar y trabajar desde su asistente de IA.</div>
+        </div>
+        <ul class="feature-list">
+          <li class="feature-item feature-on">Buscador ilimitado (63M+ registros)</li>
+          <li class="feature-item feature-on">Monitor completo + filtros</li>
+          <li class="feature-item feature-on">Explorer completo + proyecciones</li>
+          <li class="feature-item feature-on">Perfil de competidores</li>
+          <li class="feature-item feature-on">Alertas ilimitadas + competidores</li>
+          <li class="feature-item feature-on">BOE — alerta temprana diaria</li>
+          <li class="feature-item feature-on">Universo ilimitado + expansión nivel 3</li>
+          <li class="feature-item feature-on">BORME — registro mercantil</li>
+          <li class="feature-item feature-on">Cargos compartidos detectados</li>
+          <li class="feature-item feature-on">Export PDF</li>
+          <li class="feature-item feature-on">API access — CRM/ERP propio</li>
+          <li class="feature-item feature-on">MCP autenticado — búsqueda desde tu asistente de IA</li>
+        </ul>
+        <div class="plan-action">
+          {(userPlan.plan === 'pro' || userPlan.plan === 'empresa' || userPlan.plan === 'developer')
+            ? <button class="btn-plan btn-current" disabled>Plan actual</button>
+            : <button class="btn-plan btn-primary" id="btn-checkout-pro">Empezar ahora →</button>
+          }
+        </div>
+      </div>
+
+    </div><!-- /plan-grid -->
+
+  </div>
+</DashboardLayout>
+
+<style>
+  .plan-page {
+    padding: 28px 32px;
+    max-width: 1100px;
+  }
+
+  .success-banner {
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    background: hsl(var(--primary) / 0.08);
+    border: 1px solid hsl(var(--primary) / 0.25);
+    border-radius: 8px;
+    color: hsl(var(--primary));
+    font-size: 14px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+  }
+
+  .plan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid hsl(var(--border) / 0.1);
+    color: hsl(var(--muted-foreground));
+  }
+  .plan-badge--pro, .plan-badge--empresa, .plan-badge--developer {
+    background: hsl(var(--primary) / 0.08);
+    border-color: hsl(var(--primary) / 0.25);
+    color: hsl(var(--primary));
+  }
+  .interval-tag {
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  /* Toggle */
+  .billing-toggle {
+    display: inline-flex;
+    gap: 2px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.08);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 32px;
+  }
+  .toggle-btn {
+    background: transparent;
+    border: none;
+    color: hsl(var(--muted-foreground) / 0.8);
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toggle-btn.active {
+    background: hsl(var(--primary) / 0.12);
+    color: hsl(var(--foreground));
+  }
+  .toggle-btn:hover:not(.active) {
+    color: hsl(var(--foreground) / 0.6);
+  }
+  .badge-savings {
+    font-size: 10px;
+    background: hsl(var(--primary));
+    color: hsl(var(--background));
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Grid */
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .plan-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.07);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: border-color 0.15s;
+  }
+  .plan-card:hover { border-color: hsl(var(--border) / 0.12); }
+  .plan-card--featured {
+    background: hsl(var(--primary) / 0.04);
+    border-color: hsl(var(--primary) / 0.2);
+  }
+  .plan-card--featured:hover { border-color: hsl(var(--primary) / 0.35); }
+  .plan-card--current {
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .plan-card-header { display: flex; flex-direction: column; gap: 6px; }
+
+  .plan-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--muted-foreground));
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .current-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    border-radius: 4px;
+    padding: 2px 7px;
+    width: fit-content;
+  }
+
+  .plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    margin-top: 4px;
+  }
+  .price-amount {
+    font-size: 32px;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    letter-spacing: -0.03em;
+  }
+  .price-period {
+    font-size: 14px;
+    color: hsl(var(--muted-foreground) / 0.7);
+  }
+  .price-annual {
+    font-size: 11px;
+    color: hsl(var(--primary) / 0.7);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .plan-desc {
+    font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.7);
+    margin-top: 2px;
+  }
+
+  /* Features */
+  .feature-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .feature-item {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .feature-item::before { content: ''; width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .feature-on { color: hsl(var(--foreground) / 0.75); }
+  .feature-on::before { background: hsl(var(--primary) / 0.25); border: 1.5px solid hsl(var(--primary)); }
+  .feature-off { color: hsl(var(--muted-foreground) / 0.5); text-decoration: line-through; }
+  .feature-off::before { background: hsl(var(--card)); border: 1.5px solid hsl(var(--border) / 0.1); }
+
+  /* Buttons */
+  .plan-action { margin-top: auto; }
+  .btn-plan {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn-primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--background));
+    border: none;
+  }
+  .btn-primary:hover { background: hsl(var(--primary) / 0.8); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    color: hsl(var(--foreground) / 0.6);
+    border: 1px solid hsl(var(--border) / 0.12);
+  }
+  .btn-secondary:hover { border-color: hsl(var(--border) / 0.25); color: hsl(var(--foreground)); }
+  .btn-current {
+    background: transparent;
+    color: hsl(var(--primary));
+    border: 1px solid hsl(var(--primary) / 0.2);
+    cursor: default;
+    opacity: 0.7;
+  }
+  .btn-upgrade {
+    background: hsl(var(--warning));
+    color: hsl(var(--background));
+    border: none;
+    font-weight: 600;
+  }
+  .btn-upgrade:hover { background: hsl(var(--warning) / 0.8); }
+
+  /* Manage subscription */
+  .manage-subscription {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding: 16px 20px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.07);
+    border-radius: 10px;
+  }
+  .btn-manage {
+    background: transparent;
+    color: hsl(var(--foreground) / 0.75);
+    border: 1px solid hsl(var(--border) / 0.15);
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .btn-manage:hover {
+    border-color: hsl(var(--primary) / 0.4);
+    color: hsl(var(--primary));
+  }
+  .manage-hint {
+    font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.7);
+  }
+
+
+  @media (max-width: 1100px) {
+    .plan-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .plan-grid { grid-template-columns: 1fr; }
+    .plan-page { padding: 20px 16px; }
+    .manage-subscription { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>
+
+<script>
+  let currentInterval = 'month';
+
+  const btnMonth = document.getElementById('btn-month');
+  const btnYear  = document.getElementById('btn-year');
+  const proPrice = document.getElementById('pro-price');
+  const proNote  = document.getElementById('pro-annual-note');
+  const btnCheckoutPro = document.getElementById('btn-checkout-pro');
+
+  function setInterval(interval: string) {
+    currentInterval = interval;
+    if (interval === 'year') {
+      btnYear?.classList.add('active');
+      btnMonth?.classList.remove('active');
+      if (proPrice) proPrice.textContent = '€24';  // 290/12 ≈ 24
+      proNote && (proNote.style.display = 'block');
+    } else {
+      btnMonth?.classList.add('active');
+      btnYear?.classList.remove('active');
+      if (proPrice) proPrice.textContent = '€29';
+      proNote && (proNote.style.display = 'none');
+    }
+  }
+
+  btnMonth?.addEventListener('click', () => setInterval('month'));
+  btnYear?.addEventListener('click', () => setInterval('year'));
+
+  function startCheckout(plan: string) {
+    return async () => {
+      const btn = document.getElementById(`btn-checkout-${plan}`) as HTMLButtonElement;
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = 'Redirigiendo…';
+      try {
+        const res = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan, interval: currentInterval }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert(data.error || 'Error iniciando el pago');
+          btn.disabled = false;
+          btn.textContent = 'Empezar ahora →';
+        }
+      } catch (e) {
+        alert('Error de conexión');
+        btn.disabled = false;
+        btn.textContent = 'Empezar ahora →';
+      }
+    };
+  }
+
+  btnCheckoutPro?.addEventListener('click', startCheckout('pro'));
+
+
+  // Manage subscription (Stripe Customer Portal)
+  const btnManage = document.getElementById('btn-manage-subscription');
+  btnManage?.addEventListener('click', async () => {
+    const btn = btnManage as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Redirigiendo…';
+    try {
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Error abriendo el portal');
+        btn.disabled = false;
+        btn.textContent = 'Gestionar suscripción';
+      }
+    } catch (e) {
+      alert('Error de conexión');
+      btn.disabled = false;
+      btn.textContent = 'Gestionar suscripción';
+    }
+  });
+</script>

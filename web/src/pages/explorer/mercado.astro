@@ -1,0 +1,1022 @@
+---
+import DashboardLayout from '../../layouts/dashboard.astro';
+import { clerkClient } from '@clerk/astro/server';
+import { getUserPlan } from '../../lib/plan';
+
+let userPlan = { plan: 'free' as const };
+try {
+  const auth = (Astro.locals as any).auth?.();
+  const userId = auth?.userId;
+  if (userId) {
+    const client = clerkClient({ secretKey: import.meta.env.CLERK_SECRET_KEY });
+    const user = await client.users.getUser(userId);
+    const meta = (user.publicMetadata as Record<string, any>) || {};
+    userPlan = getUserPlan(meta, user.username || undefined, userId);
+  }
+} catch { /* non-fatal */ }
+const isFree = userPlan.plan === 'free';
+---
+
+<DashboardLayout title="Análisis de mercado — elicita_">
+  <style>
+    /* Override main padding for full-canvas layout */
+    .mercado-wrap {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 32px); /* 32px = status-bar height */
+      overflow: hidden;
+      background: hsl(var(--background));
+    }
+
+    #graph-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: default;
+    }
+
+    /* Search bar */
+    #search-wrap {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 20;
+      width: 320px;
+    }
+    @media (max-width: 480px) {
+      #search-wrap { width: calc(100vw - 32px); }
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: hsl(var(--background) / 0.9);
+      border: 1px solid hsl(var(--primary) / 0.2);
+      border-radius: 8px;
+      color: hsl(var(--foreground));
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 13px;
+      outline: none;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    #search-input::placeholder { color: hsl(var(--foreground) / 0.25); }
+    #search-input:focus { border-color: hsl(var(--primary) / 0.5); }
+
+    #search-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: hsl(var(--background) / 0.95);
+      border: 1px solid hsl(var(--foreground) / 0.08);
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow: hidden;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    #search-dropdown.visible { display: block; }
+
+    .dd-section {
+      padding: 6px 12px 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: hsl(var(--foreground) / 0.25);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .dd-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      color: hsl(var(--foreground) / 0.65);
+      cursor: pointer;
+      transition: background 0.1s;
+      border-left: 2px solid transparent;
+    }
+    .dd-item:hover, .dd-item.sel {
+      background: hsl(var(--primary) / 0.08);
+      border-left-color: hsl(var(--primary));
+      color: hsl(var(--foreground) / 0.9);
+    }
+    .dd-icon { font-size: 11px; flex-shrink: 0; }
+    .dd-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dd-type {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: hsl(var(--foreground) / 0.2);
+      flex-shrink: 0;
+    }
+    .dd-empty {
+      padding: 12px;
+      font-size: 12px;
+      color: hsl(var(--foreground) / 0.2);
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Legend */
+    #legend {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 20;
+      background: hsl(var(--background) / 0.9);
+      border: 1px solid hsl(var(--foreground) / 0.08);
+      border-radius: 8px;
+      padding: 10px 14px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: hsl(var(--foreground) / 0.55);
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Stats bar */
+    #stats-bar {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: hsl(var(--background) / 0.85);
+      border: 1px solid hsl(var(--foreground) / 0.06);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: hsl(var(--foreground) / 0.35);
+      white-space: nowrap;
+    }
+
+    /* Tooltip */
+    #tooltip {
+      position: absolute;
+      display: none;
+      z-index: 30;
+      pointer-events: none;
+      background: hsl(var(--background) / 0.92);
+      border: 1px solid hsl(var(--foreground) / 0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 12px;
+      color: hsl(var(--foreground));
+      max-width: 220px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    #tooltip .tt-name { font-weight: 500; margin-bottom: 3px; }
+    #tooltip .tt-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: hsl(var(--foreground) / 0.4); }
+
+    /* Loading overlay */
+    #loading {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 25;
+      background: hsl(var(--background) / 0.5);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: hsl(var(--foreground) / 0.4);
+    }
+    #loading.visible { display: flex; }
+
+    /* Empty state */
+    #empty-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    #empty-state .es-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.2; }
+    #empty-state .es-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: hsl(var(--foreground) / 0.2);
+      text-align: center;
+      max-width: 300px;
+      line-height: 1.6;
+    }
+
+    /* Pro CTA */
+    .pro-cta-section {
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: hsl(var(--card) / 0.78);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+    .pro-cta-glass {
+      text-align: center;
+      max-width: 420px;
+      padding: 0 24px;
+    }
+    .pro-cta-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.8; }
+    .pro-cta-title { font-size: 1.125rem; font-weight: 500; color: hsl(var(--foreground) / 0.85); margin-bottom: 8px; }
+    .pro-cta-desc { font-size: 0.875rem; color: hsl(var(--foreground) / 0.45); line-height: 1.5; margin-bottom: 20px; }
+    .pro-cta-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 24px;
+      background: hsl(var(--primary) / 0.12); border: 1px solid hsl(var(--primary) / 0.35);
+      border-radius: 6px; color: hsl(var(--primary));
+      font-size: 0.875rem; font-weight: 500; text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .pro-cta-btn:hover { background: hsl(var(--primary) / 0.2); border-color: hsl(var(--primary) / 0.5); }
+  </style>
+
+  <div class="mercado-wrap">
+    <!-- Canvas -->
+    <canvas id="graph-canvas"></canvas>
+
+    <!-- Empty state (shown before first search) -->
+    <div id="empty-state">
+      <div class="es-icon">🌐</div>
+      <div class="es-text">Busca una empresa o un organismo para visualizar sus vínculos contractuales</div>
+    </div>
+
+    {!isFree && (
+      <>
+        <!-- Search bar -->
+        <div id="search-wrap">
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Busca una empresa o un organismo…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <div id="search-dropdown"></div>
+        </div>
+
+        <!-- Legend -->
+        <div id="legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:hsl(var(--info))"></div>
+            ← Organismos
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:hsl(var(--primary))"></div>
+            Empresas →
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div id="stats-bar">—</div>
+
+        <!-- Tooltip -->
+        <div id="tooltip">
+          <div class="tt-name" id="tt-name"></div>
+          <div class="tt-meta" id="tt-meta"></div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading">Cargando grafo…</div>
+      </>
+    )}
+
+    {isFree && (
+      <div class="pro-cta-section" id="pro-cta-overlay">
+        <div class="pro-cta-glass">
+          <div class="pro-cta-icon">🔒</div>
+          <div class="pro-cta-title">El análisis de mercado requiere Pro</div>
+          <div class="pro-cta-desc">
+            Sube de plan para desbloquear el análisis de mercado y el resto de funciones Pro.
+          </div>
+          <a href="/precios" class="pro-cta-btn">Desbloquear con Pro →</a>
+        </div>
+      </div>
+    )}
+  </div>
+</DashboardLayout>
+
+<script>
+(function() {
+  const isFree = (window.__elicitaPlan && window.__elicitaPlan.plan) === 'free';
+  if (isFree) return;
+
+  // ── titleCase ──────────────────────────────────────────────────────────────
+  function titleCase(s) {
+    if (!s) return '';
+    const lowerSet = new Set(['y','e','de','del','la','las','los','el','en','con','para','por']);
+    return s.split(/(\s+|,\s*)/).map((word, i) => {
+      if (/^(S\.?L\.?U?\.?|S\.?A\.?U?\.?|S\.?C\.?|S\.?L\.?P\.?|U\.?T\.?E\.?|A\.?I\.?E\.?)$/i.test(word)) return word.toUpperCase();
+      if (/^\s+$/.test(word) || /^,/.test(word)) return word;
+      const w = word.toLowerCase();
+      if (i > 0 && lowerSet.has(w)) return w;
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join('');
+  }
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+  const canvas    = document.getElementById('graph-canvas') as HTMLCanvasElement;
+  const ctx       = canvas.getContext('2d')!;
+  const searchInput  = document.getElementById('search-input') as HTMLInputElement;
+  const dropdown  = document.getElementById('search-dropdown')!;
+  const statsBar  = document.getElementById('stats-bar')!;
+  const tooltip   = document.getElementById('tooltip')!;
+  const ttName    = document.getElementById('tt-name')!;
+  const ttMeta    = document.getElementById('tt-meta')!;
+  const loadingEl = document.getElementById('loading')!;
+  const emptyEl   = document.getElementById('empty-state')!;
+  const wrap      = canvas.parentElement!;
+
+  const dpr = window.devicePixelRatio || 1;
+
+  // ── Graph state ──────────────────────────────────────────────────────────
+  interface GNode {
+    id: string;
+    name: string;
+    type: 'adjudicatario' | 'organismo';
+    contratos: number;
+    volumen: number;
+  }
+  interface GEdge {
+    source: string;
+    target: string;
+    contratos: number;
+    volumen: number;
+  }
+
+  let nodes: GNode[] = [];
+  let edges: GEdge[] = [];
+  let centerId = '';
+
+  // Physics arrays (Float32 for perf)
+  let px: Float32Array = new Float32Array(0);
+  let py: Float32Array = new Float32Array(0);
+  let vx: Float32Array = new Float32Array(0);
+  let vy: Float32Array = new Float32Array(0);
+
+  // Adjacency list: nodeIndex → [nodeIndex, ...]
+  let adj: number[][] = [];
+
+  // Node index map
+  let nodeIdx: Map<string, number> = new Map();
+
+  // ── Viewport ─────────────────────────────────────────────────────────────
+  let W = 0, H = 0;
+  let scale = 1, tx = 0, ty = 0;
+
+  function resize() {
+    W = wrap.clientWidth;
+    H = wrap.clientHeight;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function fmtVol(v: number): string {
+    if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M€';
+    if (v >= 1e3) return (v / 1e3).toFixed(0) + 'K€';
+    return v.toFixed(0) + '€';
+  }
+
+  function nodeRadius(n: GNode): number {
+    return Math.max(4, Math.min(20, 3 + Math.log10((n.volumen || 1) + 1) * 2));
+  }
+
+  function nodeColor(n: GNode): string {
+    return n.type === 'adjudicatario' ? 'hsl(152, 60%, 40%)' : 'hsl(213, 94%, 68%)';
+  }
+
+  function screenToWorld(sx: number, sy: number): [number, number] {
+    return [(sx - tx) / scale, (sy - ty) / scale];
+  }
+
+  // ── Graph init ────────────────────────────────────────────────────────────
+  function initGraph(data: { center: any; nodes: GNode[]; edges: GEdge[] }) {
+    nodes = data.nodes;
+    edges = data.edges;
+    centerId = data.center.id;
+
+    const n = nodes.length;
+    px = new Float32Array(n);
+    py = new Float32Array(n);
+    vx = new Float32Array(n);
+    vy = new Float32Array(n);
+    adj = Array.from({ length: n }, () => []);
+    nodeIdx = new Map();
+
+    nodes.forEach((node, i) => {
+      nodeIdx.set(node.id, i);
+      // Circular initial layout
+      // Bipartite initial positions: organismos LEFT, empresas RIGHT
+      const isOrg = nodes[i].type === 'organismo';
+      const baseX = isOrg ? W * 0.3 : W * 0.7;
+      const spread = H * 0.35;
+      const orgCount = nodes.filter(nd => nd.type === 'organismo').length;
+      const empCount = nodes.filter(nd => nd.type !== 'organismo').length;
+      const sameTypeIdx = nodes.slice(0, i).filter(nd => (nd.type === 'organismo') === isOrg).length;
+      const sameTypeTotal = isOrg ? orgCount : empCount;
+      const yPos = sameTypeTotal > 1 ? (sameTypeIdx / (sameTypeTotal - 1)) * 2 - 1 : 0;
+      px[i] = baseX + (Math.random() - 0.5) * W * 0.08;
+      py[i] = H / 2 + yPos * spread + (Math.random() - 0.5) * 30;
+    });
+
+    // Center node starts at center
+    const ci = nodeIdx.get(centerId);
+    if (ci !== undefined) {
+      px[ci] = W / 2;
+      py[ci] = H / 2;
+    }
+
+    // Build adjacency
+    for (const e of edges) {
+      const si = nodeIdx.get(e.source);
+      const ti = nodeIdx.get(e.target);
+      if (si !== undefined && ti !== undefined) {
+        adj[si].push(ti);
+        adj[ti].push(si);
+      }
+    }
+
+    // Reset viewport
+    scale = 1;
+    tx = 0;
+    ty = 0;
+
+    // Update stats
+    statsBar.textContent = `${n} nodos · ${edges.length} conexiones`;
+    emptyEl.style.display = 'none';
+
+    // Reset sim energy
+    simEnergy = 1;
+    frameCount = 0;
+  }
+
+  // ── Force simulation ──────────────────────────────────────────────────────
+  let simEnergy = 0;
+  let frameCount = 0;
+
+  function simulate() {
+    if (simEnergy < 0.001) return;
+    simEnergy *= 0.992;
+    frameCount++;
+
+    const n = nodes.length;
+    if (n === 0) return;
+
+    // Bipartite layout: organismos LEFT, empresas RIGHT
+    const leftX = W * 0.3;
+    const rightX = W * 0.7;
+    for (let i = 0; i < n; i++) {
+      const targetX = nodes[i].type === 'organismo' ? leftX : rightX;
+      vx[i] += (targetX - px[i]) * 0.025 * simEnergy;
+      vy[i] += (H / 2 - py[i]) * 0.008 * simEnergy;
+    }
+
+    // Repulsion — spatial grid optimization
+    const cellSize = 80;
+    const grid: Record<string, number[]> = {};
+    for (let i = 0; i < n; i++) {
+      const gx = Math.floor(px[i] / cellSize);
+      const gy = Math.floor(py[i] / cellSize);
+      const key = gx + ',' + gy;
+      if (!grid[key]) grid[key] = [];
+      grid[key].push(i);
+    }
+
+    for (let i = 0; i < n; i++) {
+      const gx = Math.floor(px[i] / cellSize);
+      const gy = Math.floor(py[i] / cellSize);
+      for (let dx = -2; dx <= 2; dx++) {
+        for (let dy = -2; dy <= 2; dy++) {
+          const neighbors = grid[(gx + dx) + ',' + (gy + dy)];
+          if (!neighbors) continue;
+          for (const j of neighbors) {
+            if (j <= i) continue;
+            let rx = px[i] - px[j];
+            let ry = py[i] - py[j];
+            let dist2 = rx * rx + ry * ry;
+            if (dist2 < 1) dist2 = 1;
+            if (dist2 > 25000) continue;
+            const force = 90 * simEnergy / dist2;
+            vx[i] += rx * force;
+            vy[i] += ry * force;
+            vx[j] -= rx * force;
+            vy[j] -= ry * force;
+          }
+        }
+      }
+    }
+
+    // Edge attraction
+    for (const e of edges) {
+      const si = nodeIdx.get(e.source);
+      const ti = nodeIdx.get(e.target);
+      if (si === undefined || ti === undefined) continue;
+      const ox = px[ti] - px[si];
+      const oy = py[ti] - py[si];
+      const f = 0.006 * simEnergy;
+      vx[si] += ox * f;
+      vy[si] += oy * f;
+      vx[ti] -= ox * f;
+      vy[ti] -= oy * f;
+    }
+
+    // Damping + integrate (skip dragged node)
+    for (let i = 0; i < n; i++) {
+      if (i === dragIdx) continue;
+      vx[i] *= 0.82;
+      vy[i] *= 0.82;
+      px[i] += vx[i];
+      py[i] += vy[i];
+    }
+  }
+
+  // ── Interaction state ─────────────────────────────────────────────────────
+  let hoverIdx = -1;
+  let dragIdx  = -1;
+  let isPanning = false;
+  let lastMx = 0, lastMy = 0;
+  let touchDist = 0;
+  let searchHighlight: Set<number> = new Set();
+  let fadeIn = 0; // 0→1 for initial fade
+
+  function hitTest(sx: number, sy: number): number {
+    const [wx, wy] = screenToWorld(sx, sy);
+    let best = -1, bestD = Infinity;
+    for (let i = 0; i < nodes.length; i++) {
+      const dx = px[i] - wx, dy = py[i] - wy;
+      const r = nodeRadius(nodes[i]) / scale + 6 / scale;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < r && d < bestD) { best = i; bestD = d; }
+    }
+    return best;
+  }
+
+  function showTooltip(i: number, sx: number, sy: number) {
+    const n = nodes[i];
+    ttName.textContent = titleCase(n.name) || n.name;
+    ttMeta.textContent = `${n.type === 'adjudicatario' ? '🟢 Empresa' : '🔵 Organismo'} · ${n.contratos} contratos · ${fmtVol(n.volumen)}`;
+    tooltip.style.display = 'block';
+    const ttW = 220, ttH = 56;
+    let lx = sx + 14, ly = sy - 8;
+    if (lx + ttW > W) lx = sx - ttW - 8;
+    if (ly + ttH > H) ly = sy - ttH - 4;
+    tooltip.style.left = lx + 'px';
+    tooltip.style.top  = ly + 'px';
+  }
+
+  // Mouse
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 0.88 : 1.14;
+    const mx = e.offsetX, my = e.offsetY;
+    tx = mx - (mx - tx) * factor;
+    ty = my - (my - ty) * factor;
+    scale *= factor;
+  }, { passive: false });
+
+  canvas.addEventListener('mousedown', (e) => {
+    const hit = hitTest(e.offsetX, e.offsetY);
+    if (hit >= 0) {
+      dragIdx = hit;
+    } else {
+      isPanning = true;
+    }
+    lastMx = e.offsetX;
+    lastMy = e.offsetY;
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    const mx = e.offsetX, my = e.offsetY;
+    if (isPanning) {
+      tx += mx - lastMx;
+      ty += my - lastMy;
+    } else if (dragIdx >= 0) {
+      const [wx, wy] = screenToWorld(mx, my);
+      px[dragIdx] = wx;
+      py[dragIdx] = wy;
+      vx[dragIdx] = 0;
+      vy[dragIdx] = 0;
+    } else {
+      const hit = hitTest(mx, my);
+      hoverIdx = hit;
+      if (hit >= 0) {
+        showTooltip(hit, mx, my);
+        canvas.style.cursor = 'pointer';
+      } else {
+        tooltip.style.display = 'none';
+        canvas.style.cursor = 'default';
+      }
+    }
+    lastMx = mx;
+    lastMy = my;
+  });
+
+  canvas.addEventListener('mouseup', (e) => {
+    if (dragIdx < 0 && !isPanning) {
+      const hit = hitTest(e.offsetX, e.offsetY);
+      if (hit >= 0) navigateToNode(nodes[hit]);
+    }
+    isPanning = false;
+    dragIdx = -1;
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    hoverIdx = -1;
+    tooltip.style.display = 'none';
+    canvas.style.cursor = 'default';
+    isPanning = false;
+    dragIdx = -1;
+  });
+
+  // Touch
+  let touchStartIdx = -1;
+  let touches0: { x: number; y: number }[] = [];
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches.length === 1) {
+      const tx_ = e.touches[0].clientX - rect.left;
+      const ty_ = e.touches[0].clientY - rect.top;
+      const hit = hitTest(tx_, ty_);
+      if (hit >= 0) { dragIdx = hit; touchStartIdx = hit; }
+      else { isPanning = true; touchStartIdx = -1; }
+      lastMx = tx_; lastMy = ty_;
+    }
+    touches0 = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    if (e.touches.length === 2) {
+      touchDist = Math.hypot(touches0[0].x - touches0[1].x, touches0[0].y - touches0[1].y);
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches.length === 2 && touches0.length === 2) {
+      const newDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = newDist / touchDist;
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      const cy_ = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      tx = cx - (cx - tx) * factor;
+      ty = cy_ - (cy_ - ty) * factor;
+      scale *= factor;
+      touchDist = newDist;
+    } else if (e.touches.length === 1) {
+      const nx = e.touches[0].clientX - rect.left;
+      const ny = e.touches[0].clientY - rect.top;
+      if (dragIdx >= 0) {
+        const [wx, wy] = screenToWorld(nx, ny);
+        px[dragIdx] = wx; py[dragIdx] = wy;
+        vx[dragIdx] = 0; vy[dragIdx] = 0;
+      } else if (isPanning) {
+        tx += nx - lastMx;
+        ty += ny - lastMy;
+      }
+      lastMx = nx; lastMy = ny;
+    }
+    touches0 = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', (e) => {
+    if (dragIdx >= 0 && touchStartIdx >= 0 && e.changedTouches.length === 1) {
+      const rect = canvas.getBoundingClientRect();
+      const ex = e.changedTouches[0].clientX - rect.left;
+      const ey = e.changedTouches[0].clientY - rect.top;
+      const hit = hitTest(ex, ey);
+      if (hit >= 0 && hit === touchStartIdx) navigateToNode(nodes[hit]);
+    }
+    isPanning = false; dragIdx = -1; touchStartIdx = -1;
+  });
+
+  function navigateToNode(n: GNode) {
+    if (n.type === 'adjudicatario') {
+      window.location.href = `/explorer/competidores/${encodeURIComponent(n.id)}`;
+    } else {
+      window.location.href = `/explorer/organismos/${encodeURIComponent(n.name)}`;
+    }
+  }
+
+  // ── Render loop ───────────────────────────────────────────────────────────
+  function draw() {
+    requestAnimationFrame(draw);
+    simulate();
+    ctx.clearRect(0, 0, W, H);
+
+    if (nodes.length === 0) return;
+
+    // Zone labels (background)
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    ctx.font = 'bold 14px Instrument Sans, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'hsl(213, 94%, 68%)';
+    ctx.fillText('ORGANISMOS', W * 0.3, 30);
+    ctx.fillStyle = 'hsl(152, 60%, 40%)';
+    ctx.fillText('ADJUDICATARIOS', W * 0.7, 30);
+    // Divider line
+    ctx.strokeStyle = 'hsla(155, 5%, 96%, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 8]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 10);
+    ctx.lineTo(W / 2, H - 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Fade in
+    fadeIn = Math.min(1, fadeIn + 0.025);
+
+    const hasHover   = hoverIdx >= 0;
+    const hasSearch  = searchHighlight.size > 0;
+    const hasFocus   = hasHover || hasSearch;
+
+    // Hover neighborhood
+    const hoverSet = new Set<number>();
+    if (hasHover) {
+      hoverSet.add(hoverIdx);
+      for (const ni of adj[hoverIdx]) hoverSet.add(ni);
+    }
+
+    ctx.save();
+    ctx.globalAlpha = fadeIn;
+    ctx.translate(tx, ty);
+    ctx.scale(scale, scale);
+
+    // Edges
+    for (const e of edges) {
+      const si = nodeIdx.get(e.source);
+      const ti = nodeIdx.get(e.target);
+      if (si === undefined || ti === undefined) continue;
+
+      const isHoverEdge  = hasHover && hoverSet.has(si) && hoverSet.has(ti);
+      const isSearchEdge = hasSearch && (searchHighlight.has(si) || searchHighlight.has(ti));
+
+      let alpha = 0.08;
+      let lw = Math.max(0.5, Math.min(2, 0.5 + e.contratos * 0.02));
+      if (hasFocus && !isHoverEdge && !isSearchEdge) {
+        alpha = 0.015;
+      } else if (isHoverEdge) {
+        alpha = 0.5;
+        lw = Math.max(1, lw * 1.5);
+      }
+
+      ctx.strokeStyle = `hsla(155, 5%, 96%, ${alpha})`;
+      ctx.lineWidth = lw / scale;
+      ctx.beginPath();
+      ctx.moveTo(px[si], py[si]);
+      ctx.lineTo(px[ti], py[ti]);
+      ctx.stroke();
+    }
+
+    // Nodes
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      const r = nodeRadius(n);
+      const isCenter  = n.id === centerId;
+      const isHovered = hoverIdx === i;
+      const isSearch  = searchHighlight.has(i);
+
+      let alpha = fadeIn;
+      if (hasFocus && !hoverSet.has(i) && !searchHighlight.has(i)) {
+        alpha = fadeIn * 0.12;
+      }
+
+      ctx.globalAlpha = alpha;
+
+      // Glow for center node
+      if (isCenter) {
+        ctx.globalAlpha = alpha * 0.25;
+        ctx.fillStyle = nodeColor(n);
+        ctx.beginPath();
+        ctx.arc(px[i], py[i], r * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.beginPath();
+        ctx.arc(px[i], py[i], r * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha;
+      }
+
+      // Halo for hovered/search
+      if ((isHovered || isSearch) && alpha > 0.3) {
+        ctx.globalAlpha = alpha * 0.3;
+        ctx.fillStyle = nodeColor(n);
+        ctx.beginPath();
+        ctx.arc(px[i], py[i], r * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha;
+      }
+
+      // Main node
+      ctx.fillStyle = nodeColor(n);
+      ctx.beginPath();
+      ctx.arc(px[i], py[i], isCenter ? r * 1.4 : r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label
+      const showLabel = scale > 1.4 || isHovered || isSearch || isCenter;
+      if (showLabel) {
+        const fontSize = Math.max(8, 10 / scale);
+        ctx.globalAlpha = alpha * 0.9;
+        ctx.fillStyle = 'hsl(155, 5%, 96%)';
+        ctx.font = `${fontSize}px Instrument Sans, sans-serif`;
+        ctx.textAlign = 'center';
+        const _tcName = titleCase(n.name) || n.name;
+        const label = _tcName.length > 28 ? _tcName.slice(0, 26) + '…' : _tcName;
+        ctx.fillText(label, px[i], py[i] - r * (isCenter ? 1.6 : 1) - 4 / scale);
+      }
+    }
+
+    ctx.restore();
+  }
+
+  requestAnimationFrame(draw);
+
+  // ── Search autocomplete ───────────────────────────────────────────────────
+  let ddResults: Array<{ name: string; id: string; type: string }> = [];
+  let ddSel = -1;
+  let debounce: ReturnType<typeof setTimeout> | null = null;
+
+  function renderDropdown() {
+    if (!ddResults.length) {
+      dropdown.innerHTML = '<div class="dd-empty">Sin resultados</div>';
+      dropdown.classList.add('visible');
+      return;
+    }
+
+    const empresas = ddResults.filter(r => r.type === 'adjudicatario');
+    const orgs     = ddResults.filter(r => r.type === 'organismo');
+
+    let html = '';
+    let idx = 0;
+
+    if (empresas.length) {
+      html += '<div class="dd-section">🟢 Empresas</div>';
+      for (const r of empresas) {
+        const sel = idx === ddSel ? ' sel' : '';
+        html += `<div class="dd-item${sel}" data-idx="${idx}" data-id="${esc(r.id)}" data-type="${esc(r.type)}">
+          <span class="dd-icon">🏢</span>
+          <span class="dd-name">${escHtml(r.name)}</span>
+          <span class="dd-type">NIF</span>
+        </div>`;
+        idx++;
+      }
+    }
+    if (orgs.length) {
+      html += '<div class="dd-section">🔵 Organismos</div>';
+      for (const r of orgs) {
+        const sel = idx === ddSel ? ' sel' : '';
+        html += `<div class="dd-item${sel}" data-idx="${idx}" data-id="${esc(r.id)}" data-type="${esc(r.type)}">
+          <span class="dd-icon">🏛</span>
+          <span class="dd-name">${escHtml(r.name)}</span>
+        </div>`;
+        idx++;
+      }
+    }
+
+    dropdown.innerHTML = html;
+    dropdown.classList.add('visible');
+
+    dropdown.querySelectorAll('.dd-item').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        ddSel = Number((el as HTMLElement).dataset.idx);
+        renderDropdown();
+      });
+      el.addEventListener('pointerdown', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const id   = (el as HTMLElement).dataset.id || '';
+        const type = (el as HTMLElement).dataset.type || '';
+        selectResult(id, type);
+      });
+    });
+  }
+
+  function esc(s: string) { return s.replace(/"/g, '&quot;'); }
+  function escHtml(s: string) { return s.replace(/\u0026/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  async function doSearch(q: string) {
+    if (q.length < 2) { dropdown.classList.remove('visible'); return; }
+    const res = await fetch(`/api/graph-search?q=${encodeURIComponent(q)}`);
+    if (!res.ok) return;
+    ddResults = await res.json();
+    ddSel = ddResults.length > 0 ? 0 : -1;
+    renderDropdown();
+  }
+
+  searchInput.addEventListener('input', () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => doSearch(searchInput.value.trim()), 300);
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (!dropdown.classList.contains('visible')) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      ddSel = Math.min(ddSel + 1, ddResults.length - 1);
+      renderDropdown();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      ddSel = Math.max(ddSel - 1, 0);
+      renderDropdown();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const r = ddResults[ddSel >= 0 ? ddSel : 0];
+      if (r) selectResult(r.id, r.type);
+    } else if (e.key === 'Escape') {
+      dropdown.classList.remove('visible');
+    }
+  });
+
+  document.addEventListener('pointerdown', (e) => {
+    if (!searchInput.contains(e.target as Node) && !dropdown.contains(e.target as Node)) {
+      dropdown.classList.remove('visible');
+    }
+  });
+
+  async function selectResult(id: string, type: string) {
+    dropdown.classList.remove('visible');
+    searchInput.blur();
+    await loadGraph(id, type);
+  }
+
+  async function loadGraph(q: string, type: string) {
+    loadingEl.classList.add('visible');
+    searchHighlight.clear();
+    hoverIdx = -1;
+    fadeIn = 0;
+
+    try {
+      const res = await fetch(`/api/graph?q=${encodeURIComponent(q)}&type=${encodeURIComponent(type)}`);
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('[mercado] graph error', err);
+        return;
+      }
+      const data = await res.json();
+      initGraph(data);
+    } catch (err) {
+      console.error('[mercado] fetch error', err);
+    } finally {
+      loadingEl.classList.remove('visible');
+    }
+  }
+
+  // Search highlight (filter nodes matching text)
+  searchInput.addEventListener('keyup', () => {
+    const q = searchInput.value.toLowerCase().trim();
+    searchHighlight.clear();
+    if (q.length >= 2 && nodes.length > 0) {
+      nodes.forEach((n, i) => {
+        if (n.name.toLowerCase().includes(q) || n.id.toLowerCase().includes(q)) {
+          searchHighlight.add(i);
+        }
+      });
+      // Pan to first match
+      if (searchHighlight.size > 0 && nodes.length > 0) {
+        const first = searchHighlight.values().next().value;
+        tx = W / 2 - px[first] * scale;
+        ty = H / 2 - py[first] * scale;
+      }
+    }
+  });
+
+})();
+</script>

@@ -1,0 +1,47 @@
+{
+  "snapshotId": "technology-20260915-153519Z",
+  "rows": [
+    {
+      "metric": "cpv_resolved_pct",
+      "coveragePct": 100.0,
+      "unknownCount": 0,
+      "definition": "Filas fuente con CPV resuelto por una regla CPV versionada."
+    },
+    {
+      "metric": "amount_valid_pct",
+      "coveragePct": 88.91831177,
+      "unknownCount": 8830,
+      "definition": "Candidatos sectoriales con importe de adjudicación finito y positivo."
+    },
+    {
+      "metric": "supplier_nif_valid_pct",
+      "coveragePct": 97.00074805,
+      "unknownCount": 2125,
+      "definition": "Contratos analíticos con NIF de forma válida."
+    },
+    {
+      "metric": "supplier_resolved_pct",
+      "coveragePct": 95.39879465,
+      "unknownCount": 3260,
+      "definition": "Contratos analíticos con NIF y sociedad presentes en el registro curado."
+    },
+    {
+      "metric": "business_group_resolved_pct",
+      "coveragePct": 0.0,
+      "unknownCount": 70851,
+      "definition": "Contratos analíticos con grupo curado, con evidencia y vigencia."
+    },
+    {
+      "metric": "buyer_resolved_pct",
+      "coveragePct": 100.0,
+      "unknownCount": 0,
+      "definition": "Contratos analíticos con comprador canónico curado."
+    },
+    {
+      "metric": "ute_unresolved_amount_pct",
+      "coveragePct": 6.351149,
+      "unknownCount": 0,
+      "definition": "Proporción de importe mantenida en UTE sin reparto oficial verificable."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+---
+import MonitorTable from '../../components/MonitorTable.astro';
+import DashboardLayout from '../../layouts/dashboard.astro';
+---
+
+<DashboardLayout title="Activas — elicita_">
+  <MonitorTable
+    pageMode="activas"
+    title="Licitaciones Activas"
+    placeholder="Describe lo que buscas. Ej: limpieza de oficinas en Madrid"
+    estadosDefault={['abierta','publicada','anuncio_previo','evaluacion','en_curso']}
+    estadoLabels={{
+      'abierta':'Abierta','publicada':'Publicada','anuncio_previo':'Anuncio previo',
+      'evaluacion':'Evaluación','en_curso':'En curso','adjudicada':'Adjudicada',
+      'resuelta':'Resuelta','formalizada':'Formalizada','desierta':'Desierta',
+      'anulada':'Anulada','borrador':'Borrador',
+    }}
+    showAdjudicatario={false}
+    showFuente={true}
+    showRelevance={true}
+    sortByAdjudicatario={false}
+    filterActivas={true}
+    helpContext="buscar"
+  />
+</DashboardLayout>

@@ -1,0 +1,35 @@
+# Elicita — Inteligencia de contratación pública
+# https://elicita.es
+
+User-agent: *
+Disallow: /dashboard/
+Disallow: /sign-in
+Disallow: /api/
+Allow: /
+
+# AI Bot Rules (RFC 9309)
+User-agent: GPTBot
+Allow: /
+Disallow: /dashboard/
+Disallow: /sign-in/
+Disallow: /api/
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Bytespider
+Disallow: /
+
+# Content Signals
+Content-Signal: ai-train=no, search=yes, ai-input=no
+
+Sitemap: https://elicita.es/sitemap-index.xml

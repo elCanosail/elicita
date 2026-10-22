@@ -1,0 +1,36 @@
+{
+  "snapshotId": "technology-20260915-153519Z",
+  "periodTo": "2026-01-26",
+  "points": [
+    {
+      "year": "2022",
+      "amountEur": 3026113537.56,
+      "contracts": 14978,
+      "partial": false
+    },
+    {
+      "year": "2023",
+      "amountEur": 3755196508.44,
+      "contracts": 15822,
+      "partial": false
+    },
+    {
+      "year": "2024",
+      "amountEur": 3524478385.9,
+      "contracts": 18340,
+      "partial": false
+    },
+    {
+      "year": "2025",
+      "amountEur": 4141065449.84,
+      "contracts": 17984,
+      "partial": false
+    },
+    {
+      "year": "2026",
+      "amountEur": 83176624.09,
+      "contracts": 467,
+      "partial": true
+    }
+  ]
+}

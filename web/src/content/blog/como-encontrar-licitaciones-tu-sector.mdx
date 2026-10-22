@@ -1,0 +1,105 @@
+---
+title: "Cómo encontrar todas las licitaciones de tu sector (y no perderte ninguna)"
+excerpt: "Doce boletines, miles de contratos al mes, organismos que contratan en ciclos predecibles. Te enseñamos cómo usar Elicita para pasar del caos al control sistemático de tu mercado."
+date: "2026-07-31"
+readTime: "5 min"
+category: "Guía"
+series: "Guías y producto"
+author: "Equipo Elicita"
+tags: ["buscador", "organismos", "competidores", "universo", "alertas", "onboarding"]
+draft: false
+---
+
+La contratación pública española publica miles de licitaciones al mes repartidas en doce boletines oficiales. PLACE, TED Europa, y los boletines de Catalunya, Madrid, Galicia, Andalucía, Euskadi, Valencia, Aragón, Asturias... Cada uno con su propio formato, su propia web, su propio ritmo.
+
+Si intentas vigilarlos a mano, estás muerto. Y si usas un servicio de alertas genérico, recibes las mismas alertas que tu competencia — sin ventaja.
+
+Elicita indexa los 66,4 millones de registros de todos esos boletines, los unifica en un solo buscador, y te da herramientas para anticipar, no solo reaccionar.
+
+## Tu primera búsqueda
+
+Ve a [elicita.es/buscar](https://elicita.es/buscar). Sin registro, tienes 3 búsquedas diarias gratis.
+
+Escribe un término. La búsqueda recorre el objeto del contrato, el organismo, y el adjudicatario. Algunos ejemplos por sector:
+
+- **Software**: `desarrollo software hospital` — para empresas tecnológicas que venden a Sanidad Pública
+- **Construcción**: `obras de saneamiento` — para contratistas de infraestructura municipal
+- **Sanidad**: `material médico` — para distribuidores de productos sanitarios
+- **Consultoría**: `servicios de consultoría` — para despachos que buscan proyectos de asesoría pública
+
+Puedes filtrar por fuente (solo PLACE, solo Catalunya, etc.), por importe mínimo y máximo, por estado del contrato, por fecha, por CPV y por NIF de adjudicatario.
+
+Los resultados se ordenan por relevancia o fecha. Cada fila es expandible — clic y ves el detalle completo: organismo, importe de licitación y adjudicación, CPV, estado, NIF del adjudicatario, y enlace a la publicación original.
+
+## Entender qué encuentras
+
+Cada licitación tiene campos que parecan obvios pero conviene entenderlos bien:
+
+**CPV (Common Procurement Vocabulary)** — el código europeo que clasifica lo que se contrata. `72000000` es software. `45230000` es construcción. `33000000` es material médico. El CPV es tu filtro más potente. Aprende los códigos de tu sector y búscalos directamente.
+
+**Estados** — *Anuncio* significa que el contrato está abierto a ofertas. *Adjudicada* significa que ya hay ganador. *Formalizada* significa que el contrato está firmado. Filtrar por estado te permite separar oportunidades activas de información histórica.
+
+**Importe** — hay dos: el importe de licitación (lo que el organismo presupuestó) y el importe de adjudicación (lo que se pagó realmente). La diferencia entre ambos te dice si hubo ahorro o sobrecoste.
+
+## Seguir organismos y empresas
+
+Cuando encuentras un organismo que contrata lo que tú vendes, puedes seguirlo. En cada ficha de organismo hay un botón **Seguir** que lo añade a tu lista. Igual con competidores — busca por NIF, abre su ficha, y síguelos.
+
+Los follows alimentan las alertas y el reporte semanal. En vez de buscar cada día, el sistema te avisa cuando hay movimiento.
+
+## Analizar a tu competencia
+
+Cada empresa adjudicataria tiene una ficha completa en `/explorer/competidores/[NIF]`. Busca por NIF o navega desde cualquier resultado de búsqueda.
+
+La ficha muestra:
+
+- **Total de contratos** y **volumen acumulado** — qué tan grande es el competidor
+- **Organismos principales** — con quién tiene relación
+- **Evolución anual** — si está creciendo o perdiendo contratos
+- **CPVs principales** — en qué se especializa
+- **Adjudicaciones recientes** — sus últimos 50 contratos
+- **Cargos compartidos** — si tiene directivos en común con otros adjudicatarios (posible conflicto de interés)
+- **Indicadores de calidad** — 20 métricas sobre sus contratos (validez, consistencia, transparencia)
+
+Esta es la base de la inteligencia competitiva. No basta con saber que existen — necesitas saber cuándo pujan, a qué importes, con qué organismos, y si están ganando o perdiendo terreno.
+
+## Universo — el grafo que muestra conexiones
+
+La función más potente de Elicita es [Universo](https://elicita.es/explorer/universo): un grafo interactivo que muestra cómo organismos y adjudicatarios están conectados.
+
+Cada nodo es una empresa o un organismo. Cada arista es un contrato. Puedes filtrar por CPV, por rango temporal, por tipo de nodo. Puedes colorear por comunidad autónoma o por tipo. Puedes ver cuota de mercado, concentración, y nodos puente.
+
+Doble-clic en un nodo expande sus conexiones. Descubres que la empresa que siempre gana en Madrid también gana en Andalucía a través de un organismo que no conocías. Eso no se ve en una tabla — se ve en un grafo.
+
+## Configurar alertas
+
+En `/cuenta/alertas` configuras qué vigilar:
+
+- **CPVs de interés** — los códigos de tu sector
+- **Organismos favoritos** — los que contratas habitualmente
+- **Keywords** — términos específicos que no quieres perderte
+- **Competidores** — que te avise cuando un competidor gane algo
+
+Las alertas corren cada 4 horas. Recibes un email cuando hay coincidencias. Los usuarios Pro tienen alertas ilimitadas; el plan Free tiene 1 alerta.
+
+## Explorer y proyecciones
+
+El Explorer va más allá de la búsqueda reactiva. Usa los patrones históricos de contratación para proyectar renovaciones. Si un organismo contrata mantenimiento de software cada 3 años, el sistema lo detecta y te lo muestra como oportunidad futura.
+
+Las proyecciones no son certezas — son probabilidades basadas en datos reales. Te dan una ventana de 6 a 9 meses antes de la publicación para preparar oferta, relación con el organismo, y recursos.
+
+## Para técnicos: API y MCP
+
+Si quieres integrar Elicita en tu CRM, ERP, o flujo propio, hay una [API REST](https://elicita.es/docs/api) y un [MCP server](https://elicita.es/docs/mcp).
+
+La API soporta búsqueda, estadísticas, cobertura, CPV, organismo, grafo de relaciones y contratos. Autenticación por API key (Bearer token). El plan Pro incluye acceso completo.
+
+El MCP server permite conectar Elicita a tu asistente de IA. Puedes preguntar "¿qué licitaciones de software hay en Madrid esta semana?" y obtener respuestas con datos reales.
+
+## Empieza gratis
+
+El plan Free te da 3 búsquedas diarias, monitor de licitaciones activas, y explorer con proyecciones básicas. Sin tarjeta, sin compromiso.
+
+Cuando necesites más — buscador ilimitado, alertas, Universo, BORME, API, MCP — el plan Pro son €29/mes.
+
+**[Probar gratis →](https://elicita.es/buscar)** · **[Ver planes →](https://elicita.es/precios)** · **[Guía completa →](https://elicita.es/docs/guia)**

@@ -1,0 +1,41 @@
+---
+title: "Cómo anticiparse 6-9 meses a las licitaciones públicas"
+excerpt: "Análisis predictivo sobre el dataset completo de contratación pública española. Caso real de detección de oportunidad 9 meses antes de publicación."
+date: "2026-02-27"
+readTime: "3 min"
+category: "Metodología"
+series: "Guías y producto"
+author: "Equipo Elicita"
+tags: ["predicción", "contratación pública", "metodología", "análisis predictivo"]
+draft: false
+---
+
+La contratación pública española mueve más de **180.000 millones de euros anuales**. Sin embargo, la mayoría de empresas solo detectan oportunidades cuando ya están publicadas, con plazos de 15-30 días para preparar ofertas.
+
+## El problema: información dispersa y tardía
+
+Los sistemas tradicionales de alerta notifican cuando un contrato ya está publicado en el BOE o PLACE. Para entonces compites en igualdad de acceso a la información pública, con plazos cortos y sin margen para construir una oferta diferencial: el tiempo para preparar una oferta ganadora es mínimo, y las alianzas estratégicas deben formarse a contrarreloj.
+
+## La solución: inteligencia predictiva sobre datos históricos
+
+El sistema analiza patrones por tipo de contrato, organismo y sector para estimar cuándo se relicitarán servicios. La fórmula conceptual es simple:
+
+```
+Fecha_Fin_Estimada = Fecha_Adjudicación + Duración_Histórica_Media
+Alerta_Temprana = Fecha_Fin_Estimada - 6_a_9_meses
+```
+
+Lo que no es simple es la escala: 66,4M registros, 26 años de histórico, miles de organismos con patrones de contratación distintos.
+
+## Caso real: renovación de infraestructura telecom
+
+**Organismo**: Entidad ferroviaria nacional  
+**Contrato**: Mantenimiento infraestructuras telecomunicaciones (adjudicado 2022)  
+**Duración típica**: 36 meses  
+**Detección**: 9 meses antes de la publicación esperada
+
+El cliente pudo contactar el área de contratación, analizar el pliego histórico, preparar una oferta con mejores condiciones técnicas y establecer alianzas estratégicas antes que la competencia.
+
+## Transparencia metodológica
+
+Todo el procesamiento se realiza sobre **datos públicos oficiales** mediante técnicas estándar de inteligencia de negocio. La ventaja no proviene de la fuente de datos, sino de la agregación masiva, el procesamiento sistemático y el análisis predictivo.

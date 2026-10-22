@@ -1,0 +1,521 @@
+---
+import Layout from '../../../layouts/dashboard.astro';
+import { query } from '../../../lib/duckdb';
+import { titleCase } from '../../../lib/format';
+
+const { name } = Astro.params;
+
+if (!name) {
+  return Astro.redirect('/explorer');
+}
+
+const organismoName = decodeURIComponent(name as string);
+
+// CPV dictionary
+let cpvDict: Record<string, string> = {};
+try {
+  const cpvModule = await import('../../../data/cpv_es.json');
+  cpvDict = (cpvModule.default || cpvModule) as Record<string, string>;
+} catch {}
+
+// ── All queries in parallel ────────────────────────────────────────────────
+let totalContratos = 0;
+let totalVolumen = 0;
+let mediaContrato = 0;
+let numAdjudicatarios = 0;
+let topAdjudicatarios: { adjudicatario: string; nif: string; contratos: number; volumen: number }[] = [];
+let evolucionAnual: { ano: number; contratos: number; volumen: number }[] = [];
+let cpvsPrincipales: { code: string; name: string; count: number }[] = [];
+
+try {
+  const [statsRows, adjRows, anoRows, cpvRows] = await Promise.all([
+    query(
+      `SELECT COUNT(*) AS total, COALESCE(SUM(importe_adjudicacion), 0) AS volumen, COUNT(DISTINCT nif_adjudicatario) AS num_adj FROM contratos_vivos WHERE organismo = ?`,
+      [organismoName]
+    ),
+    query(
+      `SELECT adjudicatario, nif_adjudicatario AS nif, COUNT(*) AS contratos, COALESCE(SUM(importe_adjudicacion), 0) AS volumen FROM contratos_vivos WHERE organismo = ? AND adjudicatario IS NOT NULL GROUP BY adjudicatario, nif_adjudicatario ORDER BY volumen DESC LIMIT 20`,
+      [organismoName]
+    ),
+    query(
+      `SELECT EXTRACT(YEAR FROM fecha_publicacion) AS ano, COUNT(*) AS contratos, COALESCE(SUM(importe_adjudicacion), 0) AS volumen FROM contratos_vivos WHERE organismo = ? AND fecha_publicacion IS NOT NULL GROUP BY ano ORDER BY ano ASC`,
+      [organismoName]
+    ),
+    query(
+      `SELECT cpv AS cpv_principal, COUNT(*) AS cnt FROM contratos_vivos WHERE organismo = ? AND cpv IS NOT NULL GROUP BY cpv ORDER BY cnt DESC LIMIT 8`,
+      [organismoName]
+    ),
+  ]);
+
+  if (statsRows.length > 0) {
+    totalContratos = Number(statsRows[0].total) || 0;
+    totalVolumen = Number(statsRows[0].volumen) || 0;
+    mediaContrato = totalContratos > 0 ? totalVolumen / totalContratos : 0;
+    numAdjudicatarios = Number(statsRows[0].num_adj) || 0;
+  }
+
+  topAdjudicatarios = adjRows.map(r => ({
+    adjudicatario: titleCase(r.adjudicatario) || r.adjudicatario,
+    nif: r.nif || '',
+    contratos: Number(r.contratos),
+    volumen: Number(r.volumen),
+  }));
+
+  evolucionAnual = anoRows.map(r => ({
+    ano: Number(r.ano),
+    contratos: Number(r.contratos),
+    volumen: Number(r.volumen),
+  }));
+
+  cpvsPrincipales = cpvRows.map(r => {
+    const code = String(r.cpv_principal || r.cpv).replace('.0', '').trim();
+    return { code, name: cpvDict[code] || code, count: Number(r.cnt) };
+  });
+} catch (e: any) {
+  console.error('[ficha organismo] query error:', e?.message);
+}
+
+// ── Close DB ──────────────────────────────────────────────────────────────
+Astro.response.headers.set('Cache-Control', 'public, max-age=3600');
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function fmtVolumen(v: number): string {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M€';
+  if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K€';
+  return v.toFixed(0) + '€';
+}
+
+const maxContratos = evolucionAnual.length > 0 ? Math.max(...evolucionAnual.map(r => r.contratos)) : 1;
+---
+
+<Layout title={`${organismoName} — elicita_`} active="organismos">
+
+<div class="ficha-wrap">
+
+  <!-- Back -->
+  <a href="javascript:history.back()" class="back-link">← Volver</a>
+
+  <!-- Header -->
+  <div class="ficha-header">
+    <div class="ficha-header-main">
+      <div class="ficha-badge">ORGANISMO CONTRATANTE</div>
+      <h1 class="ficha-name">{organismoName}</h1>
+    </div>
+    <div class="ficha-actions">
+      <button id="follow-btn" class="follow-btn" data-type="organismo" data-id={organismoName} data-name={organismoName}>
+        <span class="follow-icon">☆</span>
+        <span class="follow-text">Seguir</span>
+      </button>
+    </div>
+  </div>
+
+  {totalContratos === 0 ? (
+    <div class="empty-card">Sin datos de contratación para este organismo</div>
+  ) : (
+    <>
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val mono">{totalContratos.toLocaleString('es-ES')}</div>
+          <div class="stat-lbl">Total contratos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{fmtVolumen(totalVolumen)}</div>
+          <div class="stat-lbl">Volumen total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{fmtVolumen(mediaContrato)}</div>
+          <div class="stat-lbl">Media por contrato</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{numAdjudicatarios.toLocaleString('es-ES')}</div>
+          <div class="stat-lbl">Adjudicatarios únicos</div>
+        </div>
+      </div>
+
+      <!-- Top Adjudicatarios -->
+      {topAdjudicatarios.length > 0 && (
+        <div class="card">
+          <div class="card-header">Top Adjudicatarios (por volumen)</div>
+          <div class="org-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Adjudicatario</th>
+                  <th>NIF</th>
+                  <th class="th-r">Contratos</th>
+                  <th class="th-r">Volumen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topAdjudicatarios.map(adj => (
+                  <tr>
+                    <td class="td-adj">
+                      {adj.nif ? (
+                        <a href={`/explorer/competidores/${adj.nif}`} class="adj-link">{adj.adjudicatario}</a>
+                      ) : (
+                        <span>{adj.adjudicatario}</span>
+                      )}
+                    </td>
+                    <td class="mono td-nif">{adj.nif || '—'}</td>
+                    <td class="td-r mono">{adj.contratos.toLocaleString('es-ES')}</td>
+                    <td class="td-r mono">{fmtVolumen(adj.volumen)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <!-- Evolución anual -->
+      {evolucionAnual.length > 0 && (
+        <div class="card">
+          <div class="card-header">Evolución Anual</div>
+          <div class="evo-chart">
+            {evolucionAnual.map(row => (
+              <div class="evo-row">
+                <div class="evo-year mono">{row.ano}</div>
+                <div class="evo-bar-wrap">
+                  <div class="evo-bar" style={`width:${Math.max(2, (row.contratos / maxContratos) * 100)}%`}></div>
+                </div>
+                <div class="evo-val mono">{row.contratos} <span class="evo-vol">({fmtVolumen(row.volumen)})</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- CPVs principales -->
+      {cpvsPrincipales.length > 0 && (
+        <div class="card">
+          <div class="card-header">CPVs Principales</div>
+          <div class="cpv-pills">
+            {cpvsPrincipales.map(cpv => (
+              <div class="cpv-pill" title={`${cpv.code} · ${cpv.count} contratos`}>
+                <span class="cpv-code mono">{cpv.code}</span>
+                <span class="cpv-name">{cpv.name.replace(/\.$/, '').slice(0, 60)}{cpv.name.length > 60 ? '…' : ''}</span>
+                <span class="cpv-cnt mono">×{cpv.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )}
+
+  <div class="ficha-footer">
+    <span class="mono">Fuente: PLACSP + CCAA unificadas (contratos_vivos)</span>
+    <span>·</span>
+    <span class="mono">{organismoName}</span>
+  </div>
+
+</div>
+
+</Layout>
+
+<style is:global>
+  .ficha-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+  }
+
+  /* Back link */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.3);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: hsl(var(--primary)); }
+
+  /* Header */
+  .ficha-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .ficha-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: hsl(var(--primary));
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+  .ficha-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: hsl(var(--foreground) / 0.92);
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  /* Follow button */
+  .ficha-actions { flex-shrink: 0; }
+  .follow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid hsl(var(--foreground) / 0.12);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.55);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .follow-btn:hover {
+    border-color: hsl(var(--primary) / 0.4);
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.05);
+  }
+  .follow-btn.following {
+    border-color: hsl(var(--primary) / 0.35);
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.08);
+  }
+  .follow-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .stat-card {
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 20px;
+    font-weight: 600;
+    color: hsl(var(--primary));
+    margin-bottom: 4px;
+  }
+  .stat-lbl {
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+
+  /* Cards */
+  .card {
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .card-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(var(--foreground) / 0.2);
+    margin-bottom: 14px;
+  }
+  .empty-card {
+    background: hsl(var(--foreground) / 0.01);
+    border: 1px solid hsl(var(--foreground) / 0.05);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.2);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  /* Data table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .data-table thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--foreground) / 0.15);
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+  }
+  .data-table thead th.th-r { text-align: right; }
+  .data-table tbody tr {
+    border-bottom: 1px solid hsl(var(--foreground) / 0.03);
+  }
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table tbody tr:hover { background: hsl(var(--foreground) / 0.02); }
+  .data-table td {
+    padding: 9px 8px;
+    color: hsl(var(--foreground) / 0.7);
+    vertical-align: top;
+  }
+  .td-adj { max-width: 320px; }
+  .td-nif { font-size: 11px; color: hsl(var(--foreground) / 0.35); white-space: nowrap; }
+  .org-scroll { max-height: 440px; overflow-y: auto; }
+  .td-r { text-align: right; }
+
+  /* Adjudicatario clickable link */
+  .adj-link {
+    color: hsl(var(--foreground) / 0.75);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .adj-link:hover { color: hsl(var(--primary)); }
+
+  /* Evolución anual chart */
+  .evo-chart { display: flex; flex-direction: column; gap: 7px; }
+  .evo-row { display: flex; align-items: center; gap: 10px; }
+  .evo-year { font-size: 11px; color: hsl(var(--foreground) / 0.35); width: 36px; flex-shrink: 0; }
+  .evo-bar-wrap {
+    flex: 1;
+    background: hsl(var(--foreground) / 0.04);
+    border-radius: 2px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .evo-bar {
+    height: 100%;
+    background: hsl(var(--primary));
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .evo-val { font-size: 11px; color: hsl(var(--foreground) / 0.6); white-space: nowrap; }
+  .evo-vol { color: hsl(var(--foreground) / 0.25); }
+
+  /* CPV pills */
+  .cpv-pills { display: flex; flex-direction: column; gap: 6px; }
+  .cpv-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: hsl(var(--foreground) / 0.03);
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 6px;
+    padding: 7px 12px;
+  }
+  .cpv-code { font-size: 10px; color: hsl(var(--foreground) / 0.3); white-space: nowrap; }
+  .cpv-name { font-size: 12px; color: hsl(var(--foreground) / 0.65); flex: 1; }
+  .cpv-cnt { font-size: 10px; color: hsl(var(--primary)); }
+
+  /* Footer */
+  .ficha-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.1);
+  }
+
+  /* Mono utility */
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .ficha-wrap { padding: 16px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .ficha-name { font-size: 16px; }
+    .td-nif { display: none; }
+  }
+</style>
+
+<script is:inline>
+(function() {
+  const btn = document.getElementById('follow-btn');
+  if (!btn) return;
+
+  const type = btn.dataset.type;
+  const id = btn.dataset.id;
+  const name = btn.dataset.name;
+  let isAuth = false;
+
+  function setFollowing(following) {
+    const icon = btn.querySelector('.follow-icon');
+    const text = btn.querySelector('.follow-text');
+    if (following) {
+      btn.classList.add('following');
+      if (icon) icon.textContent = '★';
+      if (text) text.textContent = 'Dejar de seguir';
+    } else {
+      btn.classList.remove('following');
+      if (icon) icon.textContent = '☆';
+      if (text) text.textContent = 'Seguir';
+    }
+  }
+
+  async function load() {
+    try {
+      const res = await fetch('/api/follows');
+      if (res.status === 401) {
+        isAuth = false;
+        return;
+      }
+      isAuth = true;
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = type === 'organismo' ? (data.follows?.organismos || []) : (data.follows?.competidores || []);
+      const following = list.some(f => f.id === id);
+      setFollowing(following);
+    } catch (e) {
+      console.error('[follows] error loading:', e);
+    }
+  }
+
+  btn.addEventListener('click', async () => {
+    if (!isAuth) {
+      window.location.href = '/sign-up';
+      return;
+    }
+    const following = btn.classList.contains('following');
+    btn.disabled = true;
+    try {
+      if (following) {
+        const res = await fetch(`/api/follows?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (res.ok) setFollowing(false);
+      } else {
+        const res = await fetch('/api/follows', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, id, nombre: name }),
+        });
+        if (res.ok) {
+          setFollowing(true);
+        } else if (res.status === 403) {
+          const data = await res.json();
+          if (confirm((data.error || 'Límite alcanzado') + ' ¿Ver planes?')) {
+            window.location.href = data.upgrade || '/precios';
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[follows] error toggling:', e);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  load();
+})();
+</script>

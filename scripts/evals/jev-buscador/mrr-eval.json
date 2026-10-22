@@ -1,0 +1,847 @@
+[
+  {
+    "q": "gestión de residuos tóxicos generados por un laboratorio",
+    "poolSize": 20,
+    "jevMs": 793,
+    "classic": [
+      {
+        "id": "PLACSP:2026/SSV/000828:Órganos Directivos del Ayuntamiento de Sevilla",
+        "titulo": "Gestión externa de los residuos generados por el trabajo en la Sección de Higiene Pública del Laboratorio Muni"
+      },
+      {
+        "id": "GAL:828845",
+        "titulo": "CSN-2026-0012: Contratación del servicio de recogida, gestión y tratamiento de los residuos generados por el L"
+      },
+      {
+        "id": "PLACSP:10126/2026:Puertos de las Illes Balears",
+        "titulo": "consiste en la realización del servicio de recogida y correcta gestión de los residuos peligrosos generados po"
+      },
+      {
+        "id": "PLACSP:44/2026:Presidencia de la Autoridad Portuaria de Ceuta",
+        "titulo": "Servicio de gestión de residuos tóxicos y peligrosos (RTP) y mantenimiento de los puntos de almacenamiento tem"
+      },
+      {
+        "id": "PLACSP:CS/07/1126031868/26/PASA:Gerencia del Área de Salud de Plasencia",
+        "titulo": "Suministro, instalación y puesta en marcha de un ventilador de transporte para el Servicio de Urgencias del Ho"
+      },
+      {
+        "id": "PLACSP:104/2026:Dirección General de Gestión Económica, Contratación e Infraestructuras de la Conselleria de Sanidad",
+        "titulo": "servicio de la gestión extracentro (recogida, transporte y tratamiento) de residuos sanitarios (grupos iii y g"
+      },
+      {
+        "id": "PLACSP:1757/2026:Dirección General de Gestión Económica, Contratación e Infraestructuras de la Conselleria de Sanidad",
+        "titulo": "servicio de gestión integral del servicio de la gestión extracentro (recogida, transporte y tratamiento) de re"
+      },
+      {
+        "id": "DOGV:19429605",
+        "titulo": "servicio de la gestión extracentro (recogida, transporte y tratamiento) de residuos sanitarios (grupos iii y g"
+      },
+      {
+        "id": "DOGV:20292445",
+        "titulo": "servicio de gestión integral del servicio de la gestión extracentro (recogida, transporte y tratamiento) de re"
+      },
+      {
+        "id": "PLACSP:262909PSS007:Subdirección General de la Oficina Presupuestaria y Gestión Económica",
+        "titulo": "Servicio integral de retirada de residuos de laboratorio por una empresa especializada y autorizada para el Ce"
+      },
+      {
+        "id": "PLACSP:CA 4/2026:Gerencia de Guaguas Municipales, S.A.",
+        "titulo": "Servicios de recogida, transporte y gestión de residuos generados en las instalaciones de Guaguas Municipales,"
+      },
+      {
+        "id": "PLACSP:TSA0077465:Empresa de Transformación Agraria S.A.,S.M.E., M.P., (TRAGSA)",
+        "titulo": "Contratación del Suministro del Sistema de Tratamiento de Los desechos y Residuos Generados por Los Experiment"
+      },
+      {
+        "id": "PLACSP:EMG 127-265:Dirección de la Empresa para la Gestión de Residuos Industriales, S.A. (EMGRISA)",
+        "titulo": "Contratación de servicios de transporte, recepción, aceptación y tratamiento final de residuos generados en el"
+      },
+      {
+        "id": "PLACSP:2025PL049:Dirección Gerencia de Limpieza de Málaga Sociedad Anónima Municipal",
+        "titulo": "Servicio de recogida y gestión integral de residuos peligrosos generados por los servicios de Limpieza de Mála"
+      },
+      {
+        "id": "PLACSP:AG-03/2026:Consejería Delegada de Aguas de Lucena S.L.",
+        "titulo": "Servicio de alquiler de equipos y maquinaria con conductor para la reparación de averías, mantenimiento, renov"
+      },
+      {
+        "id": "PLACSP:2026/ RECOGIDA RESIDUOS SOLIDOS:Presidencia del Consejo de Administración del Hipódromo de la Zarzuela, S.A., S.M.E.",
+        "titulo": "Servicio de recogida, transporte y gestión de los residuos sólidos generados en las instalaciones del recinto "
+      },
+      {
+        "id": "PLACSP:EXP.25.0552.CA.SE:Sociedad Regional Cántabra de Promoción Turística S.A. CANTUR S.A.",
+        "titulo": "Contrato de Servicios de Gestión de Residuos Peligrosos y No Peligrosos de tratamiento especial generados en l"
+      },
+      {
+        "id": "DOGV:19636320",
+        "titulo": "Contrato mixto de servicio y suministro para la gestión de residuos de restos vegetales generados en las zonas"
+      },
+      {
+        "id": "AND:809044",
+        "titulo": "EXPTE 698/2019. TERCER CONTRATO BASADO EN Acuerdo Marco con una única empresa por lote, por el que se fijan la"
+      },
+      {
+        "id": "DOGV:19814201",
+        "titulo": "Servicio de recogida, transporte, gestión y eliminación de los residuos generados en las operaciones de exhuma"
+      }
+    ],
+    "jev": [
+      {
+        "id": "PLACSP:262909PSS007:Subdirección General de la Oficina Presupuestaria y Gestión Económica",
+        "s": 0.92
+      },
+      {
+        "id": "GAL:828845",
+        "s": 0.9
+      },
+      {
+        "id": "PLACSP:2026/SSV/000828:Órganos Directivos del Ayuntamiento de Sevilla",
+        "s": 0.88
+      },
+      {
+        "id": "PLACSP:TSA0077465:Empresa de Transformación Agraria S.A.,S.M.E., M.P., (TRAGSA)",
+        "s": 0.79
+      },
+      {
+        "id": "PLACSP:44/2026:Presidencia de la Autoridad Portuaria de Ceuta",
+        "s": 0.76
+      },
+      {
+        "id": "PLACSP:EXP.25.0552.CA.SE:Sociedad Regional Cántabra de Promoción Turística S.A. CANTUR S.A.",
+        "s": 0.66
+      },
+      {
+        "id": "DOGV:20292445",
+        "s": 0.51
+      },
+      {
+        "id": "PLACSP:1757/2026:Dirección General de Gestión Económica, Contratación e Infraestructuras de la Conselleria de Sanidad",
+        "s": 0.5
+      },
+      {
+        "id": "PLACSP:104/2026:Dirección General de Gestión Económica, Contratación e Infraestructuras de la Conselleria de Sanidad",
+        "s": 0.48
+      },
+      {
+        "id": "DOGV:19429605",
+        "s": 0.46
+      },
+      {
+        "id": "PLACSP:EMG 127-265:Dirección de la Empresa para la Gestión de Residuos Industriales, S.A. (EMGRISA)",
+        "s": 0.46
+      },
+      {
+        "id": "PLACSP:2025PL049:Dirección Gerencia de Limpieza de Málaga Sociedad Anónima Municipal",
+        "s": 0.36
+      },
+      {
+        "id": "AND:809044",
+        "s": 0.25
+      },
+      {
+        "id": "PLACSP:10126/2026:Puertos de las Illes Balears",
+        "s": 0.16
+      },
+      {
+        "id": "PLACSP:CS/07/1126031868/26/PASA:Gerencia del Área de Salud de Plasencia",
+        "s": 0.16
+      },
+      {
+        "id": "PLACSP:AG-03/2026:Consejería Delegada de Aguas de Lucena S.L.",
+        "s": 0.15
+      },
+      {
+        "id": "DOGV:19814201",
+        "s": 0.15
+      },
+      {
+        "id": "PLACSP:CA 4/2026:Gerencia de Guaguas Municipales, S.A.",
+        "s": 0.13
+      },
+      {
+        "id": "PLACSP:2026/ RECOGIDA RESIDUOS SOLIDOS:Presidencia del Consejo de Administración del Hipódromo de la Zarzuela, S.A., S.M.E.",
+        "s": 0.09
+      },
+      {
+        "id": "DOGV:19636320",
+        "s": 0.05
+      }
+    ]
+  },
+  {
+    "q": "consumibles y aparatos de análisis para laboratorio de hospital",
+    "poolSize": 20,
+    "jevMs": 305,
+    "classic": [
+      {
+        "id": "MCM:CM-A/SUM-0000048628/2026",
+        "titulo": "UTENSILIOS Y CONSUMIBLES DE LABORATORIO"
+      },
+      {
+        "id": "PLACSP:CMAYOR/2025/CHGUV0/1360/L2:Consorcio Hospital General Universitario de Valencia",
+        "titulo": "Reactivos y  puesta a disposición de equipos para la realización de determinaciones analíticas en el laborator"
+      },
+      {
+        "id": "DOGV:17604067",
+        "titulo": "Reactivos y  puesta a disposición de equipos para la realización de determinaciones analíticas en el laborator"
+      },
+      {
+        "id": "PLACSP:55/T/24/SS/GE/A/0123:Dirección Gerente del Hospital Universitario Nuestra Señora de Candelaria",
+        "titulo": "Servicio de mantenimiento y soporte del sistema de información Connectlab y Connecthall instalado en la sala d"
+      },
+      {
+        "id": "PLACSP:SER/2026/0000105883:Gerencia de Servicios Sanitarios del Área de Salud de Lanzarote",
+        "titulo": "Expediente administrativo para la contratación del servicio de recogida de muestras de legionela, transporte y"
+      },
+      {
+        "id": "PLACSP:PA 946/2026:Departamento de Salud Alicante. Dirección Económica-Gerencia",
+        "titulo": "Suministro de reactivos para la determinación de aminas biógenas en orina y vitaminas en sangre mediante hplc,"
+      },
+      {
+        "id": "DOGV:20139261",
+        "titulo": "Suministro de reactivos para la determinación de aminas biógenas en orina y vitaminas en sangre mediante hplc,"
+      },
+      {
+        "id": "PLACSP:CS/9999/1101223805/26/PA:Servicio Murciano de Salud - Gerencia",
+        "titulo": "Suministro de material necesario para realizar los estudios genéticos de cáncer hereditario y otras patologías"
+      },
+      {
+        "id": "MCM:381719",
+        "titulo": "REACTIVOS Y CONSUMIBLES DEL OSMOMETRO"
+      },
+      {
+        "id": "MCM:382106",
+        "titulo": "REACTIVOS Y CONSUMIBLES DEL OSMOMETRO"
+      },
+      {
+        "id": "MCM:A/SER-025804/2026",
+        "titulo": "Servicio para la implantación, mantenimiento y soporte de un sistema de información para los laboratorios de a"
+      },
+      {
+        "id": "MCM:A/SUM-019683/2026",
+        "titulo": "Suministro de reactivos y cesión de uso de los equipos necesarios para la Sección de Microbiología del Laborat"
+      },
+      {
+        "id": "PLACSP:2026000114:Gerencia del Área Sanitaria I - Jarrio del Servicio de Salud del Principado de Asturias",
+        "titulo": "suministro de reactivos, material y dotación de equipamiento necesarios para la realización de pruebas analíti"
+      },
+      {
+        "id": "MCM:Exp FIB 2026/004 Contrato basado 2022/010",
+        "titulo": "Suministro de reactivos y consumibles exclusivos  necesarios para el análisis de transcriptómica espacial “SIN"
+      },
+      {
+        "id": "MCM:FIB 2026/012 CONTRATO BASADO 2022/010",
+        "titulo": "Suministro de reactivos y consumibles exclusivos necesarios para el análisis de transcriptómica espacial “SING"
+      },
+      {
+        "id": "MCM:CM 1430/2026",
+        "titulo": "Sistema de PCR cuantitativa de 96 pocillos para la cuantificación precisa de ácidos nucleicos mediante detecci"
+      },
+      {
+        "id": "MCM:CM 1432/2026",
+        "titulo": "Herramienta para poder analizar la tecnología usada en la preparación de librerías y secuenciación en el labor"
+      },
+      {
+        "id": "MCM:CM 1531/2026",
+        "titulo": "Adquisición de dos kits de genotipado (48muestras/kit) basado en tecnología de microarray para el análisis de "
+      },
+      {
+        "id": "MCM:CM 1560/2026",
+        "titulo": "Compra de 1 unidad de reactivo químico para uso en técnicas histológicas, consistente en oceína sintética de c"
+      },
+      {
+        "id": "MCM:CM 1562/2026",
+        "titulo": "Compra de 1 unidad de reactivo químico para uso en técnicas histológicas, consistente en ácido fosfomolíbdico "
+      }
+    ],
+    "jev": [
+      {
+        "id": "PLACSP:2026000114:Gerencia del Área Sanitaria I - Jarrio del Servicio de Salud del Principado de Asturias",
+        "s": 0.94
+      },
+      {
+        "id": "PLACSP:CMAYOR/2025/CHGUV0/1360/L2:Consorcio Hospital General Universitario de Valencia",
+        "s": 0.91
+      },
+      {
+        "id": "DOGV:17604067",
+        "s": 0.91
+      },
+      {
+        "id": "MCM:A/SUM-019683/2026",
+        "s": 0.88
+      },
+      {
+        "id": "DOGV:20139261",
+        "s": 0.72
+      },
+      {
+        "id": "MCM:CM 1430/2026",
+        "s": 0.72
+      },
+      {
+        "id": "PLACSP:PA 946/2026:Departamento de Salud Alicante. Dirección Económica-Gerencia",
+        "s": 0.7
+      },
+      {
+        "id": "MCM:CM-A/SUM-0000048628/2026",
+        "s": 0.68
+      },
+      {
+        "id": "MCM:382106",
+        "s": 0.66
+      },
+      {
+        "id": "PLACSP:CS/9999/1101223805/26/PA:Servicio Murciano de Salud - Gerencia",
+        "s": 0.62
+      },
+      {
+        "id": "MCM:381719",
+        "s": 0.6
+      },
+      {
+        "id": "MCM:CM 1560/2026",
+        "s": 0.56
+      },
+      {
+        "id": "MCM:CM 1562/2026",
+        "s": 0.55
+      },
+      {
+        "id": "MCM:CM 1531/2026",
+        "s": 0.54
+      },
+      {
+        "id": "MCM:FIB 2026/012 CONTRATO BASADO 2022/010",
+        "s": 0.46
+      },
+      {
+        "id": "MCM:Exp FIB 2026/004 Contrato basado 2022/010",
+        "s": 0.43
+      },
+      {
+        "id": "PLACSP:SER/2026/0000105883:Gerencia de Servicios Sanitarios del Área de Salud de Lanzarote",
+        "s": 0.19
+      },
+      {
+        "id": "MCM:CM 1432/2026",
+        "s": 0.13
+      },
+      {
+        "id": "MCM:A/SER-025804/2026",
+        "s": 0.1
+      },
+      {
+        "id": "PLACSP:55/T/24/SS/GE/A/0123:Dirección Gerente del Hospital Universitario Nuestra Señora de Candelaria",
+        "s": 0.06
+      }
+    ]
+  },
+  {
+    "q": "equipamiento de laboratorio de investigación en inteligencia artificial",
+    "poolSize": 20,
+    "jevMs": 262,
+    "classic": [
+      {
+        "id": "PLACSP:GG0009/2026:Secretaría General del Instituto de Salud Carlos III",
+        "titulo": "Suministro equipamiento científico estratégico para el desarrollo y la actualización de la infraestructura de "
+      },
+      {
+        "id": "PLACSP:2024_SDA_01:Rectorado de la Universidad Miguel Hernández de Elche",
+        "titulo": "Sistema Dinámico de Adquisición (sda) de suministro de reactivos, material fungible y pequeño equipamiento en "
+      },
+      {
+        "id": "PLACSP:SUM 50/2026-ASS:Alcaldía del Ajuntament de Calp",
+        "titulo": "Suministro de equipamiento para la ejecución local de modelos de inteligencia artificial en el Ayuntamiento de"
+      },
+      {
+        "id": "DOGV:14313462",
+        "titulo": "Sistema Dinámico de Adquisición (sda) de suministro de reactivos, material fungible y pequeño equipamiento en "
+      },
+      {
+        "id": "DOGV:20297686",
+        "titulo": "Suministro de equipamiento para la ejecución local de modelos de inteligencia artificial en el Ayuntamiento de"
+      },
+      {
+        "id": "PLACSP:CG-2026/2815/0112:Dirección General de IBERMUTUA, Mutua Colaboradora con la Seguridad Social nº 274",
+        "titulo": "Suministro de suscripciones anuales de herramientas de inteligencia artificial, automatización, investigación "
+      },
+      {
+        "id": "PLACSP:5/2026/CGTU:Consejo de Administración de Turismo, Comercio y Promoción Económica de Salamanca, S.A.U.",
+        "titulo": "Suministro, instalación y puesta en marcha de equipamiento, sistemas y materiales especializados para laborato"
+      },
+      {
+        "id": "PLACSP:AM-SARA 2022/000049:Rectorado de la Universidad de Oviedo",
+        "titulo": "Acuerdo marco de suministro de reactivos, material fungible y pequeño equipamiento para los laboratorios de in"
+      },
+      {
+        "id": "PLACSP:CG-2026/2815/0099:Dirección General de IBERMUTUA, Mutua Colaboradora con la Seguridad Social nº 274",
+        "titulo": "Suscripción, durante veinticuatro (24) meses, al servicio de asesoramiento e investigación tecnológica Gartner"
+      },
+      {
+        "id": "MCM:00402-2026/45",
+        "titulo": "Libro IA Generativa para Médicos: La Extinción del Médico Neandertal en la Era de la Inteligencia Artificial. "
+      },
+      {
+        "id": "MCM:2026/2/546",
+        "titulo": "Transporte, alojamiento para el curso Inteligencia artificial en dosimetría biológica 14-16/04"
+      },
+      {
+        "id": "MCM:2026/2/582",
+        "titulo": "Billete aéreo para asistencia al II Jornadas de Inteligencia Artificial, P.Mallorca-Madrid 09/03/2026 - Madrid"
+      },
+      {
+        "id": "MCM:2026/2/869",
+        "titulo": "gestión atenciones protocolarias y servicio de catering para la II Jornada Nacional de Inteligencia Artificial"
+      },
+      {
+        "id": "PLACSP:2026SU00004:Rectorado de la Universitat de València",
+        "titulo": "Suministro mobiliario y equipamiento diverso para el laboratorio de investigación de la 3ª planta del Institut"
+      },
+      {
+        "id": "DOGV:20233477",
+        "titulo": "Suministro mobiliario y equipamiento diverso para el laboratorio de investigación de la 3ª planta del Institut"
+      },
+      {
+        "id": "PLACSP:UGR/2026/0035:Rectorado de la Universidad de Granada",
+        "titulo": "Suministro, instalación y puesta en funcionamiento del mobiliario científico y equipamiento fijo destinados al"
+      },
+      {
+        "id": "MCM:2026.2.3158",
+        "titulo": "inscripción curso online inteligencia artificial aplicada"
+      },
+      {
+        "id": "MCM:2026.2.3330",
+        "titulo": "implementación de herramienta de inteligencia artificial (ia) para la cuantificación automatizada de contenido"
+      },
+      {
+        "id": "MCM:202614352",
+        "titulo": "Equipamiento laboratorio"
+      },
+      {
+        "id": "MCM:CM 1180/2026",
+        "titulo": "Suministro de 6 kits ELISA para la determinación cuantitativa de anticuerpos anti-transglutaminasa tisular IgA"
+      }
+    ],
+    "jev": [
+      {
+        "id": "DOGV:20297686",
+        "s": 0.88
+      },
+      {
+        "id": "PLACSP:SUM 50/2026-ASS:Alcaldía del Ajuntament de Calp",
+        "s": 0.86
+      },
+      {
+        "id": "MCM:202614352",
+        "s": 0.73
+      },
+      {
+        "id": "PLACSP:AM-SARA 2022/000049:Rectorado de la Universidad de Oviedo",
+        "s": 0.6
+      },
+      {
+        "id": "PLACSP:2024_SDA_01:Rectorado de la Universidad Miguel Hernández de Elche",
+        "s": 0.54
+      },
+      {
+        "id": "MCM:2026.2.3330",
+        "s": 0.54
+      },
+      {
+        "id": "DOGV:14313462",
+        "s": 0.52
+      },
+      {
+        "id": "DOGV:20233477",
+        "s": 0.33
+      },
+      {
+        "id": "PLACSP:2026SU00004:Rectorado de la Universitat de València",
+        "s": 0.32
+      },
+      {
+        "id": "PLACSP:CG-2026/2815/0112:Dirección General de IBERMUTUA, Mutua Colaboradora con la Seguridad Social nº 274",
+        "s": 0.17
+      },
+      {
+        "id": "PLACSP:5/2026/CGTU:Consejo de Administración de Turismo, Comercio y Promoción Económica de Salamanca, S.A.U.",
+        "s": 0.17
+      },
+      {
+        "id": "PLACSP:UGR/2026/0035:Rectorado de la Universidad de Granada",
+        "s": 0.11
+      },
+      {
+        "id": "PLACSP:CG-2026/2815/0099:Dirección General de IBERMUTUA, Mutua Colaboradora con la Seguridad Social nº 274",
+        "s": 0.09
+      },
+      {
+        "id": "PLACSP:GG0009/2026:Secretaría General del Instituto de Salud Carlos III",
+        "s": 0.08
+      },
+      {
+        "id": "MCM:2026.2.3158",
+        "s": 0.05
+      },
+      {
+        "id": "MCM:CM 1180/2026",
+        "s": 0.04
+      },
+      {
+        "id": "MCM:00402-2026/45",
+        "s": 0.03
+      },
+      {
+        "id": "MCM:2026/2/546",
+        "s": 0.03
+      },
+      {
+        "id": "MCM:2026/2/869",
+        "s": 0.03
+      },
+      {
+        "id": "MCM:2026/2/582",
+        "s": 0.02
+      }
+    ]
+  },
+  {
+    "q": "arreglo de puente en carretera de montaña",
+    "poolSize": 20,
+    "jevMs": 433,
+    "classic": [
+      {
+        "id": "PLACSP:D30269326001:Dirección General de Carreteras",
+        "titulo": "30.442/26; AT-SEI-26001 Asistencia técnica para la evaluación de la resiliencia de los puentes de la Red de Ca"
+      },
+      {
+        "id": "PLACSP:2026/D31000/006-013/00068:Junta de Gobierno de la Diputación Provincial de Almería",
+        "titulo": "Proyecto De Implantación De Nuevo Pretil Urbano Y Mantenimiento De Barandillas Existentes En El Puente De La C"
+      },
+      {
+        "id": "PLACSP:1641461H:Junta de Gobierno de la Diputación Provincial de León",
+        "titulo": "Suministro de un vehículo máquina quitanieves dinámica de tipo fresa para la limpieza y evacuación de nieve en"
+      },
+      {
+        "id": "PLACSP:554/2026:Alcaldía del Ayuntamiento de Reocín (Cantabria)",
+        "titulo": "Creación de rutas para bicicletas de montaña: circuito técnico de bicicleta de montaña (MTB) y zona de bike-tr"
+      },
+      {
+        "id": "PLACSP:B070001/2026-0069:Presidencia de la Diputación Provincial de Huesca",
+        "titulo": "Ejecución de las obras contenidas en el proyecto técnico denominado \"Reparación del firme y reconstrucción de "
+      },
+      {
+        "id": "PLACSP:51P/26:Presidencia de la Diputación Provincial de Cuenca",
+        "titulo": "Control de calidad de la obra \"Reconstrucción del puente del Batán de la carretera CUV-5009 sobre el Rio Ojos "
+      },
+      {
+        "id": "PLACSP:1377301T:Presidencia de la Diputación Provincial de León",
+        "titulo": "Obras de nuevo puente sobre el río Duerna en Miñambres de la Valduerna (Carretera LE-7407)"
+      },
+      {
+        "id": "MCM:A/OBR-036768/2026",
+        "titulo": "Obras de demolición y construcción del puente en la carretera M-305 , P.K.-0+800, sobre la Real Acequia del Ja"
+      },
+      {
+        "id": "MCM:A/SER-036769/2026",
+        "titulo": "Servicios de dirección de obra y asistencia técnica para el control y vigilancia de las obras de demolición y "
+      },
+      {
+        "id": "MCM:A/SER-036770/2026",
+        "titulo": "Servicios de coordinación de seguridad y salud de las obras de demolición y construcción del puente en la carr"
+      },
+      {
+        "id": "PLACSP:2426/2026:Diputación Provincial de Zamora",
+        "titulo": "Obra de dos puentes sobre el Río Tera en la Carretera A ZA-P-1508entre las localidades de Santa Marta de Tera "
+      },
+      {
+        "id": "PLACSP:231/2026:Alcaldía del Ayuntamiento de Valderrueda",
+        "titulo": "Adquisición de bien inmueble situados en carretera cerezal 12 y parcela 5012 del poligono 403 en Puente Almuhe"
+      },
+      {
+        "id": "EUS:CO-2026-18",
+        "titulo": "Obras de sustitución del sistema de contención de la estructura núm. 2472 dela carretera BI-3740 (PK 23+500) \""
+      },
+      {
+        "id": "PLACSP:OB-028/24:Presidencia de la Diputación Provincial de Granada",
+        "titulo": "2024/4/PPCGR/1-7 “DIPUTACIÓN, Carretera local C.L. de Valderrubio a Lachar. Acceso Peatonal al Puente Metálico"
+      },
+      {
+        "id": "PLACSP:4.1.14/24:Consejería de Fomento, Vivienda, Ordenación del Territorio y Medio Ambiente de la Comunidad Autónoma de Cantabria",
+        "titulo": "Proyecto de conservación, mantenimiento estructural y mejora de seguridad vial del puente sobre la Ría de Cuba"
+      },
+      {
+        "id": "PLACSP:E2024005396S00053:Consejería Insular de Presidencia, Administración y Servicio Público, Planificación Territorial y Patrimonio Histórico del Cabildo Insular de Tenerife",
+        "titulo": "Suministro de Botas de seguridad para conservación de carreteras (Alta montaña) con destino al personal del Ca"
+      },
+      {
+        "id": "PLACSP:9P/26:Presidencia de la Diputación Provincial de Cuenca",
+        "titulo": "Asistencia técnica Dirección Obra \"Reconstrucción Puente Batán de la Carretera CUV-5009 sobre el rio Ojos de M"
+      },
+      {
+        "id": "PLACSP:114/2026/01970:Distrito de Puente de Vallecas",
+        "titulo": "Obras de subsanación de deficiencias de ITE, conservación, de exteriores, acondicionamiento, mejoras puntuales"
+      },
+      {
+        "id": "AND:945430",
+        "titulo": "03-JA-2697-OE REPARACIÓN DE DAÑOS EN LA CARRETERA A-6000, VARIOS PPKK Y PUENTE SOBRE RÍO GUADALBULLÓN"
+      },
+      {
+        "id": "AST:2024:CONP/2024/3911",
+        "titulo": "MEJORA DE LA CARRETERA AS-14 GRANDAS DE SALIME - PUENTE DEL INFIERNO, TRAMO: PUERTO DE PALO - PUENTE DEL INFIE"
+      }
+    ],
+    "jev": [
+      {
+        "id": "MCM:A/OBR-036768/2026",
+        "s": 0.81
+      },
+      {
+        "id": "MCM:A/SER-036769/2026",
+        "s": 0.81
+      },
+      {
+        "id": "PLACSP:4.1.14/24:Consejería de Fomento, Vivienda, Ordenación del Territorio y Medio Ambiente de la Comunidad Autónoma de Cantabria",
+        "s": 0.79
+      },
+      {
+        "id": "PLACSP:9P/26:Presidencia de la Diputación Provincial de Cuenca",
+        "s": 0.79
+      },
+      {
+        "id": "AST:2024:CONP/2024/3911",
+        "s": 0.79
+      },
+      {
+        "id": "PLACSP:51P/26:Presidencia de la Diputación Provincial de Cuenca",
+        "s": 0.78
+      },
+      {
+        "id": "AND:945430",
+        "s": 0.76
+      },
+      {
+        "id": "MCM:A/SER-036770/2026",
+        "s": 0.7
+      },
+      {
+        "id": "PLACSP:2026/D31000/006-013/00068:Junta de Gobierno de la Diputación Provincial de Almería",
+        "s": 0.64
+      },
+      {
+        "id": "PLACSP:2426/2026:Diputación Provincial de Zamora",
+        "s": 0.62
+      },
+      {
+        "id": "EUS:CO-2026-18",
+        "s": 0.57
+      },
+      {
+        "id": "PLACSP:OB-028/24:Presidencia de la Diputación Provincial de Granada",
+        "s": 0.42
+      },
+      {
+        "id": "PLACSP:B070001/2026-0069:Presidencia de la Diputación Provincial de Huesca",
+        "s": 0.38
+      },
+      {
+        "id": "PLACSP:1377301T:Presidencia de la Diputación Provincial de León",
+        "s": 0.36
+      },
+      {
+        "id": "PLACSP:D30269326001:Dirección General de Carreteras",
+        "s": 0.19
+      },
+      {
+        "id": "PLACSP:554/2026:Alcaldía del Ayuntamiento de Reocín (Cantabria)",
+        "s": 0.08
+      },
+      {
+        "id": "PLACSP:1641461H:Junta de Gobierno de la Diputación Provincial de León",
+        "s": 0.05
+      },
+      {
+        "id": "PLACSP:E2024005396S00053:Consejería Insular de Presidencia, Administración y Servicio Público, Planificación Territorial y Patrimonio Histórico del Cabildo Insular de Tenerife",
+        "s": 0.05
+      },
+      {
+        "id": "PLACSP:231/2026:Alcaldía del Ayuntamiento de Valderrueda",
+        "s": 0.03
+      },
+      {
+        "id": "PLACSP:114/2026/01970:Distrito de Puente de Vallecas",
+        "s": 0.02
+      }
+    ]
+  },
+  {
+    "q": "luces LED para embalses y presas",
+    "poolSize": 20,
+    "jevMs": 331,
+    "classic": [
+      {
+        "id": "PLACSP:SUMIN/OTROS/2026000123:Junta de Gobierno del Ayuntamiento de Elche",
+        "titulo": "Suministro e instalación de pantalla LED para el Directorio de empresas y servicios \"Polígono Industrial de Ca"
+      },
+      {
+        "id": "DOGV:20435197",
+        "titulo": "Suministro e instalación de pantalla LED para el Directorio de empresas y servicios \"Polígono Industrial de Ca"
+      },
+      {
+        "id": "AND:1000557",
+        "titulo": "HUJ_CBAM_AMO_2/2025_UTE AMSASJA_HUJ_OBRA DE ADECUACIÓN DE SALAS DE FORMACIÓN Y DE RADIOLOGÍA CONVENCIONAL Y SU"
+      },
+      {
+        "id": "PLACSP:PSS/2025/0000124153:Consejería de Agricultura, Ganadería y Medio Natural",
+        "titulo": "SERRE25090 Asistencia para el mantenimiento, la conservación y ayuda a la explotación de las presas y embalses"
+      },
+      {
+        "id": "PLACSP:102*/26/PR/PAS/SE:Presidencia de la Confederación Hidrográfica del Miño-Sil",
+        "titulo": "Servicio asistencia técnica para la redacción del Proyecto de señalización de las presas en los embalses naveg"
+      },
+      {
+        "id": "AST:2024:321-24GE",
+        "titulo": "SUMINISTRO DE LUCES LED PARA PATIO DE BUTACAS DEL TEATRO"
+      },
+      {
+        "id": "EUS:2023-ESKA-000053-00",
+        "titulo": "luces para los pasos de cebra. tq led vial amarilla."
+      },
+      {
+        "id": "EUS:AYT/3614-3/2023",
+        "titulo": "Luces led, Interruptores y lamparas para el mantenimiento del centro zelaieta"
+      },
+      {
+        "id": "EUS:KO3000-001504/2023",
+        "titulo": "Suministro de luces led para cambiar en la calle calbeton. oferta 30072626"
+      },
+      {
+        "id": "EUS:2023053",
+        "titulo": "Obras para instalar presas y tensión board con leds en rocodromo"
+      },
+      {
+        "id": "EUS:AYT/3084-11/2022",
+        "titulo": "Suministro de luces led para Zelaieta"
+      },
+      {
+        "id": "EUS:AYT/1480-7/2022",
+        "titulo": "Suministro luces led para polideportivo Larrea"
+      },
+      {
+        "id": "EUS:AYT1904-10/2022",
+        "titulo": "Suministro de luces led para Zelaieta"
+      },
+      {
+        "id": "EUS:CM-325-2019",
+        "titulo": "Suministro de luces led de emergencia, diferencial rearmable para persiana e interruptor crepuscular para edif"
+      },
+      {
+        "id": "EUS:CM-413-2019",
+        "titulo": "Suministro de luces led de emergencia para sustituir las averiadas en Zentek."
+      },
+      {
+        "id": "EUS:CM-252-2019",
+        "titulo": "Suministro de luces led de emergencia para edificio Villa Yeyette."
+      },
+      {
+        "id": "AND:1000267",
+        "titulo": "EXP SIGLO 379/22 ACUERDO MARCO DE OBRAS DE REPARACIÓN, RESTAURACIÓN, REHABILITACIÓN Y CONSERVACIÓN DE EDIFICIO"
+      },
+      {
+        "id": "AND:542032",
+        "titulo": "CONTRATO DE PRESTACIÓN DE SERVICIOS A DEMANDA RELACIONADOS CON LA INTERNACIONALIZACIÓN DE EMPRESAS ANDALUZAS E"
+      },
+      {
+        "id": "EUS:2026/CO_SOBR/0035",
+        "titulo": "Sustitución de alumbrado por tecnología LED del campo de fútbol Aranbizkarra para la reducción del consumo ene"
+      },
+      {
+        "id": "AND:876459",
+        "titulo": "Contratación de pólizas de seguros para Cetursa Sierra Nevada SA y empresas del Grupo"
+      }
+    ],
+    "jev": [
+      {
+        "id": "EUS:AYT/3084-11/2022",
+        "s": 0.67
+      },
+      {
+        "id": "EUS:AYT1904-10/2022",
+        "s": 0.65
+      },
+      {
+        "id": "EUS:CM-413-2019",
+        "s": 0.29
+      },
+      {
+        "id": "PLACSP:102*/26/PR/PAS/SE:Presidencia de la Confederación Hidrográfica del Miño-Sil",
+        "s": 0.15
+      },
+      {
+        "id": "EUS:CM-325-2019",
+        "s": 0.1
+      },
+      {
+        "id": "EUS:CM-252-2019",
+        "s": 0.1
+      },
+      {
+        "id": "PLACSP:PSS/2025/0000124153:Consejería de Agricultura, Ganadería y Medio Natural",
+        "s": 0.08
+      },
+      {
+        "id": "EUS:AYT/3614-3/2023",
+        "s": 0.08
+      },
+      {
+        "id": "EUS:2023-ESKA-000053-00",
+        "s": 0.07
+      },
+      {
+        "id": "EUS:KO3000-001504/2023",
+        "s": 0.06
+      },
+      {
+        "id": "EUS:2023053",
+        "s": 0.06
+      },
+      {
+        "id": "EUS:AYT/1480-7/2022",
+        "s": 0.06
+      },
+      {
+        "id": "EUS:2026/CO_SOBR/0035",
+        "s": 0.06
+      },
+      {
+        "id": "AND:1000557",
+        "s": 0.05
+      },
+      {
+        "id": "PLACSP:SUMIN/OTROS/2026000123:Junta de Gobierno del Ayuntamiento de Elche",
+        "s": 0.04
+      },
+      {
+        "id": "DOGV:20435197",
+        "s": 0.04
+      },
+      {
+        "id": "AST:2024:321-24GE",
+        "s": 0.03
+      },
+      {
+        "id": "AND:1000267",
+        "s": 0.02
+      },
+      {
+        "id": "AND:876459",
+        "s": 0.02
+      },
+      {
+        "id": "AND:542032",
+        "s": 0.01
+      }
+    ]
+  }
+]

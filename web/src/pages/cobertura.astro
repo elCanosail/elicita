@@ -1,0 +1,644 @@
+---
+import Layout from '../layouts/main.astro';
+import { Database, Globe, RefreshCw, Activity, BadgeCheck, AlertCircle, ArrowRight, Layers, Building2, Radio, Zap } from 'lucide-react';
+import fs from 'node:fs';
+import path from 'node:path';
+import { buildOpenDataDatasetJsonLd, loadDatasetContext } from '@/lib/jsonld-dataset';
+
+const metadata = {
+  title: "Cobertura de datos — Elicita",
+  description: "63M+ registros oficiales —contratación y mercantil— de 16 fuentes, 7 sectores publicados con métricas y actualización cada 4 horas.",
+};
+
+// Última ejecución real del pipeline (ingesta/data/status.json). SSR: se lee en
+// cada petición; si el fichero no está, la línea simplemente no se muestra.
+let ultimaLectura: string | null = null;
+try {
+  const status = JSON.parse(fs.readFileSync(path.join(process.cwd(), '..', 'ingesta', 'data', 'status.json'), 'utf8'));
+  const d = new Date(status?.ultima_ejecucion);
+  if (!Number.isNaN(d.getTime())) {
+    ultimaLectura = d.toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC';
+  }
+} catch {}
+
+// JSON-LD Dataset (propuesta B, 07-10): licencia desde el snapshot.json publicado
+// y dateModified desde status.json; si no hay artifact que respalde un campo,
+// se omite — nunca se inventa. /cobertura es la URL canónica del dataset.
+const datasetCtx = await loadDatasetContext();
+const datasetJsonLd = buildOpenDataDatasetJsonLd({
+  description: metadata.description,
+  license: datasetCtx.license,
+  dateModified: datasetCtx.dateModified,
+});
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+  <script type="application/ld+json" set:html={JSON.stringify(datasetJsonLd)} slot="head" />
+
+  <!-- HERO -->
+  <section class="relative overflow-hidden bg-background border-b border-white/5">
+    <div class="absolute inset-0 bg-grid opacity-20 pointer-events-none"></div>
+    <div class="container mx-auto px-4 py-20 md:py-28 relative z-10">
+      <div class="max-w-4xl mx-auto text-center space-y-6">
+        <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase">Datos públicos · Inteligencia propietaria</p>
+        <h1 class="text-4xl md:text-6xl font-light text-white tracking-tight">
+          Cobertura de <span class="text-emerald-400">datos</span>
+        </h1>
+        <p class="text-lg md:text-xl text-white/50 max-w-2xl mx-auto">
+          16 fuentes oficiales, conectadas, verificadas y actualizadas automáticamente. 63M+ registros oficiales —contratación pública y registro mercantil— listos para cruzar.
+          La ficha completa de cada una, en el <a href="/fuentes" class="text-emerald-400 hover:text-emerald-300 underline decoration-emerald-500/30">listado de fuentes</a>.
+        </p>
+        {ultimaLectura && (
+          <p class="font-mono text-xs text-white/50 tracking-wide">
+            Dataset vivo — última lectura del pipeline: {ultimaLectura} · ciclo completo cada 4 horas.
+          </p>
+        )}
+      </div>
+
+      <!-- Stats bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5 rounded-2xl overflow-hidden border border-white/5 mt-14 max-w-4xl mx-auto">
+        <div class="bg-background p-6 md:p-7 text-center">
+          <div class="font-mono text-3xl md:text-4xl text-white tabular-nums">63M+</div>
+          <div class="text-white/50 text-xs font-mono mt-1.5 uppercase tracking-wide">registros oficiales</div>
+        </div>
+        <div class="bg-background p-6 md:p-7 text-center">
+          <div class="font-mono text-3xl md:text-4xl text-white tabular-nums">16</div>
+          <div class="text-white/50 text-xs font-mono mt-1.5 uppercase tracking-wide">fuentes oficiales</div>
+        </div>
+        <div class="bg-background p-6 md:p-7 text-center">
+          <div class="font-mono text-3xl md:text-4xl text-white tabular-nums">26M+</div>
+          <div class="text-white/50 text-xs font-mono mt-1.5 uppercase tracking-wide">registros mercantiles</div>
+        </div>
+        <div class="bg-background p-6 md:p-7 text-center">
+          <div class="font-mono text-3xl md:text-4xl text-white tabular-nums">4h</div>
+          <div class="text-white/50 text-xs font-mono mt-1.5 uppercase tracking-wide">actualización</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUENTES DE DATOS — Tabla visual -->
+  <section class="py-20 md:py-28 bg-background">
+    <div class="container mx-auto px-4 max-w-6xl">
+      <div class="space-y-4 mb-14">
+        <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase">Fuentes</p>
+        <h2 class="text-3xl md:text-4xl font-light text-white">16 fuentes, una sola base de datos</h2>
+        <p class="text-white/50 max-w-2xl">
+          Cada fuente pública conectada con sincronización continua, deduplicación y trazabilidad completa.
+          Los números son reales — no estimaciones. Notas de reutilización y ficha de cada fuente en el <a href="/fuentes" class="text-emerald-400 hover:text-emerald-300 underline decoration-emerald-500/30">listado de fuentes</a>.
+        </p>
+      </div>
+
+      <!-- Summary bar -->
+      <div id="sourcesSummary" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
+        <div class="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center gap-3">
+          <div class="inline-flex p-2 rounded-lg bg-emerald-500/10">
+            <Database class="h-4 w-4 text-emerald-400" />
+          </div>
+          <div>
+            <div id="summaryCount" class="font-mono text-xl text-white tabular-nums">—</div>
+            <div class="text-white/50 text-xs font-mono uppercase tracking-wide">fuentes activas</div>
+          </div>
+        </div>
+        <div class="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center gap-3">
+          <div class="inline-flex p-2 rounded-lg bg-emerald-500/10">
+            <Activity class="h-4 w-4 text-emerald-400" />
+          </div>
+          <div>
+            <div id="summaryRecords" class="font-mono text-xl text-white tabular-nums">—</div>
+            <div class="text-white/50 text-xs font-mono uppercase tracking-wide">registros indexados</div>
+          </div>
+        </div>
+        <div class="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center gap-3">
+          <div class="inline-flex p-2 rounded-lg bg-emerald-500/10">
+            <RefreshCw class="h-4 w-4 text-emerald-400" />
+          </div>
+          <div>
+            <div id="summarySync" class="font-mono text-base text-white">—</div>
+            <div class="text-white/50 text-xs font-mono uppercase tracking-wide">última sincronización</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de fuentes -->
+      <div class="rounded-2xl border border-white/5 overflow-hidden">
+        <!-- Header -->
+        <div class="hidden md:grid grid-cols-[2fr_1fr_100px_120px_140px] gap-4 px-6 py-3 bg-white/[0.03] border-b border-white/5 text-xs font-mono uppercase tracking-wider text-white/50">
+          <div>Fuente</div>
+          <div>Registros</div>
+          <div>Frecuencia</div>
+          <div>Período</div>
+          <div>Estado</div>
+        </div>
+
+        <!-- Group: Contratación pública -->
+        <div id="groupContratacion" class="source-group">
+          <div class="group-header px-6 py-3.5 bg-white/[0.02] border-b border-white/5 flex items-center gap-3">
+            <div class="inline-flex p-1.5 rounded-lg bg-emerald-500/10">
+              <Layers class="h-4 w-4 text-emerald-400" />
+            </div>
+            <span class="text-sm font-medium text-white">Contratación pública</span>
+            <span class="source-count text-xs font-mono text-white/50 ml-auto">0 fuentes</span>
+          </div>
+          <div class="sources-grid divide-y divide-white/5">
+            <div class="source-skeleton px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white/5 animate-pulse"></div>
+                <div class="flex-1 space-y-1.5">
+                  <div class="h-3 w-1/4 bg-white/5 rounded animate-pulse"></div>
+                  <div class="h-2.5 w-1/2 bg-white/5 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group: Feeds tiempo real -->
+        <div id="groupFeeds" class="source-group">
+          <div class="group-header px-6 py-3.5 bg-white/[0.02] border-b border-white/5 flex items-center gap-3">
+            <div class="inline-flex p-1.5 rounded-lg bg-emerald-500/10">
+              <Radio class="h-4 w-4 text-emerald-400" />
+            </div>
+            <span class="text-sm font-medium text-white">Feeds en tiempo real</span>
+            <span class="source-count text-xs font-mono text-white/50 ml-auto">0 fuentes</span>
+          </div>
+          <div class="sources-grid divide-y divide-white/5">
+            <div class="source-skeleton px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white/5 animate-pulse"></div>
+                <div class="flex-1 space-y-1.5">
+                  <div class="h-3 w-1/4 bg-white/5 rounded animate-pulse"></div>
+                  <div class="h-2.5 w-1/2 bg-white/5 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group: BORME -->
+        <div id="groupBorme" class="source-group">
+          <div class="group-header px-6 py-3.5 bg-white/[0.02] border-b border-white/5 flex items-center gap-3">
+            <div class="inline-flex p-1.5 rounded-lg bg-emerald-500/10">
+              <Building2 class="h-4 w-4 text-emerald-400" />
+            </div>
+            <span class="text-sm font-medium text-white">Registro Mercantil (BORME)</span>
+            <span class="source-count text-xs font-mono text-white/50 ml-auto">0 fuentes</span>
+          </div>
+          <div class="sources-grid divide-y divide-white/5">
+            <div class="source-skeleton px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white/5 animate-pulse"></div>
+                <div class="flex-1 space-y-1.5">
+                  <div class="h-3 w-1/4 bg-white/5 rounded animate-pulse"></div>
+                  <div class="h-2.5 w-1/2 bg-white/5 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group: Calidad -->
+        <div id="groupCalidad" class="source-group">
+          <div class="group-header px-6 py-3.5 bg-white/[0.02] border-b border-white/5 flex items-center gap-3">
+            <div class="inline-flex p-1.5 rounded-lg bg-emerald-500/10">
+              <BadgeCheck class="h-4 w-4 text-emerald-400" />
+            </div>
+            <span class="text-sm font-medium text-white">Calidad de datos</span>
+            <span class="source-count text-xs font-mono text-white/50 ml-auto">0 fuentes</span>
+          </div>
+          <div class="sources-grid divide-y divide-white/5">
+            <div class="source-skeleton px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white/5 animate-pulse"></div>
+                <div class="flex-1 space-y-1.5">
+                  <div class="h-3 w-1/4 bg-white/5 rounded animate-pulse"></div>
+                  <div class="h-2.5 w-1/2 bg-white/5 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div id="sourcesError" class="hidden mt-8 p-8 rounded-2xl border border-red-500/20 bg-red-500/5 text-center">
+        <div class="inline-flex p-3 rounded-xl bg-red-500/10 mb-4">
+          <AlertCircle class="h-6 w-6 text-red-400" />
+        </div>
+        <h3 class="text-white font-medium text-lg mb-2">No se pudieron cargar las fuentes</h3>
+        <p class="text-white/50 text-sm">Vuelve a intentarlo en unos segundos. Si el problema persiste, contacta con soporte.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EL CRUCE -->
+  <section class="py-20 md:py-28 border-y border-white/5 bg-white/[0.01]">
+    <div class="container mx-auto px-4 max-w-5xl">
+      <div class="space-y-4 mb-14">
+        <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase">El cruce</p>
+        <h2 class="text-3xl md:text-4xl font-light text-white">La inteligencia está en el cruce</h2>
+        <p class="text-white/50 max-w-2xl">
+          Consultar una sola fuente es como mirar por una rendija. Elicita conecta simultáneamente fuentes estatales, autonómicas, europeas y mercantiles para construir una visión completa.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="group p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-emerald-500/30 transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-xl">🔗</span>
+            <h3 class="text-base font-medium text-white">Contratación × BORME</h3>
+          </div>
+          <p class="text-white/50 text-sm leading-relaxed">Cruzamos adjudicatarios con el Registro Mercantil para verificar datos y revelar la estructura detrás de cada contrato.</p>
+        </div>
+        <div class="group p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-emerald-500/30 transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-xl">🇪🇺</span>
+            <h3 class="text-base font-medium text-white">Nacional × TED</h3>
+          </div>
+          <p class="text-white/50 text-sm leading-relaxed">Validamos que los contratos españoles de SARA —la red de plataformas de la Administración— se publiquen en el Diario Oficial de la UE. Matching multi-estrategia: NIF, expediente, importe y órgano contratante.</p>
+        </div>
+        <div class="group p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-emerald-500/30 transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-xl">🗺️</span>
+            <h3 class="text-base font-medium text-white">Estatal × Autonómico</h3>
+          </div>
+          <p class="text-white/50 text-sm leading-relaxed">Las CCAA publican contratos que no siempre aparecen en PLACSP. Integrar ambos niveles evita puntos ciegos en el mapa competitivo.</p>
+        </div>
+        <div class="group p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-emerald-500/30 transition-colors">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-xl">⏳</span>
+            <h3 class="text-base font-medium text-white">Histórico × Tiempo real</h3>
+          </div>
+          <p class="text-white/50 text-sm leading-relaxed">26+ años de dataset para detectar ciclos de renovación, combinado con ingestión cada 4 horas para no perder ninguna oportunidad.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOTAS / COMPROMISO -->
+  <section class="py-20 md:py-28 bg-background">
+    <div class="container mx-auto px-4 max-w-5xl">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <div class="space-y-6">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase">Compromiso</p>
+          <h2 class="text-3xl md:text-4xl font-light text-white">Notas sobre los datos</h2>
+          <p class="text-white/50 leading-relaxed">
+            Cada dato que aparece en Elicita proviene de una fuente oficial verificable. Si un campo no tiene dato real, se muestra vacío. Nunca se estima o infiere sin etiquetarlo.
+          </p>
+          <ul class="space-y-3">
+            <li class="flex gap-4">
+              <span class="text-emerald-400 mt-1 shrink-0">✓</span>
+              <div>
+                <strong class="text-white/80 text-sm">Solo datos oficiales</strong>
+                <p class="text-white/50 text-sm leading-relaxed">Cada registro procede de una fuente pública verificable. Cero datos inventados.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="text-emerald-400 mt-1 shrink-0">✓</span>
+              <div>
+                <strong class="text-white/80 text-sm">Deduplicación continua</strong>
+                <p class="text-white/50 text-sm leading-relaxed">El mismo contrato puede aparecer en PLACSP y en una plataforma autonómica. Lo detectamos y unificamos.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="text-emerald-400 mt-1 shrink-0">✓</span>
+              <div>
+                <strong class="text-white/80 text-sm">20 indicadores de calidad</strong>
+                <p class="text-white/50 text-sm leading-relaxed">Cada contrato se evalúa en tres dimensiones: validez, consistencia y fiabilidad. Score automático de 0 a 100.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="text-emerald-400 mt-1 shrink-0">✓</span>
+              <div>
+                <strong class="text-white/80 text-sm">Cobertura no uniforme</strong>
+                <p class="text-white/50 text-sm leading-relaxed">Los datos anteriores a 2010 tienen menor completitud, especialmente en administraciones locales pequeñas.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="text-emerald-400 mt-1 shrink-0">✓</span>
+              <div>
+                <strong class="text-white/80 text-sm">Proyecciones etiquetadas</strong>
+                <p class="text-white/50 text-sm leading-relaxed">Cuando el sistema genera estimaciones, se identifican siempre como [PROYECCIÓN].</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="text-emerald-400 mt-1 shrink-0">✓</span>
+              <div>
+                <strong class="text-white/80 text-sm">Actualización asimétrica</strong>
+                <p class="text-white/50 text-sm leading-relaxed">Las fuentes con API en tiempo real se actualizan cada 4 horas. Los datasets abiertos se recargan mensualmente.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="space-y-4">
+          <div class="p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
+            <div class="inline-flex p-2.5 rounded-xl bg-emerald-500/10 mb-4">
+              <Zap class="h-5 w-5 text-emerald-400" />
+            </div>
+            <h3 class="text-lg font-medium text-white mb-2">Actualización continua</h3>
+            <p class="text-white/50 leading-relaxed text-sm">
+              12 fuentes sincronizadas cada 4 horas vía API. BORME, calidad y Asturias con ciclos mensuales o históricos desde repositorios abiertos. Cada fuente muestra su última sincronización en tiempo real.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
+            <div class="inline-flex p-2.5 rounded-xl bg-emerald-500/10 mb-4">
+              <Database class="h-5 w-5 text-emerald-400" />
+            </div>
+            <h3 class="text-lg font-medium text-white mb-2">Deduplicación automática</h3>
+            <p class="text-white/50 leading-relaxed text-sm">
+              El mismo contrato puede aparecer en PLACSP, en una plataforma autonómica y en TED. Matching por NIF + expediente + importe + órgano contratante. Una sola fuente de verdad.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.03]">
+            <div class="inline-flex p-2.5 rounded-xl bg-emerald-500/10 mb-4">
+              <BadgeCheck class="h-5 w-5 text-emerald-400" />
+            </div>
+            <h3 class="text-lg font-medium text-white mb-2">Trazabilidad completa</h3>
+            <p class="text-white/50 leading-relaxed text-sm">
+              Cada registro incluye su fuente de origen, fecha de descarga y lote de procesamiento. Verificable de extremo a extremo.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-20 border-t border-white/5 bg-background">
+    <div class="container mx-auto px-4 max-w-4xl text-center space-y-6">
+      <h2 class="text-2xl md:text-3xl font-light text-white">Explora la cobertura tú mismo</h2>
+      <p class="text-white/50">Prueba Elicita gratis. Sin tarjeta, sin compromiso.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/sign-up" class="inline-flex items-center justify-center h-10 px-6 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors">
+          Crear cuenta gratis
+          <ArrowRight class="ml-2 h-4 w-4" />
+        </a>
+        <a href="/buscar" class="inline-flex items-center justify-center h-10 px-6 rounded-md border border-white/10 hover:border-white/20 bg-background text-white/50 hover:text-white/70 transition-colors">
+          Probar búsqueda
+        </a>
+      </div>
+    </div>
+  </section>
+
+</Layout>
+
+<style>
+  .bg-grid {
+    background-image:
+      linear-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Source row */
+  .source-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 100px 120px 140px;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.875rem 1.5rem;
+    transition: background-color 0.15s;
+  }
+  .source-row:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .source-row-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+  }
+
+  /* Bar */
+  .source-bar {
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    margin-top: 0.25rem;
+  }
+  .source-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, hsl(160 45% 35%), hsl(160 45% 45%));
+    transition: width 0.6s ease-out;
+  }
+
+  /* LED */
+  .source-led {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .source-led--green {
+    background: hsl(160 84% 39%);
+    box-shadow: 0 0 6px hsl(160 84% 39% / 0.6);
+    animation: pulse-green 2.5s ease-in-out infinite;
+  }
+  .source-led--amber {
+    background: hsl(45 93% 47%);
+    box-shadow: 0 0 6px hsl(45 93% 47% / 0.4);
+  }
+  .source-led--grey {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Frequency badge */
+  .freq-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .freq-badge--realtime {
+    background: rgba(16, 185, 129, 0.1);
+    color: hsl(160 84% 50%);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+  }
+  .freq-badge--monthly {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+</style>
+
+<script>
+  const BORME_KEYS = ['borme_empresas', 'borme_cargos'];
+  const RT_FEED_KEYS = ['dogv', 'doga', 'boe'];
+  const CALIDAD_KEYS = ['calidad'];
+
+  function formatNumber(n: number): string {
+    if (n == null) return '—';
+    if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'G';
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return n.toLocaleString('es-ES');
+  }
+
+  function timeAgo(isoStr: string, updateLabel?: string): { text: string; ledClass: string } {
+    if (!isoStr && updateLabel) return { text: updateLabel, ledClass: 'source-led--amber' };
+    if (!isoStr) return { text: 'Sin datos', ledClass: 'source-led--grey' };
+    const diff = Date.now() - new Date(isoStr).getTime();
+    if (diff < 0) return { text: 'Ahora', ledClass: 'source-led--green' };
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(mins / 60);
+    const days = Math.floor(hours / 24);
+
+    let text: string;
+    if (mins < 1) text = 'Ahora';
+    else if (mins < 60) text = `Hace ${mins} min`;
+    else if (hours < 24) text = `Hace ${hours}h`;
+    else text = `Hace ${days}d`;
+
+    let ledClass = 'source-led--green';
+    if (hours >= 48) ledClass = 'source-led--grey';
+    else if (hours >= 6) ledClass = 'source-led--amber';
+
+    return { text, ledClass };
+  }
+
+  function escapeHtml(str: string): string {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  const MAX_RECORDS = 17_101_151; // BORME cargos = la mayor fuente
+
+  function buildSourceRow(f: any): string {
+    const { text: agoText, ledClass } = timeAgo(f.lastUpdate, f.updateLabel);
+    const recDisplay = formatNumber(f.records);
+    const freq = f.frequency || f.updateLabel || '—';
+    const isRealtime = freq.toLowerCase().includes('4h') || freq.toLowerCase().includes('hora');
+    const freqClass = isRealtime ? 'freq-badge--realtime' : 'freq-badge--monthly';
+    const period = f.firstData && f.firstData !== '—'
+      ? `${f.firstData}–${f.lastData}`
+      : 'Tiempo real';
+    const barWidth = Math.max(2, (f.records / MAX_RECORDS) * 100);
+    const icon = f.icon || '🔌';
+    const desc = f.description ? f.description.substring(0, 80) + (f.description.length > 80 ? '…' : '') : '';
+
+    // Desktop row
+    const desktop = `
+      <div class="source-row hidden md:grid" title="${escapeHtml(f.description)}">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2.5">
+            <span class="text-base">${icon}</span>
+            <span class="text-sm font-medium text-white truncate">${escapeHtml(f.name)}</span>
+          </div>
+          <div class="text-xs text-white/50 mt-0.5 truncate">${escapeHtml(desc)}</div>
+          <div class="source-bar"><div class="source-bar-fill" style="width: ${barWidth}%"></div></div>
+        </div>
+        <div class="font-mono text-sm text-white/70 tabular-nums">${recDisplay}</div>
+        <div><span class="freq-badge ${freqClass}">${escapeHtml(freq)}</span></div>
+        <div class="font-mono text-xs text-white/50">${escapeHtml(period)}</div>
+        <div class="flex items-center gap-2">
+          <span class="source-led ${ledClass}"></span>
+          <span class="text-xs text-white/50">${agoText}</span>
+        </div>
+      </div>`;
+
+    // Mobile card
+    const mobile = `
+      <div class="source-row-mobile md:hidden" title="${escapeHtml(f.description)}">
+        <div class="flex items-center gap-2.5">
+          <span class="text-base">${icon}</span>
+          <span class="text-sm font-medium text-white flex-1 min-w-0 truncate">${escapeHtml(f.name)}</span>
+          <span class="source-led ${ledClass}"></span>
+        </div>
+        <div class="flex items-center gap-3 text-xs">
+          <span class="font-mono text-white/70 tabular-nums">${recDisplay}</span>
+          <span class="freq-badge ${freqClass}">${escapeHtml(freq)}</span>
+          <span class="font-mono text-white/50">${escapeHtml(period)}</span>
+          <span class="text-white/50 ml-auto">${agoText}</span>
+        </div>
+        <div class="source-bar"><div class="source-bar-fill" style="width: ${barWidth}%"></div></div>
+      </div>`;
+
+    return desktop + mobile;
+  }
+
+  function renderError(): void {
+    const container = document.querySelectorAll('.source-group');
+    container.forEach(c => c.classList.add('hidden'));
+    const error = document.getElementById('sourcesError');
+    if (error) error.classList.remove('hidden');
+  }
+
+  function updateSummary(data: any): void {
+    const countEl = document.getElementById('summaryCount');
+    const recordsEl = document.getElementById('summaryRecords');
+    const syncEl = document.getElementById('summarySync');
+
+    if (countEl) countEl.textContent = String(data.fuentes?.length || 0);
+    if (recordsEl) recordsEl.textContent = formatNumber(data.totalRecords ?? 0);
+    if (syncEl && data.globalLastRun) {
+      const { text } = timeAgo(data.globalLastRun);
+      syncEl.textContent = text;
+    }
+  }
+
+  async function init() {
+    try {
+      const res = await fetch('/api/cobertura');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const groups = [
+        { id: 'groupContratacion', keys: [] },
+        { id: 'groupFeeds', keys: RT_FEED_KEYS },
+        { id: 'groupBorme', keys: BORME_KEYS },
+        { id: 'groupCalidad', keys: CALIDAD_KEYS },
+      ];
+
+      updateSummary(data);
+
+      for (const g of groups) {
+        const fuentes = g.keys.length
+          ? data.fuentes.filter((f: any) => g.keys.includes(f.key))
+          : data.fuentes.filter((f: any) =>
+              !BORME_KEYS.includes(f.key) &&
+              !RT_FEED_KEYS.includes(f.key) &&
+              !CALIDAD_KEYS.includes(f.key));
+
+        const groupEl = document.getElementById(g.id);
+        const grid = groupEl?.querySelector('.sources-grid');
+        const countBadge = groupEl?.querySelector('.source-count');
+
+        if (grid) {
+          grid.innerHTML = fuentes.length
+            ? fuentes.map(buildSourceRow).join('')
+            : '<div class="px-6 py-8 text-center text-white/50 text-sm">No hay fuentes en este grupo.</div>';
+        }
+        if (countBadge) {
+          countBadge.textContent = `${fuentes.length} fuente${fuentes.length === 1 ? '' : 's'}`;
+        }
+      }
+    } catch (e) {
+      console.error('Error loading cobertura:', e);
+      renderError();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+</script>

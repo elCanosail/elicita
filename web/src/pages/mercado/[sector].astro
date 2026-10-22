@@ -1,0 +1,684 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/main.astro';
+import { latestSnapshotFileReader, loadPublishedMarketSnapshot, readPublishedArtifact } from '@/lib/market-intelligence';
+import { SECTORS, sectorBySlug } from '@/lib/faro/sectors';
+import { renderContextBars, renderRankingTable, renderSeriesChart, renderShareBars } from '@/lib/faro/charts';
+import { renderBipartiteEdges } from '@/lib/faro/graph';
+import { aggregateYearly, parseCompanies, parseConcentration, parseCoverage, parseEdges, parseGroups } from '@/lib/faro/csv';
+import { formatDecimal, formatEurMillions, formatInt, formatPct } from '@/lib/faro/format';
+
+import '@fontsource-variable/source-serif-4';
+import '@fontsource-variable/instrument-sans';
+import '@fontsource-variable/jetbrains-mono';
+// Preload de las tres fuentes variables (elimina el font-swap CLS del hero).
+import serifWoff2 from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url';
+import sansWoff2 from '@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url';
+import monoWoff2 from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+
+export async function getStaticPaths() {
+  return SECTORS.map((s) => ({ params: { sector: s.slug } }));
+}
+
+const sector = sectorBySlug(Astro.params.sector)!;
+
+const publication = await loadPublishedMarketSnapshot(latestSnapshotFileReader(sector.dataset));
+
+const metadata = {
+  title: `Ficha de mercado: ${sector.name} — FARO · Elicita`,
+  description: `Ficha abierta y reproducible del mercado de ${sector.name} en la contratación pública española. Snapshot con checksums verificados, vacíos declarados y trazabilidad completa.`,
+};
+
+const MESES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
+const fechaLarga = (iso: string) => {
+  const [y, m, d] = iso.split('-');
+  return `${Number(d)} de ${MESES[Number(m) - 1]} de ${y}`;
+};
+
+const COVERAGE_LABELS: Record<string, string> = {
+  cpv_resolved_pct: 'Código CPV resuelto a sector',
+  amount_valid_pct: 'Importe de adjudicación válido',
+  supplier_nif_valid_pct: 'NIF de adjudicataria válido',
+  supplier_resolved_pct: 'Adjudicataria resuelta a identidad',
+  business_group_resolved_pct: 'Grupo empresarial resuelto',
+  buyer_resolved_pct: 'Comprador resuelto a identidad',
+  ute_unresolved_amount_pct: 'Importe retenido en UTEs sin resolver',
+};
+const coverageLabel = (metric: string) => COVERAGE_LABELS[metric] ?? metric;
+
+const jsonLdFields = (data: {
+  snapshotId: string;
+  title: string;
+  periodFrom: string;
+  periodTo: string;
+  licenseUrl: string;
+}) => ({
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: `Ficha de mercado: ${data.title} — FARO`,
+  description: `Ficha abierta y reproducible del mercado de ${data.title} en la contratación pública española. Snapshot ${data.snapshotId} con checksums SHA-256 verificados y metodología versionada.`,
+  url: `https://elicita.es/mercado/${sector.slug}`,
+  creator: { '@type': 'Organization', name: 'Elicita', url: 'https://elicita.es' },
+  license: data.licenseUrl,
+  temporalCoverage: `${data.periodFrom}/${data.periodTo}`,
+  version: data.snapshotId,
+  isAccessibleForFree: true,
+  distribution: ['snapshot.json', 'companies.csv', 'concentration.csv', 'evolution.csv', 'coverage.csv', 'checksums.sha256'].map(
+    (filename) => ({
+      '@type': 'DataDownload',
+      encodingFormat: filename.endsWith('.json') ? 'application/json' : 'text/csv',
+      contentUrl: `https://elicita.es${sector.publicLatestPath}${filename}`,
+    }),
+  ),
+});
+
+// Asamblea de datos en frontmatter (await top-level); la plantilla queda tonta.
+type Ficha = {
+  snapshot: (typeof publication extends { status: 'published'; value: infer V } ? V : never)['snapshot'];
+  receipt: (typeof publication extends { status: 'published'; value: infer V } ? V : never)['receipt'];
+  seriesHtml: string;
+  sharesHtml: string;
+  rankHtml: string;
+  groupsHtml: string | null;
+  contextHtml: string;
+  explorerTotal: number;
+  coverage: ReturnType<typeof parseCoverage>;
+  edgesGraphHtml: string;
+  amountConc: ReturnType<typeof parseConcentration>[number];
+  contractConc: ReturnType<typeof parseConcentration>[number] | undefined;
+  observed: number;
+  contracts: number;
+  jsonLd: ReturnType<typeof jsonLdFields>;
+};
+
+let ficha: Ficha | null = null;
+if (publication.status === 'published') {
+  const { snapshot, receipt } = publication.value;
+  const [evolutionCsv, concentrationCsv, companiesCsv, coverageCsv, groupsCsv] = await Promise.all([
+    readPublishedArtifact('evolution.csv', sector.dataset),
+    readPublishedArtifact('concentration.csv', sector.dataset),
+    readPublishedArtifact('companies.csv', sector.dataset),
+    readPublishedArtifact('coverage.csv', sector.dataset),
+    readPublishedArtifact('business-groups.csv', sector.dataset),
+  ]);
+  const series = aggregateYearly(evolutionCsv, snapshot.period.to);
+  const concentration = parseConcentration(concentrationCsv);
+  const companies = parseCompanies(companiesCsv, 7);
+  const explorerTotal = parseCompanies(companiesCsv, Number.MAX_SAFE_INTEGER).length;
+  const amountConc = concentration.find((c) => c.dimension === 'companies_amount')!;
+  const contractConc = concentration.find((c) => c.dimension === 'companies_contracts');
+  // F4a «En contexto»: misma métrica (top-10, companies_amount) en las tres
+  // fichas publicadas, leída de sus concentration.csv en build.
+  const contextRows = await Promise.all(
+    SECTORS.map(async (s) => {
+      const csv = await readPublishedArtifact('concentration.csv', s.dataset);
+      const conc = parseConcentration(csv).find((c) => c.dimension === 'companies_amount');
+      if (!conc) throw new Error(`concentration.csv sin companies_amount en ${s.dataset}`);
+      return { label: s.nameTitle, pct: conc.top10, active: s.dataset === sector.dataset };
+    }),
+  );
+  // Grafo sectorial (contrato v2): edges.csv puede no existir en snapshots v1
+  // todavía publicados; la ficha degrada sin sección en lugar de romper el build.
+  const edges = await readPublishedArtifact('edges.csv', sector.dataset)
+    .then((edgesCsv) => parseEdges(edgesCsv))
+    .catch(() => []);
+  ficha = {
+    snapshot,
+    receipt,
+    seriesHtml: renderSeriesChart(series),
+    sharesHtml: renderShareBars([
+      { label: 'Top 1', pct: amountConc.top1 },
+      { label: 'Top 5', pct: amountConc.top5 },
+      { label: 'Top 10', pct: amountConc.top10 },
+    ]),
+    rankHtml: renderRankingTable(companies),
+    groupsHtml: parseGroups(groupsCsv, 5).length > 0
+      ? renderShareBars(parseGroups(groupsCsv, 5).map((g) => ({ label: `${g.name} (${g.companyCount} soc.)`, pct: g.shareAmountPct })))
+      : null,
+    contextHtml: renderContextBars(contextRows),
+    edgesGraphHtml: renderBipartiteEdges(edges),
+    explorerTotal,
+    coverage: parseCoverage(coverageCsv),
+    amountConc,
+    contractConc,
+    observed: snapshot.metrics.observed_amount_eur,
+    contracts: snapshot.universe.analytic_contracts,
+    jsonLd: jsonLdFields({
+      snapshotId: snapshot.snapshot_id,
+      title: snapshot.title,
+      periodFrom: snapshot.period.from,
+      periodTo: snapshot.period.to,
+      licenseUrl: snapshot.license.url,
+    }),
+  };
+}
+---
+
+<Layout title={metadata.title} description={metadata.description} staticHtml={true}>
+  <Fragment slot="head">
+    <link rel="preload" as="font" type="font/woff2" crossorigin href={serifWoff2} />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href={sansWoff2} />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href={monoWoff2} />
+  </Fragment>
+  {!ficha ? (
+    <div class="faro-page faro-page--empty">
+      <div class="faro-container">
+        <p class="faro-kicker">FARO · Ficha de mercado</p>
+        <h1>{sector.fallbackLine}</h1>
+        <p class="faro-lede">
+          FARO publica solo cifras que provienen de un snapshot verificado por checksums. Ahora mismo no hay
+          publicación aprobada que mostrar. Puedes revisar el estado del catálogo en <a href="/datos-abiertos">datos
+          abiertos</a>.
+        </p>
+      </div>
+    </div>
+  ) : (
+    <div class="faro-page">
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(ficha.jsonLd)} />
+      <div class="faro-container">
+        <header class="faro-hero">
+          <p class="faro-kicker">FARO · Ficha de mercado</p>
+          <h1>{sector.heroTitle}</h1>
+          <p class="faro-lede">
+            Entre {fechaLarga(ficha.snapshot.period.from)} y {fechaLarga(ficha.snapshot.period.to)}, la administración
+            adjudicó <strong class="faro-mono">{formatEurMillions(ficha.observed)}</strong> en {sector.name}:{' '}
+            <strong class="faro-mono">{formatInt(ficha.contracts)}</strong> contratos repartidos
+            entre <strong class="faro-mono">{formatInt(ficha.snapshot.metrics.companies)}</strong> empresas y{' '}
+            <strong class="faro-mono">{formatInt(ficha.snapshot.metrics.buyers)}</strong> compradores. Cada cifra de
+            esta ficha proviene del snapshot{' '}
+            <span class="faro-mono faro-snapshot-id">{ficha.snapshot.snapshot_id}</span>, verificado por checksums en
+            el momento de construir esta página. En llano: cuánto dinero público se adjudica, a quién, y con quién
+            compite — sin jerga y con la fuente a la vista.
+          </p>
+          <p class="faro-hero-note">
+            Fuente: {ficha.snapshot.source.name} · datos hasta el {fechaLarga(ficha.snapshot.source.freshness_date)} ·
+            licencia {ficha.snapshot.license.name}
+          </p>
+        </header>
+
+        <section class="faro-section">
+          <h2><span class="faro-h2-num">01</span>Serie anual</h2>
+          <figure class="faro-figure" set:html={ficha.seriesHtml} />
+          <p class="faro-note">
+            Importes de adjudicación resueltos por año natural. El año {ficha.snapshot.period.to.slice(0, 4)} es
+            <em> parcial</em>: solo incluye lo publicado hasta el {fechaLarga(ficha.snapshot.period.to)}. Barra en
+            ámbar, como todos los vacíos de esta ficha.
+          </p>
+        </section>
+
+        <section class="faro-section">
+          <h2><span class="faro-h2-num">02</span>Concentración</h2>
+          <div class="faro-concentration">
+            <div class="faro-hhi">
+              <span class="faro-hhi-num faro-mono">{formatDecimal(ficha.amountConc.hhi)}</span>
+              <span class="faro-hhi-label">Índice Herfindahl–Hirschman (0–10.000)</span>
+              <span class="faro-hhi-reading">En llano: cuánto del pastel se llevan los más grandes — 0 es infinitamente repartido, 10.000 una sola empresa. Este mercado está lejos de cualquier dominancia.</span>
+            </div>
+            <div class="faro-shares-wrap" set:html={ficha.sharesHtml} />
+          </div>
+          {ficha.groupsHtml && (
+            <div class="faro-ctx-wrap">
+              <p class="faro-ctx-title">Grandes grupos · cuota del grupo sobre el mercado resuelto</p>
+              <div set:html={ficha.groupsHtml} />
+              <p class="faro-note">
+                Grupos empresariales curados con membresía pública y evidencia por URL (metodología 1.4.0).
+                El artefacto completo está en <a href={`${sector.publicLatestPath}business-groups.csv`}>business-groups.csv</a>.
+              </p>
+            </div>
+          )}
+          <div class="faro-ctx-wrap">
+            <p class="faro-ctx-title">En contexto · cuota del top-10 en las fichas publicadas</p>
+            <div set:html={ficha.contextHtml} />
+            <p class="faro-note">
+              Misma ventana temporal y metodología en los tres sectores. Base de cada barra: mercado resuelto del
+              sector (concentration.csv). La barra destacada es esta ficha.
+            </p>
+          </div>
+          <p class="faro-note">
+            Base: importes resueltos ({formatEurMillions(ficha.amountConc.denominator)}), que excluyen contratos sin
+            importe válido o sin adjudicataria resuelta. Por número de contratos el HHI es aún menor (
+            {ficha.contractConc ? formatDecimal(ficha.contractConc.hhi) : 'n/d'}): la concentración no procede de
+            volumen de encargos sino de tamaño medio.
+          </p>
+        </section>
+
+        <section class="faro-section">
+          <h2><span class="faro-h2-num">03</span>Mayores adjudicatarias</h2>
+          <div class="faro-explorer" data-src={`${sector.publicLatestPath}companies.csv`} data-total={String(ficha.explorerTotal)}>
+            <div class="faro-ex-toolbar" hidden>
+              <input class="faro-ex-search" type="search" placeholder="Buscar por nombre o NIF…" aria-label="Buscar empresa o NIF" />
+              <select class="faro-ex-sort" aria-label="Ordenar por">
+                <option value="rank">orden: ranking</option>
+                <option value="amount">orden: importe</option>
+                <option value="contracts">orden: contratos</option>
+                <option value="share">orden: cuota</option>
+              </select>
+            </div>
+            <p class="faro-ex-count faro-mono" hidden></p>
+            <div class="faro-rank-wrap" set:html={ficha.rankHtml} />
+            <button type="button" class="faro-ex-more" hidden>Mostrar más</button>
+          </div>
+          <p class="faro-note">
+            Cuotas sobre el universo observado completo ({formatEurMillions(ficha.observed)}). Las cuotas de
+            concentración de la sección 02 se calculan sobre la base resuelta (
+            {formatEurMillions(ficha.amountConc.denominator)}): ambas bases se publican y se declaran. Con JavaScript
+            esta tabla gana búsqueda y orden sobre el artefacto completo ({formatInt(ficha.explorerTotal)} empresas);
+            sin JavaScript, el top-10 prerenderizado sigue siendo el contenido.
+          </p>
+        </section>
+
+        <section class="faro-section">
+          <h2><span class="faro-h2-num">04</span>Cobertura y vacíos</h2>
+          <ul class="faro-ledger">
+            {ficha.coverage.map((row) => (
+              <li class="faro-ledger-row">
+                <div>
+                  <span class="faro-ledger-label">{coverageLabel(row.metric)}</span>
+                  <span class="faro-ledger-def">{row.definition}</span>
+                </div>
+                <div class="faro-ledger-value">
+                  <span class="faro-mono faro-ledger-pct">{formatPct(row.coveragePct)}</span>
+                  {row.coveragePct >= 99.95 ? (
+                    <span class="faro-chip faro-chip-ok">completo</span>
+                  ) : (
+                    <span class="faro-chip faro-chip-void">{formatDecimal(100 - row.coveragePct)}% sin resolver</span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p class="faro-note">
+            La cobertura se declara por artefacto. Los vacíos no se corrigen automáticamente: se publican con nombre
+            y conteo, porque una corrección silenciosa rompería la reproducibilidad. Reglas y versiones en la{' '}
+            <a href="/docs/metodologia">metodología</a>.
+          </p>
+        </section>
+
+        {ficha.edgesGraphHtml !== '' && (
+        <section class="faro-section">
+          <h2><span class="faro-h2-num">05</span>Relaciones comprador–adjudicataria</h2>
+          <figure class="faro-graph" set:html={ficha.edgesGraphHtml} />
+          <p class="faro-note">
+            Los pares que mueven el sector: cada curva es una relación repetida entre un comprador público y una
+            adjudicataria, con el grosor según el importe adjudicado. Se publican hasta 250 pares en{' '}
+            <a href={`${sector.publicLatestPath}edges.csv`}>edges.csv</a> — mínimo 2 contratos por par, calculados
+            sobre el mercado resuelto (adjudicataria identificada, excluidas las UTE sin reparto oficial) —; en el
+            gráfico se dibujan los 24 mayores. La misma herramienta abierta alimenta el universo de conexiones de
+            <a href="/explorer/universo">Elicita</a>.
+          </p>
+        </section>
+        )}
+
+        <section class="faro-section faro-sello">
+          <h2><span class="faro-h2-num">06</span>Sello FARO</h2>
+          <dl class="faro-sello-list">
+            <div><dt>Snapshot</dt><dd class="faro-mono">{ficha.snapshot.snapshot_id}</dd></div>
+            <div><dt>Ventana observada</dt><dd class="faro-mono">{ficha.snapshot.period.from} → {ficha.snapshot.period.to}</dd></div>
+            <div><dt>Frescura de la fuente</dt><dd class="faro-mono">{ficha.snapshot.source.freshness_date}</dd></div>
+            <div><dt>Fuente</dt><dd>{ficha.snapshot.source.name} · <span class="faro-mono">{ficha.snapshot.source.fingerprint.slice(0, 23)}…</span></dd></div>
+            <div>
+              <dt>Verificación</dt>
+              <dd>
+                10 artefactos con hash SHA-256 verificado al construir esta página · recibo de generación: pipeline
+                limpio, commit <span class="faro-mono">{ficha.receipt.pipeline_commit.slice(0, 8)}…</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Metodología</dt>
+              <dd class="faro-mono">
+                v{ficha.snapshot.methodology.methodology_version} · taxonomía {ficha.snapshot.methodology.taxonomy_version} ·
+                registro de identidades {ficha.snapshot.methodology.identity_registry_version}
+              </dd>
+            </div>
+            <div><dt>Licencia</dt><dd><a href={ficha.snapshot.license.url}>{ficha.snapshot.license.name}</a></dd></div>
+          </dl>
+          <p class="faro-note">
+            Descarga los artefactos y verifica los hashes tú mismo en{' '}
+            <a href="/datos-abiertos">datos abiertos</a>. FARO es la capa pública de elicita_: los mismos datos que
+            consumen los agentes vía <a href="/docs/mcp">MCP</a>.
+          </p>
+        </section>
+      </div>
+    </div>
+  )}
+  <script>
+    import { explorerRowHtml, filterCompanies, parseExplorerRows, sortCompanies, type ExplorerSortKey } from '@/lib/faro/explorer';
+    import { formatInt } from '@/lib/faro/format';
+
+    const PAGINA = 50;
+
+    function initExplorador(): void {
+      const mount = document.querySelector<HTMLElement>('.faro-explorer');
+      if (!mount) return;
+      const toolbar = mount.querySelector<HTMLElement>('.faro-ex-toolbar');
+      const count = mount.querySelector<HTMLElement>('.faro-ex-count');
+      const search = mount.querySelector<HTMLInputElement>('.faro-ex-search');
+      const sort = mount.querySelector<HTMLSelectElement>('.faro-ex-sort');
+      const tbody = mount.querySelector<HTMLTableSectionElement>('table.faro-rank tbody');
+      const more = mount.querySelector<HTMLButtonElement>('.faro-ex-more');
+      if (!toolbar || !count || !search || !sort || !tbody || !more) return;
+
+      const total = Number(mount.dataset.total ?? '0');
+      const estado = {
+        rows: null as ReturnType<typeof parseExplorerRows> | null,
+        query: '',
+        sort: 'rank' as ExplorerSortKey,
+        limite: PAGINA,
+      };
+
+      const render = (): void => {
+        if (!estado.rows) return;
+        const filtradas = sortCompanies(filterCompanies(estado.rows, estado.query), estado.sort);
+        const visibles = filtradas.slice(0, estado.limite);
+        const maxShare = Math.max(...visibles.map((r) => r.shareAmountPct), 1e-9);
+        tbody.innerHTML = visibles.map((r) => explorerRowHtml(r, maxShare)).join('');
+        count.hidden = false;
+        count.textContent = estado.query
+          ? `${formatInt(filtradas.length)} coincidencia${filtradas.length === 1 ? '' : 's'} de ${formatInt(total)} empresas · mostrando ${visibles.length}`
+          : `${formatInt(total)} empresas · mostrando ${visibles.length} · base: universo observado (companies.csv)`;
+        more.hidden = filtradas.length <= estado.limite;
+        more.textContent = `Mostrar más (${formatInt(Math.min(PAGINA, filtradas.length - estado.limite))} de ${formatInt(filtradas.length - visibles.length)})`;
+      };
+
+      const fallo = (): void => {
+        count.hidden = false;
+        count.textContent = 'no se pudo cargar el artefacto companies.csv';
+      };
+
+      let cargado = false;
+      let promesa: Promise<void> | null = null;
+      const asegurar = (): Promise<void> => {
+        if (cargado) {
+          render();
+          return Promise.resolve();
+        }
+        promesa ??= fetch(mount.dataset.src ?? '')
+          .then((res) => {
+            if (!res.ok) throw new Error(`companies.csv ${res.status}`);
+            return res.text();
+          })
+          .then((csv) => {
+            estado.rows = parseExplorerRows(csv);
+            cargado = true;
+            render();
+          });
+        return promesa;
+      };
+
+      search.addEventListener('input', () => {
+        estado.query = search.value;
+        estado.limite = PAGINA;
+        asegurar().catch(fallo);
+      });
+      sort.addEventListener('change', () => {
+        estado.sort = sort.value as ExplorerSortKey;
+        asegurar().catch(fallo);
+      });
+      more.addEventListener('click', () => {
+        estado.limite += PAGINA;
+        asegurar().catch(fallo);
+      });
+
+      toolbar.hidden = false;
+    }
+
+    initExplorador();
+  </script>
+</Layout>
+
+<style is:global>
+  /* FARO — registro cívico claro. Todo prefijado con .faro-page porque el
+     scoping de Astro no alcanza al HTML generado por set:html (SVG/tabla). */
+  .faro-page {
+    --faro-paper: oklch(0.977 0.005 160);
+    --faro-paper-raised: oklch(0.955 0.008 160);
+    --faro-paper-deep: oklch(0.93 0.012 160);
+    --faro-civic: oklch(0.50 0.11 163);
+    --faro-ink: oklch(0.25 0.02 165);
+    --faro-ink-2: oklch(0.42 0.025 165);
+    --faro-ink-3: oklch(0.48 0.02 165);
+    --faro-line: oklch(0.86 0.012 160);
+    --faro-emerald: oklch(0.72 0.15 162);
+    --faro-emerald-text: oklch(0.48 0.14 162);
+    --faro-emerald-soft: oklch(0.93 0.06 162);
+    --faro-amber: oklch(0.60 0.12 75);
+    --faro-amber-soft: oklch(0.85 0.08 85);
+    --faro-font-serif: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
+    --faro-font-sans: 'Instrument Sans Variable', system-ui, -apple-system, sans-serif;
+    --faro-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+    background: var(--faro-paper);
+    color: var(--faro-ink);
+    font-family: var(--faro-font-sans);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .faro-page .faro-container {
+    max-width: 74rem;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 3rem) 6rem;
+  }
+  .faro-page .faro-mono {
+    font-family: var(--faro-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .faro-page a { color: var(--faro-ink); text-decoration: underline; text-decoration-color: var(--faro-emerald-text, oklch(0.48 0.14 162)); text-underline-offset: 3px; }
+  .faro-page a:hover { text-decoration-color: var(--faro-ink); }
+  /* DESIGN.FARO: foco visible 2px civic en todo lo enfocable de la ficha. */
+  .faro-page a:focus-visible,
+  .faro-page button:focus-visible,
+  .faro-page input:focus-visible,
+  .faro-page select:focus-visible,
+  .faro-page summary:focus-visible {
+    outline: 2px solid var(--faro-civic, oklch(0.50 0.11 163));
+    outline-offset: 2px;
+  }
+
+  /* Hero editorial */
+  .faro-page .faro-hero { max-width: 60rem; }
+  .faro-page .faro-kicker {
+    font-family: var(--faro-font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faro-emerald-text, oklch(0.48 0.14 162));
+    margin: 0;
+  }
+  .faro-page .faro-hero h1 {
+    font-family: var(--faro-font-serif);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 4.6vw, 3.3rem);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    margin: 0.9rem 0 0;
+    color: var(--faro-ink);
+    text-wrap: balance;
+  }
+  .faro-page .faro-lede {
+    font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+    line-height: 1.75;
+    color: var(--faro-ink-2);
+    max-width: 46rem; /* 66–72ch a tamaño lede, igual que la home de referencia */
+    margin: 1.4rem 0 0;
+  }
+  .faro-page .faro-lede strong { color: var(--faro-ink); font-weight: 600; }
+  .faro-page .faro-snapshot-id { font-size: 0.86em; background: var(--faro-emerald-soft); padding: 0.1em 0.35em; border-radius: 3px; }
+  .faro-page .faro-hero-note {
+    margin: 1.2rem 0 0;
+    font-size: 0.82rem;
+    color: var(--faro-ink-3);
+    font-family: var(--faro-font-mono);
+  }
+
+  /* Secciones */
+  .faro-page .faro-graph {
+    margin: 0;
+    overflow-x: auto;
+  }
+  .faro-page .faro-graph svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  .faro-page .faro-section {
+    margin-top: clamp(3rem, 7vw, 5.5rem);
+    padding-top: clamp(1.75rem, 4vw, 3rem);
+    border-top: 1px solid var(--faro-line);
+  }
+  .faro-page .faro-section h2 {
+    font-family: var(--faro-font-serif);
+    font-weight: 600;
+    font-size: clamp(1.45rem, 2.6vw, 1.9rem);
+    letter-spacing: -0.01em;
+    margin: 0 0 1.4rem;
+    color: var(--faro-ink);
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+  }
+  .faro-page .faro-h2-num {
+    font-family: var(--faro-font-mono);
+    font-size: 0.85rem;
+    color: var(--faro-emerald-text, oklch(0.48 0.14 162));
+    letter-spacing: 0.08em;
+  }
+  .faro-page .faro-figure { margin: 0; }
+  .faro-page .faro-note {
+    margin: 1.1rem 0 0;
+    font-size: 0.86rem;
+    line-height: 1.65;
+    color: var(--faro-ink-3);
+    max-width: 42rem; /* medida de lectura editorial, alineada con la home */
+  }
+
+  /* Gráficos (SVG generado por set:html) */
+  .faro-page .faro-series { width: 100%; height: auto; display: block; }
+  .faro-page .faro-chart-val { font-family: var(--faro-font-mono); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .faro-page .faro-chart-yr { font-family: var(--faro-font-mono); font-size: 12px; }
+  .faro-page .faro-chart-partial { font-family: var(--faro-font-mono); font-size: 12px; letter-spacing: 0.08em; }
+  .faro-page .faro-shares { width: 100%; max-width: 46rem; height: auto; display: block; }
+  .faro-page .faro-share-label { font-family: var(--faro-font-mono); font-size: 12px; }
+  .faro-page .faro-share-val { font-family: var(--faro-font-mono); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Concentración */
+  .faro-page .faro-concentration {
+    display: grid;
+    grid-template-columns: minmax(15rem, 22rem) 1fr;
+    gap: clamp(1.5rem, 4vw, 4rem);
+    align-items: center;
+  }
+  .faro-page .faro-hhi { display: flex; flex-direction: column; gap: 0.35rem; }
+  .faro-page .faro-hhi-num { font-size: clamp(2.6rem, 5vw, 3.8rem); font-weight: 700; line-height: 1; color: var(--faro-ink); }
+  .faro-page .faro-hhi-label { font-size: 0.8rem; color: var(--faro-ink-3); font-family: var(--faro-font-mono); }
+  .faro-page .faro-hhi-reading { font-size: 0.95rem; color: var(--faro-ink-2); margin-top: 0.4rem; max-width: 18rem; }
+
+  /* Tabla de ranking (HTML generado por set:html) */
+  .faro-page .faro-rank-wrap { overflow-x: auto; }
+  .faro-page table.faro-rank { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  .faro-page table.faro-rank th {
+    text-align: left;
+    font-family: var(--faro-font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faro-ink-3);
+    padding: 0 0.75rem 0.6rem 0;
+    border-bottom: 1px solid var(--faro-line);
+  }
+  .faro-page table.faro-rank th.faro-r { text-align: right; }
+  .faro-page table.faro-rank td { padding: 0.85rem 0.75rem 0.85rem 0; border-bottom: 1px solid var(--faro-line); vertical-align: top; }
+  .faro-page .faro-rank-pos { font-family: var(--faro-font-serif); font-size: 1.3rem; color: var(--faro-ink-3); width: 2.4rem; }
+  .faro-page .faro-rank-name { font-weight: 600; color: var(--faro-ink); }
+  .faro-page .faro-rank-nif { font-family: var(--faro-font-mono); font-size: 0.75rem; color: var(--faro-ink-3); margin-top: 0.15rem; }
+  .faro-page .faro-rank-bar { height: 4px; background: var(--faro-emerald); border-radius: 1px; margin-top: 0.5rem; min-width: 4px; }
+  .faro-page .faro-rank-contracts { font-family: var(--faro-font-mono); font-variant-numeric: tabular-nums; color: var(--faro-ink-2); white-space: nowrap; }
+  .faro-page .faro-rank-amount { text-align: right; white-space: nowrap; }
+  .faro-page .faro-rank-big { font-family: var(--faro-font-mono); font-weight: 600; color: var(--faro-ink); }
+  .faro-page .faro-rank-sub { font-family: var(--faro-font-mono); font-size: 0.75rem; color: var(--faro-emerald-text, oklch(0.48 0.14 162)); }
+
+  /* Ledger de cobertura */
+  .faro-page .faro-ledger { list-style: none; margin: 0; padding: 0; }
+  .faro-page .faro-ledger-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--faro-line);
+  }
+  .faro-page .faro-ledger-label { display: block; font-weight: 600; color: var(--faro-ink); }
+  .faro-page .faro-ledger-def { display: block; font-size: 0.8rem; color: var(--faro-ink-3); margin-top: 0.1rem; }
+  .faro-page .faro-ledger-value { display: flex; align-items: center; gap: 0.8rem; white-space: nowrap; }
+  .faro-page .faro-ledger-pct { font-size: 1.05rem; font-weight: 600; }
+  .faro-page .faro-chip {
+    font-family: var(--faro-font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid;
+  }
+  .faro-page .faro-chip-ok { background: var(--faro-emerald-soft); color: var(--faro-ink); border-color: var(--faro-emerald); }
+  .faro-page .faro-chip-void { background: var(--faro-amber-soft); color: oklch(0.40 0.11 75); border-color: var(--faro-amber); }
+
+  /* Sello FARO */
+  /* DESIGN.FARO: el sello es panel paper-raised con borde 1px — certificado, no bloque de acento. */
+  .faro-page .faro-sello {
+    background: var(--faro-paper-raised, oklch(0.955 0.008 160));
+    border: 1px solid var(--faro-line);
+    border-radius: 6px;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+  }
+  .faro-page .faro-sello-list { margin: 0; display: grid; gap: 0.9rem; }
+  .faro-page .faro-sello-list > div { display: grid; grid-template-columns: 11rem 1fr; gap: 1rem; }
+  .faro-page .faro-sello-list dt {
+    font-family: var(--faro-font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faro-ink-3);
+    padding-top: 0.15rem;
+  }
+  .faro-page .faro-sello-list dd { margin: 0; font-size: 0.9rem; color: var(--faro-ink); }
+
+  /* Vacío y responsive */
+  .faro-page--empty { display: flex; align-items: center; }
+  .faro-page--empty h1 { font-family: var(--faro-font-serif); font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0.9rem 0 0; }
+  .faro-page--empty .faro-lede { margin-top: 1rem; }
+  @media (max-width: 720px) {
+    .faro-page .faro-concentration { grid-template-columns: 1fr; }
+    .faro-page .faro-sello-list > div { grid-template-columns: 1fr; gap: 0.2rem; }
+    .faro-page table.faro-rank { font-size: 0.84rem; }
+  }
+
+  /* F4a — banda «En contexto» (comparación entre fichas, cero JS) */
+  .faro-page .faro-ctx-wrap { margin-top: 1.5rem; border-top: 1px dashed var(--faro-line, oklch(0.86 0.012 160)); padding-top: 1.2rem; }
+  .faro-page .faro-ctx-title { font-family: var(--faro-font-mono, ui-monospace, monospace); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faro-ink-3, oklch(0.55 0.02 165)); margin: 0 0 0.9rem; }
+  .faro-page .faro-ctx { display: grid; gap: 0.55rem; max-width: 30rem; }
+  .faro-page .faro-ctx-row { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr auto; gap: 0.7rem; align-items: center; }
+  .faro-page .faro-ctx-label { font-size: 0.85rem; color: var(--faro-ink-3, oklch(0.55 0.02 165)); }
+  .faro-page .faro-ctx-track { display: block; height: 0.55rem; background: var(--faro-line, oklch(0.86 0.012 160)); border-radius: 3px; overflow: hidden; }
+  .faro-page .faro-ctx-fill { display: block; height: 100%; background: var(--faro-emerald, oklch(0.72 0.15 162)); border-radius: 3px; }
+  .faro-page .faro-ctx-row:not(.faro-ctx-row--active) .faro-ctx-fill { background: var(--faro-ink-3, oklch(0.48 0.02 165)); }
+  .faro-page .faro-ctx-row--active .faro-ctx-label { color: var(--faro-ink, oklch(0.25 0.02 165)); font-weight: 600; }
+  .faro-page .faro-ctx-row--active .faro-ctx-val { color: var(--faro-ink, oklch(0.25 0.02 165)); font-weight: 600; }
+
+  /* F4a — isla exploradora (mejora progresiva) */
+  .faro-page .faro-ex-toolbar { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin: 0 0 0.8rem; }
+  .faro-page .faro-ex-search { flex: 1; min-width: 14rem; font: inherit; font-size: 0.95rem; padding: 0.5rem 0.7rem; border: 1px solid var(--faro-line, oklch(0.86 0.012 160)); border-radius: 6px; background: transparent; color: var(--faro-ink, oklch(0.25 0.02 165)); }
+  .faro-page .faro-ex-search:focus { outline: 2px solid var(--faro-civic, oklch(0.50 0.11 163)); outline-offset: 1px; }
+  .faro-page .faro-ex-sort { font: inherit; font-size: 0.9rem; padding: 0.5rem 0.4rem; border: 1px solid var(--faro-line, oklch(0.86 0.012 160)); border-radius: 6px; background: transparent; color: var(--faro-ink, oklch(0.25 0.02 165)); }
+  .faro-page .faro-ex-count { font-size: 0.78rem; color: var(--faro-ink-3, oklch(0.55 0.02 165)); margin: 0 0 0.6rem; }
+  .faro-page .faro-ex-more { font: inherit; font-size: 0.85rem; padding: 0.45rem 0.8rem; border: 1px solid var(--faro-civic, oklch(0.50 0.11 163)); border-radius: 6px; background: transparent; color: var(--faro-civic, oklch(0.50 0.11 163)); cursor: pointer; margin-top: 0.8rem; }
+  .faro-page .faro-ex-more:hover { background: var(--faro-paper-deep, oklch(0.93 0.012 160)); }
+  @media (max-width: 720px) {
+    .faro-page .faro-ctx-row { grid-template-columns: 1fr auto; }
+    .faro-page .faro-ctx-label { grid-column: 1 / -1; }
+    .faro-page .faro-ex-toolbar { flex-direction: column; align-items: stretch; }
+  }
+</style>

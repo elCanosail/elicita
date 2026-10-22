@@ -1,0 +1,90 @@
+---
+import Layout from '../../layouts/main.astro';
+
+import organismos from '../../data/rankings-organismos.json';
+import meta from '../../data/rankings-organismos-meta.json';
+
+const description = "Top 50 organismos de contratación pública española por importe total adjudicado. Ranking de administraciones con más presupuesto en contratos públicos.";
+
+function formatMoney(n: number): string {
+  if (n >= 1e9) return `€${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `€${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `€${(n / 1e3).toFixed(0)}K`;
+  return `€${n.toFixed(0)}`;
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString('es-ES');
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: 'Top organismos por importe — Contratación pública España',
+  description: description,
+  url: 'https://elicita.es/rankings/organismos-importe',
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  creator: { '@type': 'Organization', name: 'Elicita', url: 'https://elicita.es' },
+};
+---
+
+<Layout title="Top organismos por importe — Elicita" description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+
+  <section class="py-20 md:py-32">
+    <div class="container mx-auto px-4">
+      <div class="max-w-5xl mx-auto">
+        <div class="space-y-4 mb-12">
+          <div class="flex items-center gap-2 text-sm text-white/50">
+            <a href="/rankings" class="hover:text-emerald-400 transition-colors">Rankings</a>
+            <span>/</span>
+            <span class="text-white/60">Organismos por importe</span>
+          </div>
+          <h1 class="text-3xl md:text-5xl font-light text-white">Top organismos por importe</h1>
+          <p class="text-white/50 text-lg max-w-2xl">
+            Las administraciones con mayor presupuesto destinado a contratación pública.
+            Ranking por importe total adjudicado. Datos de PLACSP + TED + fuentes autonómicas.
+          </p>
+          <p class="font-mono text-xs text-white/50">
+            Datos a {meta.fecha_corte || '—'} · {formatNumber(meta.filas_base)} contratos analizados · regenerado {meta.generado_utc.replace('T', ' ').slice(0, 16)} UTC
+          </p>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10 text-left text-white/50">
+                <th class="py-3 px-4 font-normal">#</th>
+                <th class="py-3 px-4 font-normal">Organismo</th>
+                <th class="py-3 px-4 font-normal text-right">Contratos</th>
+                <th class="py-3 px-4 font-normal text-right">Importe total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {organismos.map((item, i) => (
+                <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-4 text-white/50 font-mono">{i + 1}</td>
+                  <td class="py-3 px-4 text-white/80 font-medium">{item.nombre}</td>
+                  <td class="py-3 px-4 text-white/60 text-right font-mono">{formatNumber(item.contratos)}</td>
+                  <td class="py-3 px-4 text-emerald-400 text-right font-mono font-medium">{formatMoney(item.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-8 pt-8 border-t border-white/5 space-y-3">
+          <p class="text-sm text-white/50">
+            Datos estructurados por Elicita a partir de PLACSP, TED UE y boletines autonómicos.
+            Licencia CC BY 4.0. <a href="/reutilizacion-y-atribucion" class="text-emerald-400 hover:text-emerald-300">Reutilización y atribución</a>.
+          </p>
+          <p class="text-sm text-white/50">
+            Ver también: <a href="/rankings/organismos-volumen" class="text-emerald-400 hover:text-emerald-300">organismos por volumen</a> ·
+            <a href="/rankings/adjudicatarios-importe" class="text-emerald-400 hover:text-emerald-300">adjudicatarios por importe</a> ·
+            <a href="/rankings/adjudicatarios-volumen" class="text-emerald-400 hover:text-emerald-300">adjudicatarios por volumen</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

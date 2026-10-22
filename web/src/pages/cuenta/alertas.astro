@@ -1,0 +1,1204 @@
+---
+// /cuenta/alertas — Configuración de alertas por email
+import DashboardLayout from '../../layouts/dashboard.astro';
+---
+
+<DashboardLayout title="Alertas — elicita_">
+  <div class="alertas-page">
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Alertas de licitaciones</h1>
+        <p class="page-subtitle">Recibe un email cuando aparezcan nuevas licitaciones en tus sectores</p>
+      </div>
+      <div class="alert-status" id="alert-status-badge">
+        <span class="status-dot"></span>
+        <span id="alert-status-text">Cargando…</span>
+      </div>
+    </div>
+
+    <div id="free-limit-banner" class="free-limit-banner" style="display:none">
+      <div class="limit-content">
+        <span id="limit-counter" class="limit-counter">0/1 alertas usadas</span>
+        <a href="/precios" class="limit-cta">Desbloquear alertas ilimitadas con Pro →</a>
+      </div>
+    </div>
+
+    <div class="alertas-grid">
+
+      <!-- CPVs de interés -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">🏷</div>
+          <div>
+            <h2>CPVs de interés</h2>
+            <p>Selecciona los códigos de contratación que quieres vigilar</p>
+          </div>
+        </div>
+        <div class="cpv-search-wrap">
+          <input type="text" id="cpv-search" class="field-input" placeholder="Buscar por código o descripción…" autocomplete="off" />
+        </div>
+        <div id="cpv-dropdown" class="cpv-dropdown" style="display:none"></div>
+        <div id="cpv-chips" class="chips-container">
+          <span class="chips-empty">No hay CPVs seleccionados</span>
+        </div>
+      </section>
+
+      <!-- Organismos favoritos -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">🏛</div>
+          <div>
+            <h2>Organismos favoritos</h2>
+            <p>Organismos contratantes que quieres seguir (opcional)</p>
+          </div>
+        </div>
+        <div class="org-list" id="org-list"></div>
+        <div class="kw-add-row">
+          <input
+            type="text"
+            id="org-add-input"
+            class="field-input"
+            placeholder="Añadir organismo… (Enter para añadir)"
+            autocomplete="off"
+          />
+          <button type="button" id="org-add-btn" class="kw-add-btn">+</button>
+        </div>
+        <div class="field-hint">Se busca si el nombre del organismo contiene el texto.</div>
+        <input type="hidden" id="organismos-input" />
+      </section>
+
+      <!-- Keywords -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">🔑</div>
+          <div>
+            <h2>Palabras clave</h2>
+            <p>Términos que deben aparecer en el objeto del contrato</p>
+          </div>
+        </div>
+        <div class="kw-list" id="kw-list"></div>
+        <div class="kw-add-row">
+          <input
+            type="text"
+            id="kw-add-input"
+            class="field-input"
+            placeholder="Añadir término… (Enter para añadir)"
+            autocomplete="off"
+          />
+          <button type="button" id="kw-add-btn" class="kw-add-btn">+</button>
+        </div>
+        <div class="field-hint">Se busca si el título del contrato contiene alguna de estas palabras. También puedes crear alertas desde el botón 🔔 en Monitor.</div>
+        <!-- Hidden input to maintain compatibility with save logic -->
+        <input type="hidden" id="keywords-input" />
+      </section>
+
+      <!-- Competidores -->
+      <section class="section-card" id="competitors-card">
+        <div class="section-header">
+          <div class="section-icon">🏆</div>
+          <div>
+            <h2>
+              Competidores
+              <span class="pro-badge">PRO</span>
+            </h2>
+            <p>Recibe un email cuando una de estas empresas gane un contrato del BOE</p>
+          </div>
+        </div>
+        <div class="competitor-list" id="competitor-list"></div>
+        <div class="kw-add-row">
+          <input
+            type="text"
+            id="competitor-add-input"
+            class="field-input"
+            placeholder="Añadir por nombre o NIF… (Enter para añadir)"
+            autocomplete="off"
+          />
+          <button type="button" id="competitor-add-btn" class="kw-add-btn">+</button>
+        </div>
+        <div class="field-hint">Escribe un NIF para intentar resolver el nombre automáticamente. Las alertas se envían inmediatamente al formalizarse el contrato.</div>
+      </section>
+
+      <!-- Frecuencia -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">⏱</div>
+          <div>
+            <h2>Frecuencia</h2>
+            <p>¿Cuándo quieres recibir los emails?</p>
+          </div>
+        </div>
+        <div class="radio-group">
+          <label class="radio-option" id="radio-4h">
+            <input type="radio" name="frecuencia" value="4h" checked />
+            <div class="radio-card">
+              <div class="radio-title">Cada 4 horas</div>
+              <div class="radio-desc">Alerta inmediata en cada ciclo de ingesta</div>
+            </div>
+          </label>
+          <label class="radio-option" id="radio-diario">
+            <input type="radio" name="frecuencia" value="diario" />
+            <div class="radio-card">
+              <div class="radio-title">Resumen diario</div>
+              <div class="radio-desc">Un email a las 8:00 AM con todas las licitaciones del día</div>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- Email + Estado + Guardar -->
+      <section class="section-card section-card--bottom">
+        <div class="email-row">
+          <div class="section-icon">✉️</div>
+          <div class="email-info">
+            <div class="email-label">Las alertas se envían a tu email de registro</div>
+            <div class="email-value" id="user-email">—</div>
+          </div>
+        </div>
+
+        <div class="alert-toggle-row">
+          <label class="alert-toggle">
+            <input type="checkbox" id="alerts-active-toggle" checked />
+            <span class="toggle-slider"></span>
+            <span class="toggle-label" id="toggle-label">Alertas activadas</span>
+          </label>
+        </div>
+
+        <div class="save-row">
+          <div class="save-status" id="save-status"></div>
+          <button class="btn-danger" id="btn-clear-all" type="button">
+            Eliminar todo
+          </button>
+          <button class="btn-save" id="btn-save">
+            Guardar alertas
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</DashboardLayout>
+
+<style is:global>
+  .alertas-page {
+    padding: 28px 32px;
+    max-width: 800px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    margin-bottom: 6px;
+  }
+  .page-subtitle {
+    font-size: 13px;
+    color: hsl(var(--muted-foreground) / 0.7);
+  }
+
+  .alert-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--background) / 0.03);
+    border: 1px solid hsl(var(--border) / 0.08);
+    border-radius: 20px;
+    padding: 5px 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .alert-status .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: hsl(var(--foreground) / 0.2);
+    flex-shrink: 0;
+  }
+  .alert-status.active .status-dot {
+    background: hsl(var(--primary));
+    box-shadow: 0 0 6px hsl(var(--primary) / 0.5);
+  }
+  .alert-status.active {
+    border-color: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary));
+  }
+
+  /* Free limit banner */
+  .free-limit-banner {
+    background: hsl(var(--warning) / 0.06);
+    border: 1px solid hsl(var(--warning) / 0.2);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+  .limit-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .limit-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--warning) / 0.9);
+  }
+  .limit-cta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--primary));
+    text-decoration: none;
+    border: 1px solid hsl(var(--primary) / 0.25);
+    border-radius: 6px;
+    padding: 6px 10px;
+    transition: all 0.15s;
+  }
+  .limit-cta:hover {
+    background: hsl(var(--primary) / 0.08);
+    border-color: hsl(var(--primary) / 0.4);
+  }
+
+  /* Grid */
+  .alertas-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .section-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.07);
+    border-radius: 10px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: border-color 0.15s;
+  }
+  .section-card:hover {
+    border-color: hsl(var(--border) / 0.1);
+  }
+  .section-card--bottom {
+    background: hsl(var(--primary) / 0.03);
+    border-color: hsl(var(--primary) / 0.1);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .section-icon {
+    font-size: 18px;
+    width: 36px;
+    height: 36px;
+    background: hsl(var(--background) / 0.04);
+    border: 1px solid hsl(var(--border) / 0.06);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 14px;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    margin-bottom: 3px;
+  }
+  .section-header p {
+    font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.7);
+  }
+
+  /* Field input */
+  .field-input {
+    width: 100%;
+    background: hsl(var(--background) / 0.03);
+    border: 1px solid hsl(var(--border) / 0.08);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: hsl(var(--foreground));
+    font-size: 13px;
+    font-family: 'Instrument Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field-input:focus {
+    border-color: hsl(var(--primary) / 0.35);
+  }
+  .field-input::placeholder {
+    color: hsl(var(--muted-foreground) / 0.5);
+  }
+  .field-hint {
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: -8px;
+  }
+  .kw-list {
+    display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px;
+  }
+  .kw-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 6px; font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    background: hsl(var(--primary) / 0.08); border: 1px solid hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground) / 0.7); transition: all 0.15s;
+  }
+  .kw-tag:hover { border-color: hsl(var(--primary) / 0.4); }
+  .kw-tag .kw-text { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kw-tag .kw-del {
+    cursor: pointer; color: hsl(var(--muted-foreground) / 0.5); font-size: 14px; line-height: 1;
+    transition: color 0.15s;
+  }
+  .kw-tag .kw-del:hover { color: hsl(var(--destructive) / 0.7); }
+  .kw-empty { font-size: 12px; color: hsl(var(--muted-foreground) / 0.35); font-family: 'JetBrains Mono', monospace; }
+  .kw-add-row { display: flex; gap: 8px; align-items: center; }
+  .kw-add-row .field-input { flex: 1; }
+  .kw-add-btn {
+    padding: 8px 14px; background: hsl(var(--primary) / 0.1); border: 1px solid hsl(var(--primary) / 0.2);
+    border-radius: 6px; color: hsl(var(--primary)); font-size: 16px; cursor: pointer; transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .kw-add-btn:hover { background: hsl(var(--primary) / 0.2); border-color: hsl(var(--primary) / 0.4); }
+
+  /* CPV dropdown */
+  .cpv-search-wrap {
+    position: relative;
+  }
+  .cpv-dropdown {
+    position: absolute;
+    z-index: 100;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.1);
+    border-radius: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    width: calc(100% - 48px);
+    margin-top: 4px;
+    box-shadow: 0 8px 32px hsl(var(--background) / 0.5);
+  }
+  .cpv-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    font-size: 12px;
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    transition: background 0.1s;
+    border-left: 2px solid transparent;
+  }
+  .cpv-option:hover {
+    background: hsl(var(--primary) / 0.08);
+    border-left-color: hsl(var(--primary));
+    color: hsl(var(--foreground));
+  }
+  .cpv-option .cpv-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--primary));
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+  .cpv-option .cpv-desc {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Chips */
+  .chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 38px;
+    align-items: flex-start;
+  }
+  .chips-empty {
+    font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    padding: 6px 0;
+    font-style: italic;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: hsl(var(--primary) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.25);
+    border-radius: 20px;
+    padding: 4px 12px 4px 10px;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.8);
+    font-family: 'JetBrains Mono', monospace;
+    transition: border-color 0.15s;
+  }
+  .chip:hover {
+    border-color: hsl(var(--primary) / 0.5);
+  }
+  .chip-remove {
+    background: none;
+    border: none;
+    color: hsl(var(--muted-foreground) / 0.5);
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .chip-remove:hover {
+    color: hsl(var(--destructive) / 0.8);
+  }
+
+  /* Radio group */
+  .radio-group {
+    display: flex;
+    gap: 12px;
+  }
+  .radio-option {
+    flex: 1;
+    cursor: pointer;
+    display: flex;
+  }
+  .radio-option input[type="radio"] {
+    display: none;
+  }
+  .radio-card {
+    flex: 1;
+    border: 1px solid hsl(var(--border) / 0.07);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: border-color 0.15s, background 0.15s;
+    background: hsl(var(--card));
+  }
+  .radio-option input:checked + .radio-card {
+    border-color: hsl(var(--primary) / 0.4);
+    background: hsl(var(--primary) / 0.06);
+  }
+  .radio-card:hover {
+    border-color: hsl(var(--border) / 0.12);
+  }
+  .radio-option input:checked + .radio-card .radio-title {
+    color: hsl(var(--primary));
+  }
+  .radio-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: hsl(var(--foreground) / 0.75);
+    margin-bottom: 4px;
+    transition: color 0.15s;
+  }
+  .radio-desc {
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.7);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Email row */
+  .email-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .email-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .email-label {
+    font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.7);
+  }
+  .email-value {
+    font-size: 14px;
+    color: hsl(var(--foreground) / 0.7);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Save row */
+  .save-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    border-top: 1px solid hsl(var(--border) / 0.05);
+    padding-top: 16px;
+    margin-top: 4px;
+  }
+  .save-status {
+    font-size: 13px;
+    color: hsl(var(--muted-foreground));
+  }
+  .save-status.ok {
+    color: hsl(var(--primary));
+  }
+  .save-status.err {
+    color: hsl(var(--destructive));
+  }
+  .org-list { display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px; }
+  .alert-toggle-row { margin: 12px 0; }
+  .alert-toggle {
+    display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: hsl(var(--muted-foreground));
+  }
+  .alert-toggle input { display: none; }
+  .toggle-slider {
+    width: 36px; height: 20px; border-radius: 10px; position: relative;
+    background: hsl(var(--foreground) / 0.1); transition: background 0.2s;
+  }
+  .toggle-slider::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: hsl(var(--foreground) / 0.4); transition: all 0.2s;
+  }
+  .alert-toggle input:checked + .toggle-slider { background: hsl(var(--primary) / 0.3); }
+  .alert-toggle input:checked + .toggle-slider::after { left: 18px; background: hsl(var(--primary)); }
+  .btn-danger {
+    background: transparent; color: hsl(var(--destructive) / 0.6); border: 1px solid hsl(var(--destructive) / 0.2);
+    border-radius: 7px; padding: 10px 18px; font-size: 12px; cursor: pointer;
+    transition: all 0.15s; font-family: 'JetBrains Mono', monospace;
+  }
+  .btn-danger:hover { color: hsl(var(--destructive) / 0.7); border-color: hsl(var(--destructive) / 0.4); background: hsl(var(--destructive) / 0.05); }
+  .btn-save {
+    background: hsl(var(--primary));
+    color: hsl(var(--background));
+    border: none;
+    border-radius: 7px;
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'Instrument Sans', sans-serif;
+  }
+  .btn-save:hover {
+    background: hsl(var(--primary) / 0.8);
+  }
+  .btn-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .pro-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: hsl(var(--warning) / 0.12);
+    color: hsl(var(--warning) / 0.9);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .disabled-card {
+    opacity: 0.7;
+  }
+  .disabled-card .field-input {
+    cursor: not-allowed;
+  }
+  .competitor-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 20px;
+  }
+  .competitor-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    background: hsl(var(--primary) / 0.08);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground) / 0.8);
+    transition: all 0.15s;
+    max-width: 100%;
+  }
+  .competitor-tag:hover {
+    border-color: hsl(var(--primary) / 0.4);
+  }
+  .competitor-tag .competitor-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .competitor-tag .competitor-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .competitor-tag .competitor-nif {
+    font-size: 10px;
+    color: hsl(var(--primary));
+  }
+  .competitor-tag .competitor-del {
+    cursor: pointer;
+    color: hsl(var(--muted-foreground) / 0.2);
+    font-size: 14px;
+    line-height: 1;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+  .competitor-tag .competitor-del:hover {
+    color: hsl(var(--destructive) / 0.7);
+  }
+  .competitor-empty {
+    font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.15);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  @media (max-width: 640px) {
+    .alertas-page { padding: 16px; }
+    .radio-group { flex-direction: column; }
+    .page-header { flex-direction: column; }
+  }
+</style>
+
+<script is:inline>
+document.addEventListener('DOMContentLoaded', function() {
+  var selectedCpvs = {};
+  var allCpvs = {};
+  var debounceTimer = null;
+  var userPlan = { plan: 'free', maxAlerts: 1 };
+  window._competitorList = [];
+  var competitorPlanEnabled = false;
+
+  function renderLimitBanner() {
+    var banner = document.getElementById('free-limit-banner');
+    var counter = document.getElementById('limit-counter');
+    if (!banner || !counter) return;
+
+    var maxAlerts = userPlan.maxAlerts;
+    if (!Number.isFinite(maxAlerts)) {
+      banner.style.display = 'none';
+      return;
+    }
+
+    var cpvList = Object.keys(selectedCpvs);
+    var orgList = window._orgList || [];
+    var kwList = window._kwList || [];
+    var used = [cpvList, orgList, kwList].filter(function(arr) { return arr.length > 0; }).length;
+
+    counter.textContent = used + '/' + maxAlerts + ' alertas usadas';
+    banner.style.display = maxAlerts > 0 ? 'block' : 'none';
+  }
+
+  function updatePlanInfo() {
+    fetch('/api/user/plan')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.plan) {
+          userPlan.plan = data.plan;
+          userPlan.maxAlerts = typeof data.maxAlerts === 'number' ? data.maxAlerts : 1;
+          competitorPlanEnabled = userPlan.plan === 'pro' || userPlan.plan === 'empresa';
+          var card = document.getElementById('competitors-card');
+          var badge = card ? card.querySelector('.pro-badge') : null;
+          if (card) {
+            if (competitorPlanEnabled) {
+              card.classList.remove('disabled-card');
+              if (badge) badge.style.display = 'none';
+            } else {
+              card.classList.add('disabled-card');
+              if (badge) badge.style.display = 'inline-block';
+            }
+          }
+          var input = document.getElementById('competitor-add-input');
+          var btn = document.getElementById('competitor-add-btn');
+          if (input) {
+            input.disabled = !competitorPlanEnabled;
+            input.placeholder = competitorPlanEnabled
+              ? 'Añadir por nombre o NIF… (Enter para añadir)'
+              : 'Requiere plan Pro o Empresa';
+          }
+          if (btn) btn.disabled = !competitorPlanEnabled;
+          renderLimitBanner();
+          renderCompetitorTags();
+        }
+      })
+      .catch(function() {});
+  }
+
+  // Load initial state
+  Promise.all([
+    fetch('/api/alertas').then(function(r) { return r.json(); }).catch(function() { return {}; }),
+    fetch('/api/cpv').then(function(r) { return r.json(); }).catch(function() { return {}; })
+  ]).then(function(results) {
+    var alertasData = results[0];
+    allCpvs = results[1] || {};
+
+    updatePlanInfo();
+
+    // Prefill email
+    var emailEl = document.getElementById('user-email');
+    if (emailEl && alertasData.email) {
+      emailEl.textContent = alertasData.email;
+    }
+
+    var alertas = alertasData.alertas;
+    if (alertas) {
+      // CPVs
+      if (Array.isArray(alertas.cpvs)) {
+        alertas.cpvs.forEach(function(code) {
+          var desc = allCpvs[code] || code;
+          selectedCpvs[code] = desc;
+        });
+        renderChips();
+      }
+      // Organismos
+      // Organismos — render as tags
+      var orgInput = document.getElementById('organismos-input');
+      window._orgList = Array.isArray(alertas.organismos) ? alertas.organismos.slice() : [];
+      renderOrgTags();
+      if (orgInput) orgInput.value = window._orgList.join(', ');
+
+      // Active toggle
+      var activeToggle = document.getElementById('alerts-active-toggle');
+      var toggleLabel = document.getElementById('toggle-label');
+      if (activeToggle) {
+        activeToggle.checked = alertas.activo !== false;
+        if (toggleLabel) toggleLabel.textContent = activeToggle.checked ? 'Alertas activadas' : 'Alertas desactivadas';
+        activeToggle.addEventListener('change', function() {
+          if (toggleLabel) toggleLabel.textContent = activeToggle.checked ? 'Alertas activadas' : 'Alertas desactivadas';
+          renderLimitBanner();
+        });
+      }
+      // Keywords — render as tags
+      var kwInput = document.getElementById('keywords-input');
+      window._kwList = Array.isArray(alertas.keywords) ? alertas.keywords.slice() : [];
+      renderKwTags();
+      if (kwInput) kwInput.value = window._kwList.join(', ');
+
+      // Competidores
+      window._competitorList = Array.isArray(alertas.competidores) ? alertas.competidores.slice() : [];
+      renderCompetitorTags();
+
+      // Frecuencia
+      var frecuencia = alertas.frecuencia || '4h';
+      var radioEls = document.querySelectorAll('input[name="frecuencia"]');
+      radioEls.forEach(function(r) {
+        r.checked = (r.value === frecuencia);
+      });
+      // Status badge
+      if (alertas.activo) {
+        var badge = document.getElementById('alert-status-badge');
+        var badgeText = document.getElementById('alert-status-text');
+        if (badge) badge.classList.add('active');
+        if (badgeText) badgeText.textContent = 'Activas';
+      }
+    } else {
+      var badgeText = document.getElementById('alert-status-text');
+      if (badgeText) badgeText.textContent = 'Sin configurar';
+    }
+
+    renderLimitBanner();
+  });
+
+  // CPV search
+  var cpvSearch = document.getElementById('cpv-search');
+  var cpvDropdown = document.getElementById('cpv-dropdown');
+
+  if (cpvSearch) {
+    cpvSearch.addEventListener('input', function() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function() {
+        var q = cpvSearch.value.trim().toLowerCase();
+        if (!q || q.length < 2) {
+          cpvDropdown.style.display = 'none';
+          return;
+        }
+        var matches = [];
+        var keys = Object.keys(allCpvs);
+        for (var i = 0; i < keys.length && matches.length < 20; i++) {
+          var code = keys[i];
+          var desc = allCpvs[code] || '';
+          if (code.indexOf(q) !== -1 || desc.toLowerCase().indexOf(q) !== -1) {
+            if (!selectedCpvs[code]) matches.push({ code: code, desc: desc });
+          }
+        }
+        renderDropdown(matches);
+      }, 200);
+    });
+
+    cpvSearch.addEventListener('blur', function() {
+      setTimeout(function() {
+        cpvDropdown.style.display = 'none';
+      }, 200);
+    });
+
+    cpvSearch.addEventListener('focus', function() {
+      if (cpvSearch.value.trim().length >= 2) {
+        cpvDropdown.style.display = 'block';
+      }
+    });
+  }
+
+  function renderDropdown(matches) {
+    if (!matches.length) {
+      cpvDropdown.style.display = 'none';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < matches.length; i++) {
+      var m = matches[i];
+      var descShort = m.desc.length > 55 ? m.desc.slice(0, 55) + '…' : m.desc;
+      html += '<div class="cpv-option" data-code="' + escAttr(m.code) + '" data-desc="' + escAttr(m.desc) + '">'
+            + '<span class="cpv-code">' + escHtml(m.code) + '</span>'
+            + '<span class="cpv-desc">' + escHtml(descShort) + '</span>'
+            + '</div>';
+    }
+    cpvDropdown.innerHTML = html;
+    cpvDropdown.style.display = 'block';
+    var opts = cpvDropdown.querySelectorAll('.cpv-option');
+    opts.forEach(function(opt) {
+      opt.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        var code = opt.getAttribute('data-code');
+        var desc = opt.getAttribute('data-desc');
+        selectedCpvs[code] = desc;
+        renderChips();
+        cpvSearch.value = '';
+        cpvDropdown.style.display = 'none';
+      });
+    });
+  }
+
+  function renderChips() {
+    var container = document.getElementById('cpv-chips');
+    var codes = Object.keys(selectedCpvs);
+    if (!codes.length) {
+      container.innerHTML = '<span class="chips-empty">No hay CPVs seleccionados</span>';
+      renderLimitBanner();
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < codes.length; i++) {
+      var code = codes[i];
+      var desc = selectedCpvs[code] || code;
+      var descShort = desc.length > 40 ? desc.slice(0, 40) + '…' : desc;
+      html += '<span class="chip">'
+            + escHtml(code) + ' — ' + escHtml(descShort)
+            + '<button class="chip-remove" data-code="' + escAttr(code) + '" title="Quitar" type="button">×</button>'
+            + '</span>';
+    }
+    container.innerHTML = html;
+    container.querySelectorAll('.chip-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var code = btn.getAttribute('data-code');
+        delete selectedCpvs[code];
+        renderChips();
+      });
+    });
+    renderLimitBanner();
+  }
+
+  // Save
+  var btnSave = document.getElementById('btn-save');
+  var saveStatus = document.getElementById('save-status');
+
+  if (btnSave) {
+    btnSave.addEventListener('click', function() {
+      btnSave.disabled = true;
+      btnSave.textContent = 'Guardando…';
+      if (saveStatus) { saveStatus.textContent = ''; saveStatus.className = 'save-status'; }
+
+      var frecRadio = document.querySelector('input[name="frecuencia"]:checked');
+      var activeToggle = document.getElementById('alerts-active-toggle');
+
+      var cpvList = Object.keys(selectedCpvs);
+      var orgList = window._orgList || [];
+      var kwList = window._kwList || [];
+      var competitorList = window._competitorList || [];
+      var frecuencia = frecRadio ? frecRadio.value : '4h';
+      var activo = activeToggle ? activeToggle.checked : true;
+
+      fetch('/api/alertas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cpvs: cpvList,
+          organismos: orgList,
+          keywords: kwList,
+          competidores: competitorList,
+          frecuencia: frecuencia,
+          activo: activo
+        })
+      }).then(function(res) {
+        return res.json();
+      }).then(function(data) {
+        btnSave.disabled = false;
+        btnSave.textContent = 'Guardar alertas';
+        if (data.ok) {
+          if (saveStatus) { saveStatus.textContent = '✓ Guardado'; saveStatus.className = 'save-status ok'; }
+          var badge = document.getElementById('alert-status-badge');
+          var badgeText = document.getElementById('alert-status-text');
+          if (badge) badge.classList.add('active');
+          if (badgeText) badgeText.textContent = 'Activas';
+          renderLimitBanner();
+          setTimeout(function() {
+            if (saveStatus) { saveStatus.textContent = ''; saveStatus.className = 'save-status'; }
+          }, 3000);
+        } else {
+          if (saveStatus) { saveStatus.textContent = data.error || 'Error al guardar'; saveStatus.className = 'save-status err'; }
+        }
+      }).catch(function() {
+        btnSave.disabled = false;
+        btnSave.textContent = 'Guardar alertas';
+        if (saveStatus) { saveStatus.textContent = 'Error de conexión'; saveStatus.className = 'save-status err'; }
+      });
+    });
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function escAttr(s) {
+    return String(s).replace(/"/g, '&quot;');
+  }
+
+  // ── Org tags ─────────────────────────────────────────────────────────────
+  function renderOrgTags() {
+    var list = document.getElementById('org-list');
+    if (!list) return;
+    var orgs = window._orgList || [];
+    if (!orgs.length) {
+      list.innerHTML = '<span class="kw-empty">Sin organismos configurados</span>';
+      renderLimitBanner();
+      return;
+    }
+    list.innerHTML = orgs.map(function(org, i) {
+      return '<span class="kw-tag" data-idx="' + i + '">'
+        + '<span class="kw-text">' + esc(org) + '</span>'
+        + '<span class="kw-del" title="Eliminar">✕</span>'
+        + '</span>';
+    }).join('');
+    list.querySelectorAll('.kw-del').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var idx = parseInt(el.parentElement.dataset.idx);
+        window._orgList.splice(idx, 1);
+        renderOrgTags();
+      });
+    });
+    renderLimitBanner();
+  }
+
+  var orgAddInput = document.getElementById('org-add-input');
+  var orgAddBtn = document.getElementById('org-add-btn');
+  if (orgAddInput) {
+    orgAddInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var v = orgAddInput.value.trim();
+        if (v && !(window._orgList || []).some(function(o) { return o.toLowerCase() === v.toLowerCase(); })) {
+          if (!window._orgList) window._orgList = [];
+          window._orgList.push(v);
+          renderOrgTags();
+        }
+        orgAddInput.value = '';
+      }
+    });
+  }
+  if (orgAddBtn && orgAddInput) {
+    orgAddBtn.addEventListener('click', function() {
+      var v = orgAddInput.value.trim();
+      if (v && !(window._orgList || []).some(function(o) { return o.toLowerCase() === v.toLowerCase(); })) {
+        if (!window._orgList) window._orgList = [];
+        window._orgList.push(v);
+        renderOrgTags();
+      }
+      orgAddInput.value = '';
+    });
+  }
+
+  // ── Competitor tags ─────────────────────────────────────────────────────
+  function renderCompetitorTags() {
+    var list = document.getElementById('competitor-list');
+    if (!list) return;
+    var comps = window._competitorList || [];
+    if (!comps.length) {
+      list.innerHTML = '<span class="competitor-empty">Sin competidores configurados</span>';
+      return;
+    }
+    list.innerHTML = comps.map(function(c, i) {
+      var name = c.nombre || c.nif || 'Competidor';
+      var nif = c.nif || '';
+      return '<span class="competitor-tag" data-idx="' + i + '">'
+        + '<span class="competitor-info">'
+        + '<span class="competitor-name">' + esc(name) + '</span>'
+        + (nif ? '<span class="competitor-nif">' + esc(nif) + '</span>' : '')
+        + '</span>'
+        + '<span class="competitor-del" title="Eliminar">✕</span>'
+        + '</span>';
+    }).join('');
+    list.querySelectorAll('.competitor-del').forEach(function(el) {
+      el.addEventListener('click', function() {
+        if (!competitorPlanEnabled) {
+          window.location.href = '/precios';
+          return;
+        }
+        var idx = parseInt(el.parentElement.dataset.idx);
+        window._competitorList.splice(idx, 1);
+        renderCompetitorTags();
+      });
+    });
+  }
+
+  var competitorAddInput = document.getElementById('competitor-add-input');
+  var competitorAddBtn = document.getElementById('competitor-add-btn');
+
+  function isNifLike(value) {
+    var cleaned = value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+    return /^[A-Z][0-9]{8}$|^[0-9]{8}[A-Z]$/.test(cleaned);
+  }
+
+  function normalizeNif(value) {
+    return value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+  }
+
+  function addCompetitor(value) {
+    if (!competitorPlanEnabled) {
+      window.location.href = '/precios';
+      return;
+    }
+    var raw = value.trim();
+    if (!raw) return;
+
+    var exists = (window._competitorList || []).some(function(c) {
+      return (c.nif && c.nif.toUpperCase() === normalizeNif(raw)) ||
+        (c.nombre || '').toLowerCase() === raw.toLowerCase();
+    });
+    if (exists) return;
+
+    if (!window._competitorList) window._competitorList = [];
+
+    if (isNifLike(raw)) {
+      var nif = normalizeNif(raw);
+      window._competitorList.push({ nombre: nif, nif: nif });
+      renderCompetitorTags();
+
+      fetch('/api/borme-info?nif=' + encodeURIComponent(nif))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.nombre_canonico) {
+            var idx = window._competitorList.findIndex(function(c) {
+              return c.nif === nif;
+            });
+            if (idx >= 0) {
+              window._competitorList[idx].nombre = data.nombre_canonico;
+              if (data.nif) window._competitorList[idx].nif = data.nif;
+              renderCompetitorTags();
+            }
+          }
+        })
+        .catch(function() {});
+    } else {
+      window._competitorList.push({ nombre: raw, nif: '' });
+      renderCompetitorTags();
+    }
+  }
+
+  if (competitorAddInput) {
+    competitorAddInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addCompetitor(competitorAddInput.value);
+        competitorAddInput.value = '';
+      }
+    });
+  }
+  if (competitorAddBtn && competitorAddInput) {
+    competitorAddBtn.addEventListener('click', function() {
+      addCompetitor(competitorAddInput.value);
+      competitorAddInput.value = '';
+    });
+  }
+
+  // ── Clear all button ────────────────────────────────────────────────────
+  document.getElementById('btn-clear-all')?.addEventListener('click', function() {
+    if (!confirm('¿Eliminar todas las alertas? Esta acción borrará CPVs, organismos y palabras clave.')) return;
+    selectedCpvs = {};
+    window._orgList = [];
+    window._kwList = [];
+    window._competitorList = [];
+    renderOrgTags();
+    renderKwTags();
+    renderCompetitorTags();
+    // Clear CPV chips
+    var cpvChips = document.getElementById('cpv-chips');
+    if (cpvChips) cpvChips.innerHTML = '<span class="chips-empty">No hay CPVs seleccionados</span>';
+    // Trigger save
+    document.getElementById('btn-save')?.click();
+  });
+
+  // ── Keyword tags ────────────────────────────────────────────────────────
+  function renderKwTags() {
+    var list = document.getElementById('kw-list');
+    if (!list) return;
+    var kws = window._kwList || [];
+    if (!kws.length) {
+      list.innerHTML = '<span class="kw-empty">Sin palabras clave configuradas</span>';
+      renderLimitBanner();
+      return;
+    }
+    list.innerHTML = kws.map(function(kw, i) {
+      return '<span class="kw-tag" data-idx="' + i + '">'
+        + '<span class="kw-text">' + esc(kw) + '</span>'
+        + '<span class="kw-del" title="Eliminar">✕</span>'
+        + '</span>';
+    }).join('');
+    list.querySelectorAll('.kw-del').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var idx = parseInt(el.parentElement.dataset.idx);
+        window._kwList.splice(idx, 1);
+        renderKwTags();
+        syncKwInput();
+      });
+    });
+    renderLimitBanner();
+  }
+
+  function syncKwInput() {
+    var kwInput = document.getElementById('keywords-input');
+    if (kwInput) kwInput.value = (window._kwList || []).join(', ');
+  }
+
+  function addKeyword(text) {
+    var kw = (text || '').trim();
+    if (!kw) return;
+    if (!window._kwList) window._kwList = [];
+    var exists = window._kwList.some(function(k) { return k.toLowerCase() === kw.toLowerCase(); });
+    if (exists) return;
+    window._kwList.push(kw);
+    renderKwTags();
+    syncKwInput();
+  }
+
+  // Add keyword on Enter or button click
+  var kwAddInput = document.getElementById('kw-add-input');
+  var kwAddBtn = document.getElementById('kw-add-btn');
+  if (kwAddInput) {
+    kwAddInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); addKeyword(kwAddInput.value); kwAddInput.value = ''; }
+    });
+  }
+  if (kwAddBtn && kwAddInput) {
+    kwAddBtn.addEventListener('click', function() { addKeyword(kwAddInput.value); kwAddInput.value = ''; });
+  }
+});
+</script>

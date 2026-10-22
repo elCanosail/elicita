@@ -1,0 +1,174 @@
+---
+import Layout from '../layouts/main.astro';
+import { FileText, Code, Database, FlaskConical, ArrowRight, Plug, Sparkles } from 'lucide-react';
+import { MCP_ENDPOINT, MCP_TOOLS } from '@/lib/mcp-catalog';
+
+const metadata = {
+  title: "Docs — Elicita",
+  description: "Documentación de Elicita: API, metodología, cobertura de datos y calidad.",
+};
+
+const sections = [
+  {
+    icon: Code,
+    title: "API Reference",
+    desc: "Endpoints de búsqueda, autenticación con API key, rate limits y ejemplos de uso.",
+    href: "/docs/api",
+    cta: "Ver API docs",
+    internal: true,
+  },
+  {
+    icon: FlaskConical,
+    title: "Metodología",
+    desc: "Cómo transformamos datos públicos en inteligencia accionable: ingesta, normalización, perfilado y predicciones.",
+    href: "/docs/metodologia",
+    cta: "Leer metodología",
+    internal: true,
+  },
+  {
+    icon: Database,
+    title: "Cobertura",
+    desc: "Fuentes oficiales conectadas, frecuencia de actualización, BORME y 20 indicadores de calidad.",
+    href: "/cobertura",
+    cta: "Ver cobertura",
+    internal: true,
+  },
+  {
+    icon: FileText,
+    title: "Blog",
+    desc: "Artículos sobre contratación pública, estrategia de ventas y análisis del dataset.",
+    href: "/blog",
+    cta: "Ir al blog",
+    internal: true,
+  },
+];
+
+// MCP — tarjeta destacada (fuera del grid normal)
+const mcpFeatured = {
+  title: "MCP Server",
+  subtitle: "Model Context Protocol",
+  desc: "Conecta Claude, Cursor o cualquier agente de IA a contratación pública española. 4 tools estables, de solo lectura, sobre Streamable HTTP.",
+  href: "/docs/mcp",
+  cta: "Ver documentación MCP",
+  badge: "Nuevo",
+  endpoint: MCP_ENDPOINT,
+  tools: MCP_TOOLS.map((tool) => tool.name),
+};
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden bg-background border-b border-white/5">
+    <div class="absolute inset-0 bg-grid opacity-30 pointer-events-none"></div>
+    <div class="container mx-auto px-4 py-20 md:py-32 relative z-10">
+      <div class="max-w-3xl mx-auto text-center space-y-6">
+        <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase">Documentación</p>
+        <h1 class="text-4xl md:text-6xl font-light text-white tracking-tight">
+          <span class="text-emerald-400">Docs</span>
+        </h1>
+        <p class="text-lg md:text-xl text-white/40 max-w-2xl mx-auto">
+          Todo lo que necesitas para entender Elicita, integrar la API y confiar en los datos.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MCP destacado -->
+  <section class="py-20 md:py-32 bg-background">
+    <div class="container mx-auto px-4 max-w-5xl">
+      <!-- Tarjeta MCP destacada -->
+      <a
+        href={mcpFeatured.href}
+        class="group relative block overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/[0.08] via-white/[0.02] to-transparent hover:border-emerald-500/50 transition-colors mb-12"
+      >
+        <!-- Glow effect -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 p-8 md:p-10">
+          <div class="flex flex-col md:flex-row md:items-start gap-6">
+            <!-- Icon -->
+            <div class="inline-flex p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/20">
+              <Plug class="h-7 w-7 text-emerald-400" />
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 space-y-4">
+              <div class="flex items-center gap-3 flex-wrap">
+                <h2 class="text-2xl font-medium text-white">{mcpFeatured.title}</h2>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs font-mono text-emerald-400">
+                  <Sparkles class="h-3 w-3" />
+                  {mcpFeatured.badge}
+                </span>
+              </div>
+              <p class="text-white/50 text-sm leading-relaxed max-w-2xl">{mcpFeatured.desc}</p>
+
+              <!-- Endpoint -->
+              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-black/30 border border-white/5 font-mono text-xs text-emerald-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                {mcpFeatured.endpoint}
+              </div>
+
+              <!-- Tools preview -->
+              <div class="flex flex-wrap gap-1.5 pt-2">
+                {mcpFeatured.tools.map((tool) => (
+                  <span class="px-2 py-0.5 rounded bg-white/5 border border-white/5 font-mono text-[11px] text-white/40 group-hover:text-white/60 transition-colors">
+                    {tool}
+                  </span>
+                ))}
+              </div>
+
+              <span class="inline-flex items-center text-emerald-400 text-sm font-medium group-hover:translate-x-1 transition-transform pt-2">
+                {mcpFeatured.cta}
+                <ArrowRight class="ml-2 h-4 w-4" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Grid de secciones -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {sections.map((section) => (
+          <a
+            href={section.href}
+            class="group p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-white/[0.03] transition-colors"
+          >
+            <div class="inline-flex p-3 rounded-xl bg-emerald-500/10 mb-4">
+              <section.icon class="h-6 w-6 text-emerald-400" />
+            </div>
+            <h2 class="text-xl font-medium text-white mb-2">{section.title}</h2>
+            <p class="text-white/40 text-sm leading-relaxed mb-4">{section.desc}</p>
+            <span class="inline-flex items-center text-emerald-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
+              {section.cta}
+              <ArrowRight class="ml-2 h-4 w-4" />
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-20 border-t border-white/5 bg-background">
+    <div class="container mx-auto px-4 max-w-4xl text-center space-y-6">
+      <h2 class="text-2xl md:text-3xl font-light text-white">¿Necesitas ayuda específica?</h2>
+      <p class="text-white/40">Escríbenos si necesitas integración custom, acceso a MCP o soporte para tu equipo.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/contact" class="inline-flex items-center justify-center h-10 px-6 rounded-md border border-white/10 hover:border-white/20 bg-background text-white/50 hover:text-white/70 transition-colors">
+          Contactar soporte
+        </a>
+      </div>
+    </div>
+  </section>
+
+</Layout>
+
+<style>
+  .bg-grid {
+    background-image:
+      linear-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+</style>

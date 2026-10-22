@@ -1,0 +1,28 @@
+{
+  "apps": [
+    {
+      "name": "elicita",
+      "script": "./dist/server/entry.mjs",
+      "cwd": "/root/.openclaw/workspace/projects/elicita/web",
+      "env": {
+        "HOST": "127.0.0.1",
+        "PORT": "4321",
+        "NODE_ENV": "production"
+      },
+      "env_file": "/root/.openclaw/workspace/projects/elicita/web/.env.production",
+      "restart_delay": 3000,
+      "max_restarts": 5,
+      "max_memory_restart": "4G",
+      "node_args": "--max-old-space-size=4096",
+      "watch": false
+    },
+    {
+      "name": "elicita-scheduler",
+      "script": "scheduler.js",
+      "cwd": "/root/.openclaw/workspace/projects/elicita/ingesta",
+      "restart_delay": 5000,
+      "max_restarts": 10,
+      "watch": false
+    }
+  ]
+}

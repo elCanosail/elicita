@@ -1,0 +1,82 @@
+---
+import Layout from '../layouts/main.astro';
+
+const description = "Ejercicio de derechos RGPD en Elicita: acceso, rectificación, supresión, oposición, limitación y portabilidad.";
+---
+
+<Layout title="Ejercicio de Derechos RGPD — Elicita" description={description}>
+	<section class="py-20 md:py-32">
+		<div class="container mx-auto px-4">
+			<div class="max-w-4xl mx-auto">
+				<h1 class="text-4xl md:text-5xl font-light text-white mb-4">Ejercicio de Derechos RGPD</h1>
+				<p class="text-white/30 mb-8">Última actualización: 6 de julio de 2026</p>
+
+				<div class="prose prose-lg dark:prose-invert max-w-none">
+					<p class="text-white/50">
+						Elicita reutiliza información publicada por organismos públicos (PLACSP, TED UE, BORME, BDNS) al amparo de la <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814" class="text-emerald-400 hover:text-emerald-300">Ley 37/2007 sobre reutilización de información del sector público</a> y del artículo 6.1.e/f del RGPD (interés público y legítimo en la transparencia de la contratación pública). Aun así, el RGPD te reconoce derechos específicos sobre tus datos personales y este servicio te los garantiza gratuitamente. Plazo legal de respuesta: 30 días (Art. 12.3 RGPD), prorrogables 60 días en casos complejos con justificación.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">Tus derechos detallados</h2>
+					<p class="text-white/50">
+						Conforme a los artículos 15-22 del RGPD y al título III de la LOPDGDD (LO 3/2018), puedes ejercer los siguientes derechos:
+					</p>
+
+					<ul>
+						<li><strong>Acceso (Art. 15 RGPD).</strong> Solicitar una copia de los datos personales que tratamos sobre ti, las finalidades del tratamiento, las categorías de datos, los destinatarios, el plazo de conservación y el origen. La primera copia es gratuita.</li>
+						<li><strong>Rectificación (Art. 16 RGPD).</strong> Pedir que corrijamos datos inexactos. Cuando el dato proviene literalmente del BORME, la corrección se hace en nuestra capa de extracción si fue un error de pipeline; si el error está en la fuente oficial, hay que solicitar la rectificación al Registro Mercantil correspondiente.</li>
+						<li><strong>Supresión o "derecho al olvido" (Art. 17 RGPD).</strong> Pedir que eliminemos los datos que ya no sean necesarios para la finalidad por la que se trataron, o cuando retires un consentimiento. Importante: los datos legítimamente publicados en el BORME al amparo de la Ley 37/2007 pueden no ser objeto de supresión total si el interés público en la transparencia mercantil prevalece (Art. 17.3.b RGPD); en esos casos valoramos cada solicitud individualmente y, si procede, aplicamos limitación o desindexación.</li>
+						<li><strong>Oposición (Art. 21 RGPD).</strong> Oponerte al tratamiento basado en interés legítimo o público alegando motivos relacionados con tu situación particular. Estudiaremos si nuestro interés legítimo prevalece o no sobre tus circunstancias.</li>
+						<li><strong>Limitación (Art. 18 RGPD).</strong> Pedir que restrinjamos el tratamiento mientras se resuelve una solicitud (por ejemplo, mientras valoramos un derecho de oposición). Durante la limitación los datos se conservan pero no se procesan más allá del almacenamiento.</li>
+						<li><strong>Portabilidad (Art. 20 RGPD).</strong> Recibir los datos personales que nos hayas facilitado tú directamente (cuenta de usuario, alertas, suscripciones) en un formato estructurado, de uso común y lectura mecánica. No aplica a los datos que tratamos a partir de la fuente pública.</li>
+						<li><strong>No ser objeto de decisiones automatizadas (Art. 22 RGPD).</strong> En Elicita no aplicamos decisiones automatizadas con efectos jurídicos sobre personas físicas. Nuestras predicciones de renovación contractual son informativas y no se usan para denegar servicios.</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">Casos especiales</h2>
+
+					<h3 class="text-white/70">Apariciones como administrador, apoderado o socio</h3>
+					<p class="text-white/50">
+						Si tu nombre aparece como cargo en una empresa del BORME, esto es publicación oficial obligatoria según la Ley de Sociedades de Capital y el Reglamento del Registro Mercantil. La publicidad mercantil prevalece sobre el derecho de supresión, pero podemos limitar la indexación SEO de tu ficha personal o aplicar otras medidas si demuestras un perjuicio concreto.
+					</p>
+
+					<h3 class="text-white/70">Confusión de identidad (homonimia)</h3>
+					<p class="text-white/50">
+						Si tu nombre coincide con el de un administrador del BORME y aparece información que no es tuya, escríbenos: corregimos la asignación.
+					</p>
+
+					<h3 class="text-white/70">Persona física fallecida</h3>
+					<p class="text-white/50">
+						El RGPD no protege datos de personas fallecidas, pero la LOPDGDD (Art. 3) reconoce a herederos derechos limitados. Acompaña la solicitud con documentación que acredite el fallecimiento y el vínculo.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">Verificación de identidad</h2>
+					<p class="text-white/50">
+						Para evitar accesos indebidos a datos personales, podemos pedirte documentación adicional que acredite tu identidad antes de tramitar el derecho. En el caso de derechos de acceso, rectificación o supresión sobre tu propia ficha, solemos pedir copia parcial de DNI/NIE (puedes tachar foto y número de soporte) y acreditación del vínculo con el dato (por ejemplo, comprobante de que eres la persona física mencionada). La documentación se elimina al cerrar el expediente.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">Cómo presentar la solicitud</h2>
+					<p class="text-white/50">
+						Puedes enviar tu solicitud por correo a <a href="mailto:privacidad@elicita.es" class="text-emerald-400 hover:text-emerald-300">privacidad@elicita.es</a> o por correo postal a:
+					</p>
+					<p class="text-white/50">
+						José María Hontoria de la Esperanza<br />
+						Calle Doctor Antonio Cortés Lladó, 5<br />
+						41004 Sevilla
+					</p>
+					<p class="text-white/50">
+						Para verificar tu identidad podemos pedirte documentación adicional.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">Reclamaciones</h2>
+					<p class="text-white/50">
+						Si no quedas conforme con nuestra respuesta, puedes reclamar ante la <a href="https://www.aepd.es" class="text-emerald-400 hover:text-emerald-300">Agencia Española de Protección de Datos</a>.
+					</p>
+
+					<hr class="border-white/5 my-8" />
+					<p class="text-sm text-white/25">
+						Última actualización: 6 de julio de 2026.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>

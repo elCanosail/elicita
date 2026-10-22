@@ -1,0 +1,95 @@
+---
+import Layout from '../layouts/main.astro';
+
+const description = "Reutilización y atribución de los datos de Elicita: licencia CC BY 4.0, condiciones y casos prácticos.";
+---
+
+<Layout title="Reutilización y Atribución — Elicita" description={description}>
+	<section class="py-20 md:py-32">
+		<div class="container mx-auto px-4">
+			<div class="max-w-4xl mx-auto">
+				<h1 class="text-4xl md:text-5xl font-light text-white mb-4">Reutilización y Atribución</h1>
+				<p class="text-white/30 mb-8">Última actualización: 6 de julio de 2026</p>
+
+				<div class="prose prose-lg dark:prose-invert max-w-none">
+					<p class="text-white/50">
+						Elicita se ampara en la <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814" class="text-emerald-400 hover:text-emerald-300">Ley 37/2007 sobre reutilización de la información del sector público</a> (transposición de la Directiva UE 2019/1024). Los datos derivados publicados en este portal se ofrecen bajo licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es" class="text-emerald-400 hover:text-emerald-300">Creative Commons Attribution 4.0 (CC BY 4.0)</a>.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">Qué puedes hacer</h2>
+					<ul>
+						<li><strong>Compartir</strong> los datos copiándolos, publicándolos y redistribuyéndolos en cualquier medio.</li>
+						<li><strong>Adaptar:</strong> remezclar, transformar, construir derivados — incluyendo uso comercial.</li>
+						<li><strong>Integrar</strong> en aplicaciones, dashboards, modelos de IA, investigación académica o productos.</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">Condiciones</h2>
+					<ul>
+						<li>Cita la fuente original: PLACSP / TED / BORME / BDNS (publicación oficial).</li>
+						<li>Cita a Elicita como intermediario técnico cuando los datos hayan pasado por nuestro pipeline de estructuración.</li>
+						<li>No desnaturalices el contenido ni induzcas a pensar que la plataforma es oficial.</li>
+						<li>Indica si has hecho cambios respecto a los datos originales.</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">Cita sugerida</h2>
+					<p class="text-white/50">
+						Datos de contratación pública (PLACSP, TED UE, BORME) estructurados por Elicita (https://elicita.es). Licencia CC BY 4.0.
+					</p>
+
+					<h3 class="text-white/70">En texto:</h3>
+					<p class="text-white/50">
+						«Datos extraídos de la Plataforma de Contratación del Sector Público (PLACSP) y Tenders Electronic Daily (TED UE), estructurados por Elicita [elicita.es]. Disponibles bajo licencia Creative Commons BY 4.0».
+					</p>
+
+					<h3 class="text-white/70">En referencia académica:</h3>
+					<p class="text-white/50">
+						Elicita. (2026). Datos estructurados de contratación pública española y europea. Elicita.es. Licencia CC BY 4.0. https://elicita.es
+					</p>
+
+					<h3 class="text-white/70">En código fuente (cabecera):</h3>
+					<pre class="bg-white/5 rounded p-4 text-sm"><code># Datos: PLACSP / TED UE / BORME via Elicita — https://elicita.es
+# Licencia datos: CC BY 4.0</code></pre>
+
+					<h2 class="text-white font-light text-2xl">Datos personales</h2>
+					<p class="text-white/50">
+						La reutilización de datos personales (nombres de administradores, apoderados, etc. provenientes del BORME) está sujeta a las limitaciones del RGPD: solo es legítimo el tratamiento para finalidades compatibles con la transparencia mercantil. Queda prohibido el perfilado comercial o publicitario de personas físicas a partir de estos datos.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">Limitaciones</h2>
+					<ul>
+						<li>No presentes los datos como «fuente oficial»: eres responsable de aclarar la cadena de origen — PLACSP/TED/BORME (oficial) → Elicita (intermediario técnico) → tú (reutilizador).</li>
+						<li>No reutilices el código fuente, diseño visual, textos editoriales originales ni la marca «Elicita» bajo CC BY 4.0 — esos elementos están reservados. La licencia CC BY 4.0 cubre exclusivamente los datos derivados de fuentes públicas que estructura nuestra plataforma.</li>
+						<li>No realices perfilado comercial individualizado de personas físicas a partir del cruce de los datos del BORME (RGPD Art. 5.1.b — limitación de la finalidad).</li>
+						<li>No utilices los datos para finalidades incompatibles con la transparencia mercantil y la contratación pública para la que se publicaron oficialmente.</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">Cuando un dato proviene de otra fuente</h2>
+					<p class="text-white/50">
+						Algunos datos integrados en Elicita no provienen de PLACSP o TED sino de otras fuentes públicas (BORME, BDNS subvenciones, CNMV, etc.). En las fichas se indica explícitamente la fuente de cada bloque. Esos datos pueden tener condiciones de reutilización propias — consulta la página de <a href="/fuentes" class="text-emerald-400 hover:text-emerald-300">fuentes</a> para conocer la licencia y restricciones de cada uno antes de redistribuir.
+					</p>
+
+					<h2 class="text-white font-light text-2xl">Casos prácticos</h2>
+					<ul>
+						<li><strong>Inteligencia comercial B2B.</strong> Permitido. Cita la fuente. Si publicas un análisis original sobre oportunidades de contratación, atribuye conforme a CC BY 4.0.</li>
+						<li><strong>Investigación académica.</strong> Permitido sin restricciones añadidas. Si publicas paper con DOI, atribuye conforme al formato académico.</li>
+						<li><strong>Producto comercial propio.</strong> Permitido — uso comercial está expresamente autorizado por CC BY 4.0. La obligación de atribución se mantiene en la documentación, página de créditos o footer del producto.</li>
+						<li><strong>Modelos de IA y entrenamiento.</strong> Los datos pueden incorporarse a corpus de entrenamiento siempre que el modelo final no exponga datos personales individualizados de personas físicas (RGPD).</li>
+						<li><strong>Listados de email/marketing sobre personas físicas.</strong> NO PERMITIDO. El BORME no autoriza esta finalidad y choca con el principio de limitación de finalidad del RGPD.</li>
+						<li><strong>Reventa como «base oficial».</strong> NO PERMITIDO. Falsearía el origen y el carácter no oficial del dato.</li>
+					</ul>
+
+					<h2 class="text-white font-light text-2xl">Preguntas frecuentes</h2>
+					<p class="text-white/50"><strong>¿Necesito permiso para reutilizar?</strong> No. La licencia CC BY 4.0 ya te da ese permiso. Solo respeta las condiciones.</p>
+					<p class="text-white/50"><strong>¿Tengo que pagar por reutilizar?</strong> No, los datos son gratis. El plan de pago de Elicita cubre comodidades técnicas (API ampliada, alertas, explorer), no el derecho de uso de los datos.</p>
+					<p class="text-white/50"><strong>¿Puedo eliminar la atribución una vez integrados los datos en mi producto?</strong> No. La atribución es obligación permanente de la licencia CC BY 4.0.</p>
+					<p class="text-white/50"><strong>¿Y si mezclo datos de Elicita con datos propios o de otras fuentes?</strong> Atribuye cada fuente por separado. La licencia CC BY 4.0 es viral en lo que cubre, pero solo afecta a los datos extraídos de fuentes públicas estructurados por Elicita.</p>
+
+					<hr class="border-white/5 my-8" />
+					<p class="text-sm text-white/25">
+						Última actualización: 6 de julio de 2026.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>

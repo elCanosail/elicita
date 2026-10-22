@@ -1,0 +1,164 @@
+---
+import Layout from '../layouts/main.astro';
+
+const metadata = {
+  title: "Changelog — elicita_",
+  description: "Historial de versiones de elicita_. Nuevas funciones, mejoras y correcciones.",
+};
+---
+
+<Layout title={metadata.title}>
+  <section class="py-20 md:py-28">
+    <div class="container mx-auto px-6">
+      <div class="max-w-3xl mx-auto">
+
+        <!-- Header -->
+        <div class="mb-16">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-3">Changelog</p>
+          <h1 class="text-3xl md:text-4xl text-white font-light">Historial de versiones</h1>
+          <p class="text-white/40 text-sm mt-3 font-mono">elicita_ — inteligencia sobre contratación pública</p>
+        </div>
+
+        <!-- Timeline -->
+        <div class="relative">
+          <div class="absolute left-3 top-2 bottom-2 w-px bg-white/8" />
+
+          <!-- v2.2.0 — Jun 2026 -->
+          <div class="relative mb-16 pl-12">
+            <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+              <span class="text-emerald-400 text-xs">●</span>
+            </div>
+            <div class="flex items-center gap-3 mb-4">
+              <span class="font-mono text-sm text-emerald-400">v2.2.0</span>
+              <span class="font-mono text-xs text-white/25">22 Jun 2026</span>
+              <span class="ml-auto font-mono text-[10px] text-emerald-400/60 uppercase tracking-wider">Latest</span>
+            </div>
+            <h3 class="text-white font-medium text-lg mb-4">BORME integration + Universo enhancement + Dashboard audit</h3>
+            <div class="space-y-5">
+              <div>
+                <p class="font-mono text-xs text-emerald-400/70 uppercase tracking-wider mb-2">Nuevas funciones</p>
+                <ul class="space-y-1.5 text-sm text-white/50 ml-4">
+                  <li class="list-disc">Universo: panel lateral de detalle al clickar nodos</li>
+                  <li class="list-disc">Universo: expansión nivel 3 con doble-click</li>
+                  <li class="list-disc">Universo: métricas de monopolio y concentración</li>
+                  <li class="list-disc">Universo: filtros por sector CPV y rango temporal</li>
+                  <li class="list-disc">Universo: URLs compartibles del grafo</li>
+                  <li class="list-disc">BORME: enriquecimiento NIF → registro mercantil</li>
+                  <li class="list-disc">BORME: identificación de cargos compartidos</li>
+                  <li class="list-disc">BORME: panel de registro en Universo</li>
+                  <li class="list-disc">Páginas públicas de licitaciones optimizadas SEO</li>
+                </ul>
+              </div>
+              <div>
+                <p class="font-mono text-xs text-blue-400/70 uppercase tracking-wider mb-2">Mejoras</p>
+                <ul class="space-y-1.5 text-sm text-white/50 ml-4">
+                  <li class="list-disc">MonitorTable: componente unificado (~913 líneas eliminadas)</li>
+                  <li class="list-disc">Universo: migrado a contratos_vivos (30.7M)</li>
+                  <li class="list-disc">Dashboard: audit completo — a11y, ARIA, responsive, design tokens</li>
+                  <li class="list-disc">Performance: fetchWithTimeout + AbortController + requestIdleCallback</li>
+                  <li class="list-disc">Sitemap: usa vista unificada (último año, 50K)</li>
+                </ul>
+              </div>
+              <div>
+                <p class="font-mono text-xs text-amber-400/70 uppercase tracking-wider mb-2">Fixes</p>
+                <ul class="space-y-1.5 text-sm text-white/50 ml-4">
+                  <li class="list-disc">Sorting: NULLs y fechas inválidas empujadas al final</li>
+                  <li class="list-disc">Activas: filtrado de licitaciones expiradas (4.3M → 1.7M)</li>
+                  <li class="list-disc">PLACSP: preservación de fecha_publicacion original (~535K registros)</li>
+                  <li class="list-disc">Conectores: DOGA, DOGV, Andalucía timeouts ajustados</li>
+                  <li class="list-disc">Detalle: validación ID, error states, CTA PLACSP no roto</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- v2.1.0 — May 2026 -->
+          <div class="relative mb-16 pl-12">
+            <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
+              <span class="text-white/30 text-xs">●</span>
+            </div>
+            <div class="flex items-center gap-3 mb-4">
+              <span class="font-mono text-sm text-white/60">v2.1.0</span>
+              <span class="font-mono text-xs text-white/25">May 2026</span>
+            </div>
+            <h3 class="text-white font-medium text-lg mb-4">Freemium + Alertas + API pública</h3>
+            <div class="space-y-5">
+              <div>
+                <p class="font-mono text-xs text-emerald-400/70 uppercase tracking-wider mb-2">Nuevas funciones</p>
+                <ul class="space-y-1.5 text-sm text-white/50 ml-4">
+                  <li class="list-disc">Sistema freemium: Free, Pro (€149/mes), Empresa (€599/mes)</li>
+                  <li class="list-disc">Alertas email inteligentes con filtros CPV, organismo y texto</li>
+                  <li class="list-disc">API keys con cuotas mensuales y diarias</li>
+                  <li class="list-disc">Checkout self-service con Stripe</li>
+                  <li class="list-disc">Documentación pública de API en /docs</li>
+                  <li class="list-disc">Servidor MCP para integración con agentes</li>
+                  <li class="list-disc">Campana de email onboarding (días 1/3/5/7)</li>
+                  <li class="list-disc">CTAs contextuales de upgrade para usuarios Free</li>
+                </ul>
+              </div>
+              <div>
+                <p class="font-mono text-xs text-blue-400/70 uppercase tracking-wider mb-2">Mejoras</p>
+                <ul class="space-y-1.5 text-sm text-white/50 ml-4">
+                  <li class="list-disc">Onboarding skippable sin bloqueo de CIF</li>
+                  <li class="list-disc">Clerk forzado a español en runtime</li>
+                  <li class="list-desc">Página de precios con JSON-LD estructurado</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- v2.0.0 — Mar 2026 -->
+          <div class="relative mb-16 pl-12">
+            <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
+              <span class="text-white/30 text-xs">●</span>
+            </div>
+            <div class="flex items-center gap-3 mb-4">
+              <span class="font-mono text-sm text-white/60">v2.0.0</span>
+              <span class="font-mono text-xs text-white/25">Mar 2026</span>
+            </div>
+            <h3 class="text-white font-medium text-lg mb-4">Fase 2 — Explorer + DataGrid</h3>
+            <div class="space-y-5">
+              <div>
+                <p class="font-mono text-xs text-emerald-400/70 uppercase tracking-wider mb-2">Nuevas funciones</p>
+                <ul class="space-y-1.5 text-sm text-white/50 ml-4">
+                  <li class="list-disc">Explorer: proyecciones, oportunidades de mercado, competidores</li>
+                  <li class="list-disc">DataGrid con FilterSidebar y FilterChips</li>
+                  <li class="list-disc">KpiStrip con datos reales desde /api/stats</li>
+                  <li class="list-disc">Búsqueda semántica con relevance scoring</li>
+                  <li class="list-disc">Buscador público con resultados de 66M+ registros</li>
+                </ul>
+              </div>
+              <div>
+                <p class="font-mono text-xs text-blue-400/70 uppercase tracking-wider mb-2">Mejoras</p>
+                <ul class="space-y-1.5 text-sm text-white/50 ml-4">
+                  <li class="list-disc">API migrada de JSON cache a DuckDB (30.7M contratos)</li>
+                  <li class="list-disc">Scheduler con health tracking y cache fallback</li>
+                  <li class="list-disc">Conectores: Catalunya menores (866K registros), Euskadi v2</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- v1.0.0 — Feb 2026 -->
+          <div class="relative pl-12">
+            <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
+              <span class="text-white/30 text-xs">●</span>
+            </div>
+            <div class="flex items-center gap-3 mb-4">
+              <span class="font-mono text-sm text-white/60">v1.0.0</span>
+              <span class="font-mono text-xs text-white/25">Feb 2026</span>
+            </div>
+            <h3 class="text-white font-medium text-lg mb-4">Release inicial</h3>
+            <p class="text-sm text-white/40 leading-relaxed">
+              66M+ registros indexados. 11 fuentes oficiales (PLACSP, TED, 8 CCAA + BORME).
+              DuckDB como motor de consultas. Autenticación Clerk. Pipeline de ingesta con
+              scheduler automático cada 4 horas. 20 indicadores de calidad.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+</Layout>

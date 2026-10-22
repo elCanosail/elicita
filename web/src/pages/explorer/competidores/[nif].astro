@@ -1,0 +1,1419 @@
+---
+import Layout from '../../../layouts/dashboard.astro';
+import { query } from '../../../lib/duckdb';
+import { titleCase } from '../../../lib/format';
+
+
+const { nif } = Astro.params;
+
+if (!nif) {
+  return Astro.redirect('/explorer/competidores');
+}
+
+// CPV dictionary
+let cpvDict: Record<string, string> = {};
+try {
+  const cpvModule = await import('../../../data/cpv_es.json');
+  cpvDict = (cpvModule.default || cpvModule) as Record<string, string>;
+} catch {}
+
+// ── 1. All contratación queries in parallel ────────────────────────────────
+let companyName = nif;
+let totalContratos = 0;
+let totalVolumen = 0;
+let mediaContrato = 0;
+let topOrganismos: { organismo: string; contratos: number; volumen: number }[] = [];
+let evolucionAnual: { ano: number; contratos: number; volumen: number }[] = [];
+let cpvsPrincipales: { code: string; name: string; count: number }[] = [];
+
+interface Adjudicacion {
+  id: string;
+  objeto: string;
+  organismo: string;
+  importe: number;
+  fecha: string;
+  estado: string;
+  cpv: string;
+}
+let adjudicaciones: Adjudicacion[] = [];
+
+try {
+  const [nameRows, statsRows, orgRows, anoRows, cpvRows, adjRows] = await Promise.all([
+    query(`SELECT DISTINCT adjudicatario FROM contratos_vivos WHERE nif_adjudicatario = ? AND adjudicatario IS NOT NULL LIMIT 1`, [nif]),
+    query(`SELECT COUNT(*) AS total, COALESCE(SUM(importe_adjudicacion), 0) AS volumen FROM contratos_vivos WHERE nif_adjudicatario = ?`, [nif]),
+    query(`SELECT organismo, COUNT(*) AS contratos, COALESCE(SUM(importe_adjudicacion), 0) AS volumen FROM contratos_vivos WHERE nif_adjudicatario = ? AND organismo IS NOT NULL GROUP BY organismo ORDER BY volumen DESC LIMIT 20`, [nif]),
+    query(`SELECT EXTRACT(YEAR FROM fecha_publicacion) AS ano, COUNT(*) AS contratos, COALESCE(SUM(importe_adjudicacion), 0) AS volumen FROM contratos_vivos WHERE nif_adjudicatario = ? AND fecha_publicacion IS NOT NULL GROUP BY ano ORDER BY ano ASC`, [nif]),
+    query(`SELECT cpv AS cpv_principal, COUNT(*) AS cnt FROM contratos_vivos WHERE nif_adjudicatario = ? AND cpv IS NOT NULL GROUP BY cpv ORDER BY cnt DESC LIMIT 8`, [nif]),
+    query(`SELECT objeto, organismo, importe_adjudicacion, fecha_publicacion, estado, cpv, id FROM contratos_vivos WHERE nif_adjudicatario = ? ORDER BY fecha_publicacion DESC LIMIT 50`, [nif]),
+  ]);
+
+  if (nameRows.length > 0) companyName = titleCase(nameRows[0].adjudicatario) || nameRows[0].adjudicatario;
+  if (statsRows.length > 0) {
+    totalContratos = Number(statsRows[0].total) || 0;
+    totalVolumen = Number(statsRows[0].volumen) || 0;
+    mediaContrato = totalContratos > 0 ? totalVolumen / totalContratos : 0;
+  }
+  topOrganismos = orgRows.map(r => ({ organismo: titleCase(r.organismo) || r.organismo, contratos: Number(r.contratos), volumen: Number(r.volumen) }));
+  evolucionAnual = anoRows.map(r => ({ ano: Number(r.ano), contratos: Number(r.contratos), volumen: Number(r.volumen) }));
+  cpvsPrincipales = cpvRows.map(r => {
+    const code = String(r.cpv).replace('.0', '').trim();
+    return { code, name: cpvDict[code] || code, count: Number(r.cnt) };
+  });
+  adjudicaciones = adjRows.map((r: any) => ({
+    id: r.id ? String(r.id) : '',
+    objeto: r.objeto || '—',
+    organismo: titleCase(r.organismo) || r.organismo || '—',
+    importe: Number(r.importe_adjudicacion) || 0,
+    fecha: r.fecha_publicacion ? String(r.fecha_publicacion).slice(0, 10) : '—',
+    estado: r.estado || '—',
+    cpv: r.cpv ? String(r.cpv).replace('.0', '').trim() : '',
+  }));
+} catch (e: any) {
+  console.error('[ficha competidor] contratación error:', e?.message);
+}
+
+// ── 2. Calidad ────────────────────────────────────────────────────────────
+const CALIDAD_INDICATORS = [
+  'INT-VAL-01','INT-VAL-02','INT-VAL-03','INT-VAL-04','INT-VAL-05',
+  'INT-VAL-06','INT-VAL-07','INT-VAL-09','INT-VAL-10','INT-VAL-12','INT-VAL-14',
+  'INT-CONS-01','INT-CONS-08','INT-CONS-18','INT-CONS-20',
+  'INT-FIA-01','INT-FIA-04','INT-FIA-08','INT-FIA-09','INT-FIA-11',
+];
+const INDICATOR_LABELS: Record<string, string> = {
+  'INT-VAL-01': 'Publicación en plazo',
+  'INT-VAL-02': 'Tipo de procedimiento informado',
+  'INT-VAL-03': 'Criterios de adjudicación publicados',
+  'INT-VAL-04': 'Plazo de presentación adecuado',
+  'INT-VAL-05': 'Objeto del contrato descriptivo',
+  'INT-VAL-06': 'CPV informado',
+  'INT-VAL-07': 'Valor estimado publicado',
+  'INT-VAL-09': 'Nº de ofertas recibidas informado',
+  'INT-VAL-10': 'Adjudicatario identificado',
+  'INT-VAL-12': 'Importe de adjudicación publicado',
+  'INT-VAL-14': 'Fecha de adjudicación informada',
+  'INT-CONS-01': 'Coherencia tipo contrato - CPV',
+  'INT-CONS-08': 'Coherencia importe licitación - adjudicación',
+  'INT-CONS-18': 'Coherencia procedimiento - nº ofertas',
+  'INT-CONS-20': 'Coherencia plazos',
+  'INT-FIA-01': 'NIF adjudicatario válido',
+  'INT-FIA-04': 'Importe adjudicación > 0',
+  'INT-FIA-08': 'Adjudicatario no es el propio órgano',
+  'INT-FIA-09': 'Duración del contrato informada',
+  'INT-FIA-11': 'Condiciones de ejecución informadas',
+};
+
+let calidadScore: number | null = null;
+let calidadTotal = 0;
+let calidadIndicators: Record<string, number | null> = {};
+
+// Normalize company name for BORME lookup
+function normalizeName(name: string): string {
+  return name.replace(/,/g, '').replace(/\./g, '')
+    .replace(/\bS\.?L\.?U\.?\b/gi, '').replace(/\bS\.?A\.?U\.?\b/gi, '')
+    .replace(/\bS\.?L\.?\b/gi, '').replace(/\bS\.?A\.?\b/gi, '')
+    .replace(/\bS\.?C\.?\b/gi, '').replace(/\bS\.?L\.?P\.?\b/gi, '')
+    .toUpperCase().replace(/\s+/g, ' ').trim();
+}
+
+// ── NIF canonical resolution ───────────────────────────────────────────────
+let canonicalName: string | null = null;
+let bormeNorm = '';
+let nifVerificado = false;
+try {
+  const canonRows = await query(`SELECT nombre FROM nif_canonical WHERE nif = ? LIMIT 1`, [nif]);
+  if (canonRows.length > 0 && canonRows[0].nombre) {
+    canonicalName = String(canonRows[0].nombre);
+    nifVerificado = true;
+  }
+} catch (e: any) {
+  console.error('[ficha competidor] nif_canonical error:', e?.message);
+}
+
+const bormeSearchName = canonicalName || companyName;
+bormeNorm = normalizeName(bormeSearchName);
+
+let bormeEmpresas: { fecha_borme: string; actos: string; domicilio?: string; capital_euros?: number; fecha_constitucion?: string; provincia?: string; hoja_registral?: string; tomo?: string; inscripcion?: string; fecha_inscripcion?: string }[] = [];
+let bormeCargos: { fecha_borme: string; tipo_acto: string; cargo: string; persona_hash: string }[] = [];
+let bormeInfo: { domicilio?: string; capital_euros?: number; fecha_constitucion?: string; provincia?: string; hoja_registral?: string; tomo?: string; inscripcion?: string; fecha_inscripcion?: string } = {};
+
+// ── Run calidad + BORME queries in parallel ────────────────────────────────
+try {
+  const indicatorSelects = CALIDAD_INDICATORS.map(ind =>
+    `SUM(CASE WHEN "${ind}" THEN 1 ELSE 0 END) * 100.0 / NULLIF(SUM(CASE WHEN "${ind}" IS NOT NULL THEN 1 ELSE 0 END), 0) AS "${ind}_pct"`
+  ).join(', ');
+
+  const [calidadResult, bormeEmpResult, bormeCargoResult] = await Promise.all([
+    query(`SELECT AVG(score_calidad) AS score, CAST(COUNT(*) AS INTEGER) AS total, ${indicatorSelects} FROM calidad WHERE nif_adjudicatario = ?`, [nif]).catch(() => []),
+    query(`SELECT fecha_borme, actos, domicilio, capital_euros, fecha_constitucion FROM borme_empresas WHERE empresa_norm LIKE ? ORDER BY fecha_borme DESC LIMIT 30`, [`%${bormeNorm}%`]).catch(() => []),
+    query(`SELECT fecha_borme, tipo_acto, cargo, persona_hash FROM borme_cargos WHERE empresa_norm LIKE ? ORDER BY fecha_borme DESC LIMIT 50`, [`%${bormeNorm}%`]).catch(() => []),
+  ]);
+
+  // Process calidad
+  if (calidadResult.length > 0 && calidadResult[0].score !== null) {
+    calidadScore = Math.round(calidadResult[0].score * 10) / 10;
+    calidadTotal = calidadResult[0].total || 0;
+    for (const ind of CALIDAD_INDICATORS) {
+      const val = calidadResult[0][`${ind}_pct`];
+      calidadIndicators[ind] = val !== null && val !== undefined ? Math.round(val) : null;
+    }
+  }
+
+  // Process BORME empresas
+  bormeEmpresas = bormeEmpResult.map((r: any) => ({
+    fecha_borme: r.fecha_borme ? String(r.fecha_borme).slice(0, 10) : '—',
+    actos: r.actos || '—',
+    domicilio: r.domicilio || undefined,
+    capital_euros: r.capital_euros ? Number(r.capital_euros) : undefined,
+    fecha_constitucion: r.fecha_constitucion ? String(r.fecha_constitucion).slice(0, 10) : undefined,
+    provincia: r.provincia || undefined,
+    hoja_registral: r.hoja_registral || undefined,
+    tomo: r.tomo || undefined,
+    inscripcion: r.inscripcion || undefined,
+    fecha_inscripcion: r.fecha_inscripcion ? String(r.fecha_inscripcion).slice(0, 10) : undefined,
+  }));
+  for (const row of bormeEmpResult) {
+    if (!bormeInfo.domicilio && row.domicilio) bormeInfo.domicilio = row.domicilio;
+    if (!bormeInfo.capital_euros && row.capital_euros) bormeInfo.capital_euros = Number(row.capital_euros);
+    if (!bormeInfo.fecha_constitucion && row.fecha_constitucion) bormeInfo.fecha_constitucion = String(row.fecha_constitucion).slice(0, 10);
+    if (!bormeInfo.provincia && row.provincia) bormeInfo.provincia = row.provincia;
+    if (!bormeInfo.hoja_registral && row.hoja_registral) bormeInfo.hoja_registral = row.hoja_registral;
+    if (!bormeInfo.tomo && row.tomo) bormeInfo.tomo = row.tomo;
+    if (!bormeInfo.inscripcion && row.inscripcion) bormeInfo.inscripcion = row.inscripcion;
+    if (!bormeInfo.fecha_inscripcion && row.fecha_inscripcion) bormeInfo.fecha_inscripcion = String(row.fecha_inscripcion).slice(0, 10);
+  }
+
+  // Process BORME cargos
+  bormeCargos = bormeCargoResult.map((r: any) => ({
+    fecha_borme: r.fecha_borme ? String(r.fecha_borme).slice(0, 10) : '—',
+    tipo_acto: r.tipo_acto || '—',
+    cargo: r.cargo || '—',
+    persona_hash: r.persona_hash || '',
+
+  }));
+} catch (e) { console.error("[ficha] calidad+BORME:", e?.message); }
+
+// ── BORME Name Resolution ──────────────────────────────────────────────
+
+
+// ── 4. HALLAZGOS ──────────────────────────────────────────────────────────
+interface Hallazgo {
+  nivel: 'info' | 'warning' | 'risk';
+  icon: string;
+  texto: string;
+}
+const hallazgos: Hallazgo[] = [];
+
+try {
+  // Shared admin: persons in this company's cargos that also appear in other adjudicatarios
+  if (bormeCargos.length > 0) {
+    const personHashes = [...new Set(bormeCargos.map(c => c.persona_hash).filter(Boolean))];
+    if (personHashes.length > 0) {
+      const hashLiteral = personHashes.map(h => `'${h.replace(/'/g, "''")}'`).join(',');
+      const sharedAdminRows = await query(
+        `SELECT COUNT(DISTINCT bc.empresa_norm) AS num_empresas
+         FROM borme_cargos bc
+         WHERE bc.persona_hash IN (${hashLiteral})
+           AND bc.empresa_norm NOT LIKE ?`,
+        [`%${bormeNorm}%`]
+      );
+      const numEmpresas = Number(sharedAdminRows[0]?.num_empresas || 0);
+      if (numEmpresas > 1) {
+        hallazgos.push({
+          nivel: 'info',
+          icon: '🔗',
+          texto: `Administrador presente en ${numEmpresas} otras empresas registradas en BORME`,
+        });
+      }
+    }
+  }
+
+  // Dissolution/bankruptcy risk
+  const riskActs = bormeEmpresas.filter(e => {
+    const actos = (e.actos || '').toLowerCase();
+    return actos.includes('disoluci') || actos.includes('concurso') || actos.includes('liquidaci');
+  });
+  if (riskActs.length > 0) {
+    hallazgos.push({
+      nivel: 'risk',
+      icon: '⚠️',
+      texto: `Señal de riesgo: acto de disolución/concurso registrado (${riskActs[0].fecha_borme})`,
+    });
+  }
+
+  // Recently constituted
+  if (bormeInfo.fecha_constitucion && evolucionAnual.length > 0) {
+    const constitucion = new Date(bormeInfo.fecha_constitucion.replace(/(\d{2})\.(\d{2})\.(\d{2,4})/, '$3-$2-$1'));
+    const firstAno = evolucionAnual[0].ano;
+    const firstAdjDate = new Date(`${firstAno}-01-01`);
+    const monthsDiff = (firstAdjDate.getTime() - constitucion.getTime()) / (1000 * 60 * 60 * 24 * 30);
+    if (monthsDiff < 24 && monthsDiff >= 0) {
+      hallazgos.push({
+        nivel: 'warning',
+        icon: '🆕',
+        texto: `Empresa constituida ${Math.round(monthsDiff)} meses antes de su primera adjudicación (${bormeInfo.fecha_constitucion})`,
+      });
+    }
+  }
+
+  // Low capital, large contracts
+  if (bormeInfo.capital_euros !== undefined && bormeInfo.capital_euros < 3000 && totalVolumen > 100000) {
+    hallazgos.push({
+      nivel: 'warning',
+      icon: '💶',
+      texto: `Capital social bajo (${bormeInfo.capital_euros.toLocaleString('es-ES')}€) frente a volumen de contratos elevado (${fmtVolumen(totalVolumen)})`,
+    });
+  }
+
+  // No hallazgos found → positive signal
+  if (hallazgos.length === 0 && totalContratos > 0) {
+    hallazgos.push({
+      nivel: 'info',
+      icon: '✅',
+      texto: 'Sin señales de riesgo detectadas en el cruce de fuentes disponibles',
+    });
+  }
+} catch (e: any) {
+  console.error('[ficha competidor] hallazgos error:', e?.message);
+}
+
+// ── Compute active officers (Nombramientos without matching Ceses) ─────────
+const nombramientos = bormeCargos.filter(c =>
+  c.tipo_acto.toLowerCase().includes('nombramiento')
+);
+const cesadoKeys = new Set(
+  bormeCargos
+    .filter(c => c.tipo_acto.toLowerCase().includes('ces') || c.tipo_acto.toLowerCase().includes('dimisi'))
+    .map(c => `${c.persona_hash}:${c.cargo}`)
+);
+const seenActive = new Set<string>();
+const activeCargos = nombramientos
+  .filter(c => {
+    const key = `${c.persona_hash}:${c.cargo}`;
+    if (cesadoKeys.has(key)) return false;
+    if (seenActive.has(key)) return false;
+    seenActive.add(key);
+    return true;
+  })
+  .sort((a, b) => b.fecha_borme.localeCompare(a.fecha_borme));
+
+// ── Close DB ──────────────────────────────────────────────────────────────
+Astro.response.headers.set('Cache-Control', 'public, max-age=3600');
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function fmtVolumen(v: number): string {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M€';
+  if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K€';
+  return v.toFixed(0) + '€';
+}
+
+function scoreColor(s: number | null): string {
+  if (s === null) return 'hsl(var(--muted-foreground))';
+  if (s > 85) return 'hsl(var(--primary))';
+  if (s > 70) return 'hsl(var(--warning))';
+  return 'hsl(var(--destructive))';
+}
+
+function hallazgoColor(nivel: string): string {
+  if (nivel === 'risk') return 'hsl(var(--destructive))';
+  if (nivel === 'warning') return 'hsl(var(--warning))';
+  return 'hsl(var(--primary))';
+}
+
+// Bar chart for yearly evolution
+const maxContratos = evolucionAnual.length > 0 ? Math.max(...evolucionAnual.map(r => r.contratos)) : 1;
+---
+
+<Layout title={`${companyName} — elicita_`} active="competidores">
+
+<div class="ficha-wrap">
+
+  <!-- Back -->
+  <a href="/explorer/competidores" class="back-link">← Volver a Competidores</a>
+
+  <!-- Header -->
+  <div class="ficha-header">
+    <div class="ficha-header-main">
+      <h1 class="ficha-name">{companyName}</h1>
+      <div class="ficha-nif">NIF: <span class="mono">{nif}</span>
+        {nifVerificado ? (
+          <span class="nif-badge nif-badge-verified" title="NIF encontrado en BORME">NIF verificado en BORME</span>
+        ) : (
+          <span class="nif-badge nif-badge-unverified" title="NIF no presente en BORME">NIF no verificado</span>
+        )}
+      </div>
+      {canonicalName && (
+        <div class="ficha-canonical mono">{titleCase(canonicalName)}</div>
+      )}
+    </div>
+    <div class="ficha-actions">
+      <button id="follow-btn" class="follow-btn" data-type="competidor" data-id={nif} data-name={companyName}>
+        <span class="follow-icon">☆</span>
+        <span class="follow-text">Seguir</span>
+      </button>
+      {calidadScore !== null && (
+        <div class="score-badge-lg" style={`color:${scoreColor(calidadScore)};border-color:${scoreColor(calidadScore)}44`}
+             title={`Score de calidad basado en ${calidadTotal.toLocaleString('es-ES')} contratos`}>
+          <div class="score-val">{calidadScore}</div>
+          <div class="score-lbl">calidad</div>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- CONTRATACIÓN PÚBLICA -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <span class="section-line"></span>
+    <span>CONTRATACIÓN PÚBLICA</span>
+    <span class="section-line"></span>
+  </div>
+
+  {totalContratos === 0 ? (
+    <div class="empty-card">Sin datos de contratación para este NIF</div>
+  ) : (
+    <>
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val mono">{totalContratos.toLocaleString('es-ES')}</div>
+          <div class="stat-lbl">Total contratos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{fmtVolumen(totalVolumen)}</div>
+          <div class="stat-lbl">Volumen total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">{fmtVolumen(mediaContrato)}</div>
+          <div class="stat-lbl">Media por contrato</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val mono">PLACE</div>
+          <div class="stat-lbl">Fuente principal</div>
+        </div>
+      </div>
+
+      <!-- Top organismos -->
+      {topOrganismos.length > 0 && (
+        <div class="card">
+          <div class="card-header">Top Organismos Contratantes (por volumen)</div>
+          <div class="org-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Organismo</th>
+                <th class="th-r">Contratos</th>
+                <th class="th-r">Volumen</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topOrganismos.map(org => (
+                <tr>
+                  <td class="td-org">
+                    <a href={`/explorer/organismos/${encodeURIComponent(org.organismo)}`} class="org-link">{org.organismo}</a>
+                  </td>
+                  <td class="td-r mono">{org.contratos.toLocaleString('es-ES')}</td>
+                  <td class="td-r mono">{fmtVolumen(org.volumen)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        </div>
+      )}
+
+      <!-- Evolución anual -->
+      {evolucionAnual.length > 0 && (
+        <div class="card">
+          <div class="card-header">Evolución Anual</div>
+          <div class="evo-chart">
+            {evolucionAnual.map(row => (
+              <div class="evo-row">
+                <div class="evo-year mono">{row.ano}</div>
+                <div class="evo-bar-wrap">
+                  <div class="evo-bar" style={`width:${Math.max(2, (row.contratos / maxContratos) * 100)}%`}></div>
+                </div>
+                <div class="evo-val mono">{row.contratos} <span class="evo-vol">({fmtVolumen(row.volumen)})</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- CPVs principales -->
+      {cpvsPrincipales.length > 0 && (
+        <div class="card">
+          <div class="card-header">CPVs Principales</div>
+          <div class="cpv-pills">
+            {cpvsPrincipales.map(cpv => (
+              <div class="cpv-pill" title={`${cpv.code} · ${cpv.count} contratos`}>
+                <span class="cpv-code mono">{cpv.code}</span>
+                <span class="cpv-name">{cpv.name.replace(/\.$/, '').slice(0, 60)}{cpv.name.length > 60 ? '…' : ''}</span>
+                <span class="cpv-cnt mono">×{cpv.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )}
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ÚLTIMAS ADJUDICACIONES -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  {adjudicaciones.length > 0 && (
+    <>
+      <div class="section-title">
+        <span class="section-line"></span>
+        <span>ÚLTIMAS ADJUDICACIONES</span>
+        <span class="section-line"></span>
+      </div>
+      <div class="card">
+        <div class="card-header">Últimas Adjudicaciones</div>
+        <div class="adj-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Objeto</th>
+                <th>Organismo</th>
+                <th class="th-r">Importe</th>
+                <th class="th-r">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {adjudicaciones.map(a => (
+                <tr class={a.id ? 'clickable-row' : ''} data-href={a.id ? `/monitor/licitacion/${a.id}` : undefined}>
+                  <td class="td-objeto">
+                    <div class="obj-clamp" title={a.objeto}>{a.objeto}</div>
+                  </td>
+                  <td class="td-org-sm">{a.organismo}</td>
+                  <td class="td-r mono">{fmtVolumen(a.importe)}</td>
+                  <td class="td-r mono" style="font-size:11px;color:hsl(var(--foreground) / 0.3)">{a.fecha}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  )}
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- INDICADORES DE CALIDAD -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <span class="section-line"></span>
+    <span>INDICADORES DE CALIDAD</span>
+    <span class="section-line"></span>
+  </div>
+
+  {calidadScore === null ? (
+    <div class="empty-card">Sin datos de calidad para este NIF</div>
+  ) : (
+    <div class="card">
+      <div class="calidad-header">
+        <div class="score-badge-md" style={`color:${scoreColor(calidadScore)};border-color:${scoreColor(calidadScore)}44`}>
+          <div class="score-val-md">{calidadScore}</div>
+          <div class="score-lbl-sm">/ 100</div>
+        </div>
+        <div class="calidad-meta">
+          <div class="calidad-title">Score de Calidad Documental</div>
+          <div class="calidad-sub">Basado en {calidadTotal.toLocaleString('es-ES')} contratos analizados</div>
+        </div>
+      </div>
+      <div class="indicators-grid">
+        {CALIDAD_INDICATORS.map(ind => {
+          const pct = calidadIndicators[ind];
+          const label = INDICATOR_LABELS[ind] || ind;
+          const color = pct === null ? 'hsl(var(--muted-foreground))' : pct >= 85 ? 'hsl(var(--primary))' : pct >= 70 ? 'hsl(var(--warning))' : 'hsl(var(--destructive))';
+          return (
+            <div class="indicator-item" title={`${ind}: ${pct !== null ? pct + '%' : 'Sin datos'}`}>
+              <div class="ind-bar-wrap">
+                <div class="ind-bar" style={`width:${pct ?? 0}%;background:${color}`}></div>
+              </div>
+              <div class="ind-bottom">
+                <span class="ind-code mono">{ind}</span>
+                <span class="ind-pct mono" style={`color:${color}`}>{pct !== null ? pct + '%' : '—'}</span>
+              </div>
+              <div class="ind-label">{label}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  )}
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- REGISTRO MERCANTIL (BORME) — only render when data exists -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  {bormeEmpresas.length === 0 && bormeCargos.length === 0 && totalContratos === 0 && (
+    <>
+      <div class="section-title">
+        <span class="section-line"></span>
+        <span>REGISTRO MERCANTIL (BORME)</span>
+        <span class="section-line"></span>
+      </div>
+      <div class="empty-card">Empresa no encontrada en registro mercantil</div>
+    </>
+  )}
+
+  {(bormeEmpresas.length > 0 || bormeCargos.length > 0) && (
+    <>
+      <div class="section-title">
+        <span class="section-line"></span>
+        <span>REGISTRO MERCANTIL (BORME)</span>
+        <span class="section-line"></span>
+      </div>
+
+      <div class="borme-grid">
+        <!-- Company details -->
+        {(bormeInfo.domicilio || bormeInfo.capital_euros !== undefined || bormeInfo.fecha_constitucion || bormeInfo.provincia || bormeInfo.tomo) && (
+          <div class="card borme-info-card">
+            <div class="card-header">Datos Registrales</div>
+            <div class="borme-details">
+              {bormeInfo.domicilio && (
+                <div class="borme-detail-row">
+                  <span class="detail-icon">📍</span>
+                  <span class="detail-val">{bormeInfo.domicilio}</span>
+                </div>
+              )}
+              {bormeInfo.provincia && (
+                <div class="borme-detail-row">
+                  <span class="detail-icon">📌</span>
+                  <span class="detail-val">{titleCase(bormeInfo.provincia)}</span>
+                </div>
+              )}
+              {bormeInfo.capital_euros !== undefined && (
+                <div class="borme-detail-row">
+                  <span class="detail-icon">💶</span>
+                  <span class="detail-val">Capital social: <span class="mono">{bormeInfo.capital_euros.toLocaleString('es-ES')}€</span></span>
+                </div>
+              )}
+              {bormeInfo.fecha_constitucion && (
+                <div class="borme-detail-row">
+                  <span class="detail-icon">📅</span>
+                  <span class="detail-val">Constitución: <span class="mono">{bormeInfo.fecha_constitucion}</span></span>
+                </div>
+              )}
+              {bormeInfo.tomo && (
+                <div class="borme-detail-row">
+                  <span class="detail-icon">📖</span>
+                  <span class="detail-val">Tomo <span class="mono">{bormeInfo.tomo}</span>{bormeInfo.hoja_registral && ` · Hoja ${bormeInfo.hoja_registral}`}{bormeInfo.inscripcion && ` · Inscripción ${bormeInfo.inscripcion}`}</span>
+                </div>
+              )}
+              {bormeInfo.fecha_inscripcion && (
+                <div class="borme-detail-row">
+                  <span class="detail-icon">📝</span>
+                  <span class="detail-val">Fecha de inscripción: <span class="mono">{bormeInfo.fecha_inscripcion}</span></span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <!-- Active officers -->
+        {activeCargos.length > 0 && (
+          <div class="card">
+            <div class="card-header">Administradores Activos</div>
+            <div class="cargos-list">
+              {activeCargos.slice(0, 15).map(c => (
+                <div class="cargo-row">
+                  <div class="cargo-left">
+                    <span class="cargo-badge">{c.cargo}</span>
+                    <span class="cargo-name hash">
+                      Persona #{c.persona_hash ? c.persona_hash.slice(-4).toUpperCase() : '????'}
+                    </span>
+                  </div>
+                  <span class="cargo-fecha mono">{c.fecha_borme}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- All cargos (historical) if no active computed but cargos exist -->
+        {activeCargos.length === 0 && bormeCargos.length > 0 && (
+          <div class="card">
+            <div class="card-header">Cargos y Representantes</div>
+            <div class="cargos-list">
+              {[...new Map(bormeCargos.map(c => [c.persona_hash + c.cargo, c])).values()].slice(0, 15).map(c => (
+                <div class="cargo-row">
+                  <div class="cargo-left">
+                    <span class="cargo-badge">{c.cargo}</span>
+                    <span class="cargo-acto">{c.tipo_acto}</span>
+                  </div>
+                  <span class="cargo-fecha mono">{c.fecha_borme}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Timeline actos -->
+        {bormeEmpresas.length > 0 && (
+          <div class="card borme-timeline-card">
+            <div class="card-header">Actos Mercantiles</div>
+            <div class="timeline">
+              {bormeEmpresas.slice(0, 20).map(e => (
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-date mono">{e.fecha_borme}</div>
+                    <div class="timeline-actos">{e.actos}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  )}
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- CARGOS COMPARTIDOS -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <span class="section-line"></span>
+    <span>CARGOS COMPARTIDOS</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div id="conflictos-container" data-nif={nif}>
+    <div class="empty-card">Cargando análisis de cargos compartidos...</div>
+  </div>
+  <div class="text-xs text-white/40 mt-2 max-w-2xl">
+    Información derivada del cruce de datos públicos (BORME + contratación). La coincidencia de cargos entre empresas no implica irregularidad. Análisis estadístico, no juicio legal.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- HALLAZGOS -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <span class="section-line"></span>
+    <span>HALLAZGOS</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="hallazgos-list">
+    {hallazgos.map(h => (
+      <div class="hallazgo-card" style={`border-left-color:${hallazgoColor(h.nivel)}`}>
+        <span class="hallazgo-icon">{h.icon}</span>
+        <span class="hallazgo-texto">{h.texto}</span>
+      </div>
+    ))}
+    {hallazgos.length === 0 && (
+      <div class="empty-card">Sin hallazgos disponibles</div>
+    )}
+  </div>
+
+  <div class="ficha-footer">
+    <span class="mono">Fuentes: PLACSP + CCAA unificadas (contratos_vivos) · BORME · calidad</span>
+    <span>·</span>
+    <span>NIF: <span class="mono">{nif}</span></span>
+  </div>
+
+</div>
+
+</Layout>
+
+<style is:global>
+  .ficha-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+  }
+
+  /* Back link */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.3);
+    text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: hsl(var(--primary)); }
+
+  /* Header */
+  .ficha-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .ficha-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: hsl(var(--foreground) / 0.92);
+    margin: 0 0 6px;
+    line-height: 1.2;
+  }
+  .ficha-nif {
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+
+  /* Follow button */
+  .ficha-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .follow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid hsl(var(--foreground) / 0.12);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.55);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .follow-btn:hover {
+    border-color: hsl(var(--primary) / 0.4);
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.05);
+  }
+  .follow-btn.following {
+    border-color: hsl(var(--primary) / 0.35);
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.08);
+  }
+  .follow-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Score badges */
+  .score-badge-lg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: hsl(var(--background) / 0.4);
+    flex-shrink: 0;
+    cursor: default;
+  }
+  .score-badge-lg .score-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; line-height: 1; }
+  .score-badge-lg .score-lbl { font-size: 8px; color: hsl(var(--foreground) / 0.3); letter-spacing: 0.05em; }
+
+  .score-badge-md {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: hsl(var(--background) / 0.4);
+    flex-shrink: 0;
+    cursor: default;
+  }
+  .score-val-md { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; line-height: 1; }
+  .score-lbl-sm { font-size: 8px; color: hsl(var(--foreground) / 0.3); }
+
+  /* Section dividers */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: hsl(var(--foreground) / 0.2);
+    margin: 36px 0 16px;
+  }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: hsl(var(--foreground) / 0.06);
+  }
+
+  /* Cards */
+  .card {
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .card-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(var(--foreground) / 0.2);
+    margin-bottom: 14px;
+  }
+  .empty-card {
+    background: hsl(var(--foreground) / 0.01);
+    border: 1px solid hsl(var(--foreground) / 0.05);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.2);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .stat-card {
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 20px;
+    font-weight: 600;
+    color: hsl(var(--primary));
+    margin-bottom: 4px;
+  }
+  .stat-lbl {
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+
+  /* Data table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .data-table thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--foreground) / 0.15);
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+  }
+  .data-table thead th.th-r { text-align: right; }
+  .data-table tbody tr {
+    border-bottom: 1px solid hsl(var(--foreground) / 0.03);
+  }
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table tbody tr:hover { background: hsl(var(--foreground) / 0.02); }
+  .data-table td {
+    padding: 9px 8px;
+    color: hsl(var(--foreground) / 0.7);
+    vertical-align: top;
+  }
+  .td-org { max-width: 400px; font-size: 12px; }
+  .org-link {
+    color: hsl(var(--foreground) / 0.75);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .org-link:hover { color: hsl(var(--primary)); }
+  .org-scroll { max-height: 400px; overflow-y: auto; }
+  .td-r { text-align: right; }
+
+  /* Evolución anual chart */
+  .evo-chart { display: flex; flex-direction: column; gap: 7px; }
+  .evo-row { display: flex; align-items: center; gap: 10px; }
+  .evo-year { font-size: 11px; color: hsl(var(--foreground) / 0.35); width: 36px; flex-shrink: 0; }
+  .evo-bar-wrap {
+    flex: 1;
+    background: hsl(var(--foreground) / 0.04);
+    border-radius: 2px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .evo-bar {
+    height: 100%;
+    background: hsl(var(--primary));
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .evo-val { font-size: 11px; color: hsl(var(--foreground) / 0.6); white-space: nowrap; }
+  .evo-vol { color: hsl(var(--foreground) / 0.25); }
+
+  /* CPV pills */
+  .cpv-pills { display: flex; flex-direction: column; gap: 6px; }
+  .cpv-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: hsl(var(--foreground) / 0.03);
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 6px;
+    padding: 7px 12px;
+  }
+  .cpv-code { font-size: 10px; color: hsl(var(--foreground) / 0.3); white-space: nowrap; }
+  .cpv-name { font-size: 12px; color: hsl(var(--foreground) / 0.65); flex: 1; }
+  .cpv-cnt { font-size: 10px; color: hsl(var(--primary)); }
+
+  /* Calidad indicators */
+  .calidad-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .calidad-title {
+    font-size: 14px;
+    color: hsl(var(--foreground) / 0.75);
+    margin-bottom: 3px;
+  }
+  .calidad-sub {
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.25);
+  }
+  .indicators-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .indicator-item {
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.05);
+    border-radius: 6px;
+    padding: 10px 12px;
+    cursor: default;
+  }
+  .ind-bar-wrap {
+    width: 100%;
+    height: 3px;
+    background: hsl(var(--foreground) / 0.06);
+    border-radius: 2px;
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+  .ind-bar { height: 100%; border-radius: 2px; }
+  .ind-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+  .ind-code { font-size: 9px; color: hsl(var(--foreground) / 0.2); }
+  .ind-pct { font-size: 11px; font-weight: 600; }
+  .ind-label { font-size: 10px; color: hsl(var(--foreground) / 0.4); line-height: 1.3; }
+
+  /* BORME */
+  .borme-grid { display: flex; flex-direction: column; gap: 12px; }
+  .borme-info-card .borme-details { display: flex; flex-direction: column; gap: 10px; }
+  .borme-detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.65);
+  }
+  .detail-icon { flex-shrink: 0; }
+  .detail-val { line-height: 1.4; }
+
+  .cargos-list { display: flex; flex-direction: column; gap: 6px; }
+  .cargo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.03);
+  }
+  .cargo-row:last-child { border-bottom: none; }
+  .cargo-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+  .cargo-badge {
+    font-size: 10px;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    border: 1px solid hsl(var(--primary) / 0.2);
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .cargo-acto { font-size: 11px; color: hsl(var(--foreground) / 0.4); }
+  .cargo-name.resolved { font-size: 13px; color: hsl(var(--foreground) / 0.75); font-weight: 500; }
+  .cargo-name.hash { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: hsl(var(--foreground) / 0.25); }
+
+  /* Adjudicaciones */
+  .adj-scroll { max-height: 500px; overflow-y: auto; }
+  .td-objeto { max-width: 350px; }
+  .td-objeto .obj-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.65);
+    line-height: 1.4;
+  }
+  .td-org-sm { font-size: 11px; color: hsl(var(--foreground) / 0.4); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .clickable-row { cursor: pointer; }
+  .clickable-row:hover { background: hsl(var(--primary) / 0.04) !important; }
+  .cargo-fecha { font-size: 10px; color: hsl(var(--foreground) / 0.2); white-space: nowrap; }
+
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.03);
+    align-items: flex-start;
+  }
+  .timeline-item:last-child { border-bottom: none; }
+  .timeline-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: hsl(var(--foreground) / 0.15);
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .timeline-content { flex: 1; }
+  .timeline-date { font-size: 9px; color: hsl(var(--foreground) / 0.2); margin-bottom: 2px; }
+  .timeline-actos { font-size: 12px; color: hsl(var(--foreground) / 0.6); line-height: 1.4; }
+
+  .conflictos-table td { padding: 9px 8px; color: hsl(var(--foreground) / 0.7); vertical-align: top; }
+  .conflictos-table .td-r { text-align: right; }
+  .conflictos-table .td-org { max-width: 280px; font-size: 12px; }
+  .conflictos-table .td-empresa { max-width: 240px; font-size: 12px; }
+  .conflictos-table .td-persona { max-width: 160px; font-size: 11px; }
+
+  .badge-severidad {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .badge-severidad-yellow { color: hsl(var(--warning) / 0.95); border-color: hsl(var(--warning) / 0.3); background: hsl(var(--warning) / 0.08); }
+  .badge-severidad-orange { color: hsl(var(--warning) / 0.85); border-color: hsl(var(--warning) / 0.3); background: hsl(var(--warning) / 0.08); }
+  .badge-severidad-red   { color: hsl(var(--destructive) / 0.7); border-color: hsl(var(--destructive) / 0.3); background: hsl(var(--destructive) / 0.08); }
+
+  .conflictos-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: hsl(var(--primary) / 0.08);
+    color: hsl(var(--primary));
+    border: 1px solid hsl(var(--primary) / 0.15);
+    white-space: nowrap;
+  }
+
+  /* Hallazgos */
+  .hallazgos-list { display: flex; flex-direction: column; gap: 8px; }
+  .hallazgo-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-left: 3px solid;
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+  }
+  .hallazgo-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .hallazgo-texto { font-size: 13px; color: hsl(var(--foreground) / 0.7); line-height: 1.5; }
+
+  /* Footer */
+  .ficha-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.1);
+  }
+
+  /* NIF verification badge */
+  .nif-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-left: 10px;
+    vertical-align: middle;
+    letter-spacing: 0.02em;
+  }
+  .nif-badge-verified {
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.08);
+    border: 1px solid hsl(var(--primary) / 0.25);
+  }
+  .nif-badge-unverified {
+    color: hsl(var(--warning));
+    background: hsl(var(--warning) / 0.08);
+    border: 1px solid hsl(var(--warning) / 0.25);
+  }
+  .ficha-canonical {
+    margin-top: 5px;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.35);
+  }
+
+  /* Mono utility */
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .ficha-wrap { padding: 16px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .indicators-grid { grid-template-columns: 1fr; }
+    .ficha-name { font-size: 16px; }
+    .score-badge-lg { width: 56px; height: 56px; }
+    .score-badge-lg .score-val { font-size: 14px; }
+    .ficha-actions { flex-wrap: wrap; gap: 8px; }
+  }
+</style>
+
+<script is:inline>
+(function() {
+  const btn = document.getElementById('follow-btn');
+  if (!btn) return;
+
+  const type = btn.dataset.type;
+  const id = btn.dataset.id;
+  const name = btn.dataset.name;
+  let isAuth = false;
+
+  function setFollowing(following) {
+    const icon = btn.querySelector('.follow-icon');
+    const text = btn.querySelector('.follow-text');
+    if (following) {
+      btn.classList.add('following');
+      if (icon) icon.textContent = '★';
+      if (text) text.textContent = 'Dejar de seguir';
+    } else {
+      btn.classList.remove('following');
+      if (icon) icon.textContent = '☆';
+      if (text) text.textContent = 'Seguir';
+    }
+  }
+
+  async function load() {
+    try {
+      const res = await fetch('/api/follows');
+      if (res.status === 401) {
+        isAuth = false;
+        return;
+      }
+      isAuth = true;
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = type === 'organismo' ? (data.follows?.organismos || []) : (data.follows?.competidores || []);
+      const following = list.some(f => f.id === id);
+      setFollowing(following);
+    } catch (e) {
+      console.error('[follows] error loading:', e);
+    }
+  }
+
+  btn.addEventListener('click', async () => {
+    if (!isAuth) {
+      window.location.href = '/sign-up';
+      return;
+    }
+    const following = btn.classList.contains('following');
+    btn.disabled = true;
+    try {
+      if (following) {
+        const res = await fetch(`/api/follows?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (res.ok) setFollowing(false);
+      } else {
+        const res = await fetch('/api/follows', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, id, nombre: name }),
+        });
+        if (res.ok) {
+          setFollowing(true);
+        } else if (res.status === 403) {
+          const data = await res.json();
+          if (confirm((data.error || 'Límite alcanzado') + ' ¿Ver planes?')) {
+            window.location.href = data.upgrade || '/precios';
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[follows] error toggling:', e);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  load();
+})();
+</script>
+
+<script is:inline>
+(function() {
+  function fmtV(v) {
+    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M€';
+    if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K€';
+    return v.toFixed(0) + '€';
+  }
+
+  function renderConflictos(container, data) {
+    const nif = container.getAttribute('data-nif');
+    if (!data || !data.conflictos || data.conflictos.length === 0) {
+      container.innerHTML = '<div class="empty-card">Sin cargos compartidos detectados</div>';
+      return;
+    }
+
+    // Aggregate by persona + empresa vinculada
+    const groups = new Map();
+    for (const c of data.conflictos) {
+      const key = c.persona_hash + '::' + c.empresa_vinculada;
+      let g = groups.get(key);
+      if (!g) {
+        g = {
+          persona_hash: c.persona_hash,
+          cargo_origen: c.cargo_origen,
+          empresa_vinculada: c.empresa_vinculada,
+          nif_vinculada: c.nif_vinculada,
+          cargo_vinculada: c.cargo_vinculada,
+          organismos: new Map(),
+        };
+        groups.set(key, g);
+      }
+      if (!g.organismos.has(c.organismo_comun)) {
+        g.organismos.set(c.organismo_comun, {
+          organismo: c.organismo_comun,
+          contratos_origen: c.contratos_origen,
+          volumen_origen: c.volumen_origen,
+          contratos_vinculada: c.contratos_vinculada,
+          volumen_vinculada: c.volumen_vinculada,
+        });
+      }
+    }
+
+    const rows = Array.from(groups.values()).map(g => {
+      const orgs = Array.from(g.organismos.values());
+      const totalVolOrigen = orgs.reduce((s, o) => s + (o.volumen_origen || 0), 0);
+      const totalVolVinculada = orgs.reduce((s, o) => s + (o.volumen_vinculada || 0), 0);
+      const totalContratosOrigen = orgs.reduce((s, o) => s + (o.contratos_origen || 0), 0);
+      const totalContratosVinculada = orgs.reduce((s, o) => s + (o.contratos_vinculada || 0), 0);
+      const numOrganismos = orgs.length;
+      let badgeClass = 'badge-severidad-yellow';
+      let badgeText = '🟡 ' + numOrganismos + ' organismo' + (numOrganismos === 1 ? '' : 's');
+      if (numOrganismos >= 2 && numOrganismos <= 3) {
+        badgeClass = 'badge-severidad-orange';
+        badgeText = '🟠 ' + numOrganismos + ' organismos';
+      } else if (numOrganismos >= 4) {
+        badgeClass = 'badge-severidad-red';
+        badgeText = '🔴 ' + numOrganismos + ' organismos';
+      }
+      return {
+        persona_hash: g.persona_hash,
+        cargo_origen: g.cargo_origen,
+        empresa_vinculada: g.empresa_vinculada,
+        nif_vinculada: g.nif_vinculada,
+        cargo_vinculada: g.cargo_vinculada,
+        organismos: orgs,
+        totalContratosOrigen,
+        totalContratosVinculada,
+        totalVolOrigen,
+        totalVolVinculada,
+        badgeClass,
+        badgeText,
+      };
+    });
+
+    let html = '<div class="card"><div class="card-header">Cargos directivos compartidos entre empresas</div>';
+    if (data.parcial) {
+      html += '<div style="font-size:11px;color:hsl(var(--warning));margin-bottom:10px;">⚠️ Respuesta parcial: algunas consultas excedieron el tiempo límite.</div>';
+    }
+    html += '<div class="org-scroll"><table class="data-table conflictos-table"><thead><tr>';
+    html += '<th>Persona</th><th>Empresa vinculada</th><th>Organismos comunes</th>';
+    html += '<th class="th-r">Contratos origen</th><th class="th-r">Volumen origen</th>';
+    html += '<th class="th-r">Contratos vinc.</th><th class="th-r">Volumen vinc.</th>';
+    html += '<th class="th-r">Severidad</th></tr></thead><tbody>';
+
+    for (const r of rows) {
+      const personaDisplay = '#' + (r.persona_hash ? r.persona_hash.slice(-8).toUpperCase() : '????');
+      const empresaLink = r.nif_vinculada
+        ? '<a href="/explorer/competidores/' + encodeURIComponent(r.nif_vinculada) + '" class="org-link">' + r.empresa_vinculada + '</a>'
+        : r.empresa_vinculada;
+      const organismosPills = r.organismos.map(o =>
+        '<span class="conflictos-pill" title="' + o.organismo + '">' + o.organismo.slice(0, 32) + (o.organismo.length > 32 ? '…' : '') + '</span>'
+      ).join(' ');
+      html += '<tr>';
+      html += '<td class="td-persona"><span class="mono">' + personaDisplay + '</span><br><span style="font-size:10px;color:hsl(var(--foreground) / 0.35);">' + (r.cargo_origen || '—') + '</span></td>';
+      html += '<td class="td-empresa">' + empresaLink + '<br><span style="font-size:10px;color:hsl(var(--foreground) / 0.35);">' + (r.cargo_vinculada || '—') + '</span></td>';
+      html += '<td class="td-org">' + organismosPills + '</td>';
+      html += '<td class="td-r mono">' + r.totalContratosOrigen.toLocaleString('es-ES') + '</td>';
+      html += '<td class="td-r mono">' + fmtV(r.totalVolOrigen) + '</td>';
+      html += '<td class="td-r mono">' + r.totalContratosVinculada.toLocaleString('es-ES') + '</td>';
+      html += '<td class="td-r mono">' + fmtV(r.totalVolVinculada) + '</td>';
+      html += '<td class="td-r"><span class="badge-severidad ' + r.badgeClass + '">' + r.badgeText + '</span></td>';
+      html += '</tr>';
+    }
+
+    html += '</tbody></table></div></div>';
+    container.innerHTML = html;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('conflictos-container');
+    if (!container) return;
+    const nif = container.getAttribute('data-nif');
+    if (!nif) {
+      container.innerHTML = '<div class="empty-card">Sin cargos compartidos detectados</div>';
+      return;
+    }
+    fetch('/api/conflictos?nif=' + encodeURIComponent(nif))
+      .then(res => res.json())
+      .then(data => renderConflictos(container, data))
+      .catch(err => {
+        console.error('[conflictos] error:', err);
+        container.innerHTML = '<div class="empty-card">Sin cargos compartidos detectados</div>';
+      });
+
+    document.querySelectorAll('.clickable-row[data-href]').forEach(row => {
+      row.addEventListener('click', () => {
+        const href = row.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+    });
+  });
+})();
+</script>
+
+<script is:inline>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.clickable-row[data-href]').forEach(row => {
+    row.addEventListener('click', () => {
+      const href = row.getAttribute('data-href');
+      if (href) window.location.href = href;
+    });
+  });
+});
+</script>

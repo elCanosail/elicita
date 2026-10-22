@@ -1,0 +1,16 @@
+{
+  "pares": [
+    {"q": "aire acondicionado para oficinas públicas en Sevilla", "target": "BOE:BOE-B-2025-30551"},
+    {"q": "recolección de datos de encuestas para estudios internacionales de educación", "target": "BOE:BOE-B-2026-3258"},
+    {"q": "equipamiento de laboratorio de investigación en inteligencia artificial", "target": "BOE:BOE-B-2026-778"},
+    {"q": "arreglo de puente en carretera de montaña", "target": "BOE:BOE-B-2025-35164"},
+    {"q": "mantenimiento de separadores de aguas oleosas en puerto militar", "target": "BOE:BOE-B-2026-7440"},
+    {"q": "imprimir y distribuir una guía oficial del IRPF para contribuyentes", "target": "BOE:BOE-B-2026-8421"},
+    {"q": "reparar carretera tras inundaciones de la gota fría", "target": "BOE:BOE-B-2026-6788"},
+    {"q": "neveras y muebles para viviendas sociales", "target": "BOE:BOE-B-2025-32294"},
+    {"q": "equipamiento de detección y desactivación de explosivos para unidad militar", "target": "BOE:BOE-B-2026-2288"},
+    {"q": "luces LED para embalses y presas", "target": "BOE:BOE-B-2025-36400"},
+    {"q": "consumibles y aparatos de análisis para laboratorio de hospital", "target": "BOE:BOE-B-2025-29992"},
+    {"q": "gestión de residuos tóxicos generados por un laboratorio", "target": "BOE:BOE-B-2026-6491"}
+  ]
+}

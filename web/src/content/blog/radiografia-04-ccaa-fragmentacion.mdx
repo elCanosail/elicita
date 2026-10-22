@@ -1,0 +1,154 @@
+---
+title: "Radiografía #4 — 17 reinos, 17 formas de publicar: la fragmentación autonómica"
+excerpt: "Cada comunidad autónoma publica sus licitaciones de forma distinta. Diferentes campos, diferentes formatos, diferente calidad. Este es el coste real de la fragmentación."
+date: "2026-03-15"
+readTime: "10 min"
+category: "Radiografía"
+series: "Radiografía"
+author: "Equipo Elicita"
+tags: ["radiografía", "CCAA", "fragmentación", "transparencia", "datos", "análisis"]
+draft: false
+---
+
+En los tres primeros artículos de esta serie hemos analizado la contratación pública española como si fuera un mercado único. Un PLACE, un esquema de datos, 13,4 millones de registros.
+
+Pero esa es la versión simplificada. La versión real tiene más capas.
+
+España no tiene un solo mercado de contratación pública. Tiene, como mínimo, diecisiete. Y cada uno de ellos publica sus licitaciones de una forma diferente, con campos diferentes, con calidad diferente, con estructuras que no se parecen entre sí.
+
+Hoy vamos a abrir esa caja.
+
+---
+
+## El universo de datos: lo que hemos podido integrar
+
+Elicita tiene actualmente integradas fuentes propias de **5 comunidades autónomas**, además del registro nacional del PLACE. Este es el volumen de cada fuente:
+
+| Fuente | Registros |
+|--------|-----------|
+| Nacional (PLACE) | 13.419.448 |
+| Comunidad de Madrid | 2.563.527 |
+| Catalunya | 1.995.455 |
+| Galicia | 1.685.789 |
+| Andalucía | 808.441 |
+| Euskadi | 713.827 |
+
+En total: más de **21 millones de registros** de seis fuentes distintas. Cada una con su propio esquema. Cada una con su propia lógica interna.
+
+Las **12 comunidades que aún no tienen fuente propia integrada** son: Aragón, Asturias, Cantabria, Castilla-La Mancha, Castilla y León, Comunitat Valenciana, Extremadura, Islas Baleares, Canarias, La Rioja, Región de Murcia y Comunidad Foral de Navarra. Su contratación existe en el registro nacional, pero no disponemos aún de sus portales autonómicos propios.
+
+---
+
+## Primer síntoma de la fragmentación: la estructura de los datos
+
+La forma más objetiva de medir la fragmentación es contar columnas. Cuántos campos tiene cada fuente, qué información captura, cómo está organizada.
+
+| Fuente | Columnas |
+|--------|----------|
+| Nacional | 48 |
+| Comunidad de Madrid | 19 |
+| Andalucía | 34 |
+| Galicia | 12 |
+| Euskadi | 189 |
+| Catalunya | 256 |
+
+Sí, has leído bien. Galicia publica con **12 columnas**. Catalunya con **256**.
+
+Esto no significa que Catalunya tenga mejor información que Galicia en todos los contratos — significa que Catalunya ha ido acumulando fuentes heterogéneas a lo largo de los años, y ese histórico se refleja en un esquema expandido con múltiples denominaciones para el mismo concepto. En los datos de Catalunya encontramos columnas como `NOM PROVEÏDOR`, `Nom Proveïdor`, `Nom_Proveidor` y `DENOMINACIO_ADJUDICATARI` coexistiendo en la misma tabla. El mismo dato, cuatro nombres distintos.
+
+Galicia, en cambio, es minimalista: 12 campos, sin redundancias. Pero eso también significa que hay información que simplemente no existe en su registro público.
+
+El nacional tiene 48 columnas bien estructuradas — fechas, importes, CPV, NIF, estado del expediente. Es el esquema más equilibrado entre riqueza y coherencia.
+
+---
+
+## Segundo síntoma: la identificación del adjudicatario
+
+Si hay un dato crítico en cualquier contrato público, es el NIF del adjudicatario. Es el identificador único que permite saber quién se lleva el contrato, rastrear patrones de adjudicación y analizar concentración de mercado.
+
+Hemos medido en cada fuente el porcentaje de registros que incluyen ese dato de forma válida. Los resultados son reveladores:
+
+| Fuente | % registros con NIF adjudicatario |
+|--------|-----------------------------------|
+| Andalucía | 100,0% |
+| Comunidad de Madrid | 100,0% |
+| Galicia | 97,0% |
+| Nacional (PLACE) | 77,5% |
+| Catalunya | 78,6% |
+| Euskadi | 1,4% |
+
+Andalucía y Madrid publican el NIF en el 100% de sus registros. Galicia alcanza el 97%. El PLACE nacional y Catalunya rondan el 78%.
+
+Euskadi presenta el dato más llamativo: solo el **1,4% de sus registros** incluyen un identificador de adjudicatario en el campo estructurado. El resto de la información existe, pero distribuida en campos heterogéneos resultado de la integración de múltiples subsistemas autonómicos. El campo `identificationnumber` —equivalente al NIF en su esquema— solo aparece completado en 9.936 de los 713.827 registros disponibles.
+
+Esto no es un juicio sobre la política de transparencia del Gobierno Vasco. Es una consecuencia directa de cómo se construyeron históricamente sus sistemas de publicación: fuentes diversas, formatos distintos, integración compleja.
+
+---
+
+## El coste real para las empresas
+
+Hasta aquí los datos. Ahora la pregunta que importa: ¿qué significa esto en la práctica para una empresa que quiere licitar en varias comunidades?
+
+**Significa que no hay un "mercado público español".** Hay mercados autonómicos que funcionan con lógicas propias.
+
+Una empresa de servicios tecnológicos con sede en Madrid que quiere expandirse a Galicia, Andalucía y el País Vasco necesita:
+
+- Aprender a navegar **tres portales distintos** con interfaces y estructuras diferentes
+- Buscar el NIF del adjudicatario en **columnas con nombres distintos** en cada fuente (o en ninguna, en el caso de Euskadi)
+- Interpretar **escalas de calidad diferentes**: un "100% de completitud" en Andalucía no equivale a la misma riqueza informativa que el 78% del PLACE nacional, que incluye CPV, procedimiento, duración y decenas de campos adicionales
+
+El tiempo que una PYME dedica a entender el mercado en una sola comunidad no escala directamente a otras. Se multiplica.
+
+La fragmentación tiene nombre técnico en el análisis de datos: **heterogeneidad de esquemas**. Su coste económico es real, aunque difícil de cuantificar directamente: más tiempo de búsqueda, más errores de interpretación, más barreras de entrada para quien no tiene recursos para construir su propia capa de normalización.
+
+---
+
+## Lo que falta: los 12 reinos pendientes
+
+Las 12 comunidades sin fuente propia integrada en Elicita no están fuera del radar. Sus contratos aparecen en el PLACE nacional cuando el organismo contratante está obligado a publicar ahí. Pero sus portales autonómicos propios —donde se publica información adicional, en formatos locales— quedan fuera.
+
+¿Por qué faltan? No por falta de datos públicos. Faltan por la misma razón que el resto es complejo: cada portal tiene su propio esquema, su propio formato de descarga, su propia frecuencia de actualización. Algunos tienen APIs estructuradas; otros publican PDFs o Excel con formato variable. Integrarlos uno a uno es trabajo de ingeniería, no de scraping.
+
+El estado actual refleja dónde está el volumen relevante: las 5 CCAA integradas más el nacional cubren las regiones con mayor actividad licitadora del país. Pero la foto está incompleta, y lo decimos explícitamente.
+
+---
+
+## Una lectura de fondo: transparencia no es sinónimo de utilidad
+
+El principio que subyace a toda esta fragmentación merece una reflexión breve.
+
+Publicar datos es necesario. Publicarlos de forma útil es diferente.
+
+Andalucía publica con 34 campos estructurados y un 100% de completitud en el NIF adjudicatario. Galicia publica con 12 campos pero alta coherencia. El nacional publica con 48 campos y una completitud del 77,5% — inferior en porcentaje, pero con mucha más información por registro cuando el dato está presente.
+
+No hay una respuesta única a cuál es el "mejor" esquema. Depende del caso de uso. Pero sí hay una conclusión clara: **la ausencia de un estándar común hace que el coste de extraer valor de los datos recaiga sobre quien los usa, no sobre quien los publica.**
+
+Para las administraciones, publicar en su formato habitual tiene coste marginal cero. Para las empresas que intentan monitorizar el mercado completo, ese coste se multiplica por diecisiete.
+
+---
+
+## En el próximo artículo: el efecto incumbente
+
+Los datos de fragmentación abren una pregunta incómoda: si el mercado está fragmentado, ¿quién sabe navegar esa fragmentación mejor?
+
+La respuesta es casi siempre la misma: el que ya estaba ahí. La empresa que lleva años licitando en una comunidad conoce sus portales, sus procedimientos, sus plazos. Esa ventaja de conocimiento tiene un nombre en economía: **efecto incumbente**.
+
+En el **Radiografía #5** vamos a medir ese efecto con datos. ¿Cuánto porcentaje del volumen licitado acaba en empresas que ya habían ganado contratos en el mismo organismo? ¿Cuánto tarda una empresa nueva en su primera adjudicación? ¿Qué sectores tienen las barreras más altas y cuáles son más permeables?
+
+Los incumbentes tienen ventaja. Pero la ventaja tiene límites. Y los límites se pueden medir.
+
+---
+
+## La serie completa: Radiografía de la Contratación Pública Española
+
+| # | Título | Estado |
+|---|--------|--------|
+| 1 | [El mapa del tesoro: 30,9 millones de licitaciones bajo el microscopio](/blog/radiografia-01-mapa-tesoro) | ✅ Publicado |
+| 2 | [Los 875: las empresas que dominan la contratación pública](/blog/radiografia-02-los-875) | ✅ Publicado |
+| 3 | [CPV: el ADN de cada contrato público](/blog/radiografia-03-cpv-adn) | ✅ Publicado |
+| **4** | **17 reinos, 17 formas de publicar: la fragmentación autonómica** | **📍 Estás aquí** |
+| 5 | El efecto incumbente: por qué siempre ganan los mismos | 🔜 Próximo |
+
+---
+
+*Todos los datos de esta serie proceden del análisis directo de los registros del PLACE y de los portales autonómicos de Andalucía, Catalunya, Comunidad de Madrid, Euskadi y Galicia disponibles en Elicita. Sin estimaciones, sin proyecciones de consultora: lo que ves es lo que hay.*

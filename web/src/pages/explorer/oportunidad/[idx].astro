@@ -1,0 +1,472 @@
+---
+import DashboardLayout from '../../../layouts/dashboard.astro';
+
+const { idx } = Astro.params;
+---
+
+<DashboardLayout title="Predicción — elicita_ explorer">
+
+  <div class="ficha-topbar">
+    <a href="/explorer/proyecciones" class="back-link">← Predicciones</a>
+  </div>
+
+  <div class="main-content" id="ficha-root">
+    <div class="loading-text">Cargando…</div>
+  </div>
+
+</DashboardLayout>
+
+<style is:global>
+  .ficha-topbar {
+    padding: 14px 32px;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    background: hsl(var(--card));
+    z-index: 10;
+  }
+  .back-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.3);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: hsl(var(--foreground) / 0.7); }
+
+  .main-content {
+    padding: 32px;
+    max-width: 900px;
+  }
+  @media (max-width: 640px) {
+    .main-content { padding: 16px; }
+    .ficha-topbar { padding: 12px 16px; }
+  }
+
+  .loading-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.2);
+  }
+
+  /* Sección label */
+  .ficha-section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: hsl(var(--foreground) / 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+    margin-top: 32px;
+  }
+
+  /* Organismo */
+  .ficha-org-name {
+    font-size: 16px;
+    color: hsl(var(--foreground) / 0.85);
+    line-height: 1.4;
+    margin-bottom: 0;
+  }
+
+  /* Key-value grid */
+  .kv-table {
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .kv-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.04);
+  }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-key {
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--foreground) / 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: hsl(var(--foreground) / 0.01);
+    border-right: 1px solid hsl(var(--foreground) / 0.04);
+    display: flex;
+    align-items: flex-start;
+    white-space: nowrap;
+  }
+  .kv-val {
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.75);
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .conf-alta  { color: hsl(var(--primary)); }
+  .conf-media { color: hsl(var(--warning)); }
+  .conf-baja  { color: hsl(var(--foreground) / 0.3); }
+
+  /* Competidores tabla */
+  .comp-table {
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .comp-head {
+    display: grid;
+    grid-template-columns: 2fr 80px 110px;
+    padding: 8px 16px;
+    background: hsl(var(--foreground) / 0.02);
+    border-bottom: 1px solid hsl(var(--foreground) / 0.05);
+  }
+  .comp-head > div {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: hsl(var(--foreground) / 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .comp-row {
+    display: grid;
+    grid-template-columns: 2fr 80px 110px;
+    padding: 12px 16px;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.04);
+    align-items: center;
+  }
+  .comp-row:last-child { border-bottom: none; }
+  .comp-nombre {
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.7);
+  }
+  .comp-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.4);
+  }
+
+  /* Baja referencia */
+  .baja-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.5);
+    padding: 14px 16px;
+    background: hsl(var(--foreground) / 0.02);
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 8px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+
+  /* Historial */
+  .hist-table {
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .hist-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 90px auto;
+    padding: 12px 16px;
+    border-bottom: 1px solid hsl(var(--foreground) / 0.04);
+    align-items: center;
+    gap: 8px;
+  }
+  .hist-row:last-child { border-bottom: none; }
+  .hist-fecha {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.3);
+  }
+  .hist-objeto {
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .hist-importe {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.4);
+    text-align: right;
+  }
+  .hist-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--primary));
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .hist-link:hover { text-decoration: underline; }
+
+  /* Empty state inline */
+  .inline-empty {
+    padding: 20px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--foreground) / 0.15);
+    text-align: center;
+    border: 1px solid hsl(var(--foreground) / 0.06);
+    border-radius: 8px;
+    margin-bottom: 4px;
+  }
+
+  @media (max-width: 640px) {
+    .kv-row { grid-template-columns: 1fr; }
+    .kv-key { border-right: none; border-bottom: 1px solid hsl(var(--foreground) / 0.04); }
+    .hist-row { grid-template-columns: 70px 1fr; }
+    .hist-importe, .hist-link { display: none; }
+  }
+</style>
+
+<script define:vars={{ pageIdx: idx }}>
+function esc(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function kv(key, valueHtml) {
+  return `<div class="kv-row">
+    <div class="kv-key">${esc(key)}</div>
+    <div class="kv-val">${valueHtml}</div>
+  </div>`;
+}
+
+function formatProximo(raw) {
+  if (!raw) return '—';
+  const str = raw.replace('[PROYECCIÓN] ', '').trim();
+  const m = str.match(/^(\d{4})-Q(\d)$/);
+  if (m) return `Q${m[2]} ${m[1]}`;
+  const m2 = str.match(/^(\d{4})-(\d{2})$/);
+  if (m2) {
+    try {
+      const d = new Date(`${m2[1]}-${m2[2]}-01`);
+      return d.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+    } catch {}
+  }
+  return str;
+}
+
+function dotsConfianza(conf) {
+  const c = (conf || '').toLowerCase();
+  if (c === 'alta')  return '<span class="conf-alta">●●●</span><span style="color:hsl(var(--foreground) / 0.1)">○○</span>';
+  if (c === 'media') return '<span class="conf-media">●●</span><span style="color:hsl(var(--foreground) / 0.1)">○○○</span>';
+  return '<span class="conf-baja">●</span><span style="color:hsl(var(--foreground) / 0.1)">○○○○</span>';
+}
+
+function confClass(conf) {
+  const c = (conf || '').toLowerCase();
+  if (c === 'alta')  return 'conf-alta';
+  if (c === 'media') return 'conf-media';
+  return 'conf-baja';
+}
+
+function formatVolumen(v) {
+  if (!v && v !== 0) return '—';
+  if (v >= 1e9) return `€${(v/1e9).toFixed(1)}B`;
+  if (v >= 1e6) return `€${(v/1e6).toFixed(1)}M`;
+  if (v >= 1e3) return `€${Math.round(v/1000)}K`;
+  return `€${Math.round(v)}`;
+}
+
+function isFuturo(ciclo) {
+  const raw = (ciclo.proximo_estimado || '').replace('[PROYECCIÓN] ', '').trim();
+  if (!raw || raw === '—') return false;
+  const yearMatch = raw.match(/^(\d{4})/);
+  if (yearMatch) return parseInt(yearMatch[1]) >= 2026;
+  return false;
+}
+
+async function load() {
+  const root = document.getElementById('ficha-root');
+  if (!root) return;
+
+  try {
+    const res = await fetch('/api/profile');
+    if (res.status === 401) {
+      const returnUrl = encodeURIComponent(location.pathname + location.search);
+      location.href = '/sign-in?redirect_url=' + returnUrl;
+      return;
+    }
+    if (!res.ok) throw new Error('Profile error ' + res.status);
+    const pj = await res.json();
+    const d = pj?.data || {};
+
+    // Deduplicar ciclos (mismo que index.astro)
+    const seenSet = new Set();
+    const ciclos = (d.ciclos_renovacion || [])
+      .filter(isFuturo)
+      .filter(c => {
+        const key = (c.organismo || '') + '|' + (c.cpv || '').replace('.0','');
+        if (seenSet.has(key)) return false;
+        seenSet.add(key);
+        return true;
+      })
+      .slice()
+      .sort((a, b) => {
+        const pa = (a.proximo_estimado || '').replace('[PROYECCIÓN] ', '');
+        const pb = (b.proximo_estimado || '').replace('[PROYECCIÓN] ', '');
+        return pa.localeCompare(pb);
+      });
+
+    // Buscar ciclo por hash ID (mismo algoritmo que index.astro)
+    const c = ciclos.find(ci => {
+      const hash = btoa(unescape(encodeURIComponent((ci.organismo || '') + '|' + (ci.cpv || '').replace('.0','')))).replace(/[^a-zA-Z0-9]/g,'').slice(0,20);
+      return hash === pageIdx;
+    });
+
+    if (!c) {
+      root.innerHTML = `<div style="text-align:center;padding:48px;border:1px solid hsl(var(--foreground) / 0.06);border-radius:8px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:hsl(var(--foreground) / 0.2);margin-bottom:20px">Predicción no encontrada</div>
+        <a href="/explorer/proyecciones" class="back-link" style="font-size:13px">← Predicciones</a>
+      </div>`;
+      return;
+    }
+
+    const cpvLimpio = (c.cpv || '').replace('.0','');
+    const proximo = formatProximo(c.proximo_estimado);
+    const conf = c.confianza || 'baja';
+    const cls = confClass(conf);
+    const dots = dotsConfianza(conf);
+    const intervalo = c.intervalo_medio_meses
+      ? `Cada ${Math.round(c.intervalo_medio_meses)} meses`
+      : '—';
+    const ultimaAdj = c.ultima_adjudicacion
+      ? c.ultima_adjudicacion.slice(0,7).replace('-', ' ').replace(/(\d{4})\s(\d{2})/, (_, y, m) => {
+          const d = new Date(`${y}-${m}-01`);
+          return d.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+        })
+      : '—';
+
+    // Sección predicción KV
+    const predRows = [
+      kv('CPV', esc(cpvLimpio || '—')),
+      kv('Próxima licit.', `<span class="${cls}">${esc(proximo)}</span>`),
+      kv('Intervalo', esc(intervalo)),
+      kv('Confianza', `${dots} <span class="${cls}">${esc(conf.charAt(0).toUpperCase() + conf.slice(1))}</span>`),
+      c.num_contratos ? kv('Contratos previos', esc(String(c.num_contratos))) : '',
+      c.ultima_adjudicacion ? kv('Última adj.', esc(ultimaAdj)) : '',
+    ].filter(Boolean).join('');
+
+    // Competidores: filtrar del perfil los que comparten este CPV
+    const competidores = (d.competidores || []).filter(comp => {
+      const cpvsComunes = comp.cpvs_comunes || comp.cpvs || [];
+      return cpvsComunes.some(cc => (cc || '').replace('.0','').slice(0,5) === cpvLimpio.slice(0,5));
+    });
+
+    let compHtml = '';
+    if (competidores.length) {
+      const rows = competidores.slice(0, 15).map(comp => {
+        const vol = formatVolumen(comp.volumen || comp.volumen_total || 0);
+        const adj = comp.adjudicaciones || comp.num_adjudicaciones || 0;
+        return `<div class="comp-row">
+          <div class="comp-nombre">${esc(comp.nombre || '—')}</div>
+          <div class="comp-num">${esc(String(adj))}</div>
+          <div class="comp-num">${esc(vol)}</div>
+        </div>`;
+      }).join('');
+      compHtml = `
+        <div class="ficha-section-label">Competidores en CPV ${esc(cpvLimpio)}</div>
+        <div class="comp-table">
+          <div class="comp-head">
+            <div>Empresa</div><div>Adj.</div><div>Volumen</div>
+          </div>
+          ${rows}
+        </div>`;
+    } else {
+      compHtml = `
+        <div class="ficha-section-label">Competidores en CPV ${esc(cpvLimpio)}</div>
+        <div class="inline-empty">Sin datos de competidores para este CPV</div>`;
+    }
+
+    // Baja referencia
+    const bajas = (d.bajas_ganadoras || []).filter(b => {
+      const bc = (b.cpv || '').replace('.0','').slice(0,5);
+      return bc === cpvLimpio.slice(0,5);
+    });
+    let bajaHtml = '';
+    if (bajas.length) {
+      const b = bajas[0];
+      const media = b.baja_media_pct != null ? b.baja_media_pct.toFixed(1) + '%' : '—';
+      const min   = b.baja_min_pct   != null ? b.baja_min_pct.toFixed(1)   + '%' : '—';
+      const max   = b.baja_max_pct   != null ? b.baja_max_pct.toFixed(1)   + '%' : '—';
+      const n     = b.muestras       != null ? String(b.muestras)               : '—';
+      bajaHtml = `
+        <div class="ficha-section-label">Baja referencia</div>
+        <div class="baja-text">
+          Media: ${esc(media)} &nbsp;·&nbsp; Rango: ${esc(min)} – ${esc(max)} &nbsp;·&nbsp; Muestra: ${esc(n)} contratos
+        </div>`;
+    }
+
+    // Historial: adjudicaciones del perfil con mismo organismo
+    const organismoLower = (c.organismo || '').toLowerCase();
+    const palabras = organismoLower.split(/\s+/).filter(p => p.length > 4);
+    const adjudicaciones = (d.adjudicaciones || []).filter(a => {
+      const org = (a.organo_contratante || a.organismo || '').toLowerCase();
+      return palabras.length > 0 && palabras.some(p => org.includes(p));
+    });
+
+    let histHtml = '';
+    if (adjudicaciones.length) {
+      const rows = adjudicaciones.slice(0, 10).map(a => {
+        const fecha = (a.fecha_adjudicacion || '').slice(0,7);
+        const fechaDisplay = fecha ? (() => {
+          try {
+            const d = new Date(fecha + '-01');
+            return d.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+          } catch { return fecha; }
+        })() : '—';
+        const importeAdj = a.importe_adjudicacion
+          ? formatVolumen(a.importe_adjudicacion)
+          : '—';
+        const linkHtml = a.url
+          ? `<a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="hist-link">Ver fuente →</a>`
+          : '<span style="color:hsl(var(--foreground) / 0.1)">—</span>';
+        return `<div class="hist-row">
+          <div class="hist-fecha">${esc(fechaDisplay)}</div>
+          <div class="hist-objeto">${esc((a.objeto || '').slice(0,80))}</div>
+          <div class="hist-importe">${esc(importeAdj)}</div>
+          <div>${linkHtml}</div>
+        </div>`;
+      }).join('');
+      histHtml = `
+        <div class="ficha-section-label">Historial con este organismo</div>
+        <div class="hist-table">${rows}</div>`;
+    } else {
+      histHtml = `
+        <div class="ficha-section-label">Historial con este organismo</div>
+        <div class="inline-empty">Sin adjudicaciones previas con este organismo en tu perfil</div>`;
+    }
+
+    root.innerHTML = `
+      <div class="ficha-section-label" style="margin-top:0">Organismo</div>
+      <div class="ficha-org-name" style="margin-bottom:32px">${esc(c.organismo || '—')}</div>
+
+      <div class="ficha-section-label">Predicción</div>
+      <div class="kv-table">${predRows}</div>
+
+      ${bajaHtml}
+      ${compHtml}
+      ${histHtml}
+
+      <div style="margin-top:32px">
+        <a href="/explorer/proyecciones" class="back-link">← Predicciones</a>
+      </div>
+    `;
+
+  } catch (err) {
+    root.innerHTML = `<div style="text-align:center;padding:48px;border:1px solid hsl(var(--foreground) / 0.06);border-radius:8px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:hsl(var(--foreground) / 0.2);margin-bottom:20px">Error cargando la predicción</div>
+      <a href="/explorer/proyecciones" class="back-link" style="font-size:13px">← Predicciones</a>
+    </div>`;
+  }
+}
+
+load();
+</script>

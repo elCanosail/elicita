@@ -1,0 +1,386 @@
+---
+import Layout from '../../layouts/main.astro';
+import { CCAA_LIST, getDatos } from '../../lib/ccaa-data';
+import { urlFichaNormalizada } from '../../lib/licitacion-url';
+import { CCAA_TTL_MS, licitacionesCcaaCache } from '../../lib/escudo-ssr';
+
+// Defer CCAA queries to runtime to avoid OOM during build.
+// Static pages previously loaded 17× full CCAA data from DuckDB during prerender,
+// exhausting memory alongside other prerendered routes.
+export const prerender = false;
+
+// ── Cuerpos de estado autocontenidos (tarea 44) ──────────────────────────
+// 404 real y 503 con cuerpos mínimos FARO (patrón 500.astro: sin Layout, sin
+// JS, CSS inline — viajan en el propio HTML aunque el SSR esté degradado).
+// Antes: slug inválido → 302 a /404 (soft-404 con espacio de URLs infinito)
+// y fallo DuckDB → 200 con datos vacíos (soft-empty indexable).
+function paginaEstado(
+  kicker: string,
+  titulo: string,
+  texto: string,
+  links: { href: string; label: string; primary?: boolean }[]
+): string {
+  const nav = links
+    .map((l) => `<a class="${l.primary ? 'primary' : 'secondary'}" href="${l.href}">${l.label}</a>`)
+    .join('');
+  return `<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>${kicker} — Elicita</title>
+<style>
+:root { color-scheme: dark; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: #080808; }
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; color: rgba(255, 255, 255, 0.9); padding: 2rem; -webkit-font-smoothing: antialiased; }
+main { max-width: 34rem; width: 100%; text-align: center; }
+.kicker { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.7); margin-bottom: 1.25rem; }
+.kicker::before { content: '● '; color: #10b981; }
+h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 500; letter-spacing: -0.01em; color: #ffffff; margin-bottom: 1rem; }
+p { font-size: 1.0625rem; line-height: 1.65; color: rgba(255, 255, 255, 0.7); }
+nav { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+nav a { display: inline-block; font-size: 0.875rem; line-height: 1; padding: 0.75rem 1.25rem; border-radius: 0.375rem; text-decoration: none; }
+nav a.primary { background: #10b981; color: #080808; font-weight: 500; }
+nav a.primary:hover { background: #059669; }
+nav a.secondary { border: 1px solid rgba(255, 255, 255, 0.2); color: rgba(255, 255, 255, 0.9); }
+nav a.secondary:hover { border-color: rgba(255, 255, 255, 0.4); }
+nav a:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }
+footer { margin-top: 2.5rem; font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); }
+</style>
+</head>
+<body>
+<main>
+<p class="kicker">${kicker}</p>
+<h1>${titulo}</h1>
+<p>${texto}</p>
+<nav>${nav}</nav>
+<footer>elicita_ · contratación pública, datos abiertos</footer>
+</main>
+</body>
+</html>`;
+}
+
+const PAGINA_404 = paginaEstado(
+  'ERROR 404',
+  'Comunidad no encontrada',
+  'Esta comunidad autónoma no está en el listado. Consulta el listado completo, con datos vivos.',
+  [
+    { href: '/licitaciones', label: 'Licitaciones por comunidad', primary: true },
+    { href: '/', label: 'Volver al inicio' },
+  ]
+);
+const PAGINA_503 = paginaEstado(
+  'ERROR 503',
+  'Los datos no han respondido',
+  'La consulta a los datos de esta comunidad no ha respondido. No es tu navegador: reintenta en unos minutos.',
+  [
+    { href: '/', label: 'Volver al inicio', primary: true },
+    { href: '/cobertura', label: 'Ver los datos' },
+  ]
+);
+
+const { ccaa: ccaaSlug } = Astro.params;
+const ccaa = CCAA_LIST.find((c) => c.slug === ccaaSlug);
+if (!ccaa) {
+  // 404 REAL (tarea 44, cierre de la clase soft-404 de la tarea 39): el 302 a
+  // /404 dejaba un espacio de URLs infinito indexable; el 404 real lo limpia.
+  return new Response(PAGINA_404, {
+    status: 404,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
+}
+let datos: any;
+try {
+  // Memo de DATOS (no HTML): listado por slug, LRU 32 · TTL 300s (tarea 40) —
+  // espacio de claves cerrado (17 CCAA), todo el activo cabe. Un fallo DuckDB
+  // lanza y NO se cachea.
+  datos = await licitacionesCcaaCache.cached(
+    `licitaciones-ccaa:${ccaa.slug}`, 
+    CCAA_TTL_MS,
+    () => getDatos(ccaa)
+  );
+} catch (err) {
+  console.error(`[licitaciones/${ccaaSlug}] getDatos failed:`, err);
+  // Tarea 44: retry interno 1× — los blips transitorios de BD/escudo no deben
+  // tumbar la página. Persistiendo el fallo, 503 + Retry-After con cuerpo
+  // mínimo FARO: el rastreador no indexa la página y reintenta después
+  // (antes: 200 con datos vacíos — soft-empty que envenenaba el índice).
+  await new Promise((r) => setTimeout(r, 300));
+  try {
+    datos = await getDatos(ccaa);
+  } catch (err2) {
+    console.error(`[licitaciones/${ccaaSlug}] getDatos retry failed:`, err2);
+    return new Response(PAGINA_503, {
+      status: 503,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Retry-After': '300',
+      },
+    });
+  }
+}
+
+function fmtMoney(v: number): string {
+  if (v == null || v === 0) return '0 €';
+  if (v >= 1_000_000_000_000) return `${(v / 1_000_000_000_000).toFixed(2)} B€`;
+  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(2)} M€`;
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)} M€`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(0)} K€`;
+  return `${v.toFixed(0)} €`;
+}
+
+function fmtNumber(n: number): string {
+  return n.toLocaleString('es-ES');
+}
+
+function fmtDate(d: string | null): string {
+  if (!d) return '—';
+  return String(d).slice(0, 10);
+}
+
+function truncate(s: string, n: number): string {
+  if (!s || s === 'Sin título') return '—';
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+
+function displayTitle(objeto: string | null, expediente: string | null): string {
+  if (objeto && objeto.trim() && objeto !== 'Sin título') return objeto;
+  if (expediente && expediente.trim()) return `Exp. ${expediente}`;
+  return 'Sin título';
+}
+
+const description = `Licitaciones y contratos públicos en ${ccaa.nombre}. ${fmtNumber(datos.activas)} contratos activos. Importe total ${fmtMoney(datos.importe_total)}. Organismos principales, sectores con más adjudicaciones. Datos actualizados cada 4 horas.`;
+
+const canonicalUrl = new URL(Astro.url.pathname, 'https://elicita.es').href;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'GovernmentService',
+  name: `Licitaciones en ${ccaa.nombre}`,
+  serviceType: 'Contratación pública',
+  areaServed: {
+    '@type': 'AdministrativeArea',
+    name: ccaa.nombre,
+    containedInPlace: { '@type': 'Country', name: 'España' },
+  },
+  provider: { '@type': 'GovernmentOrganization', name: `Administración pública de ${ccaa.nombre}` },
+  description,
+  url: canonicalUrl,
+};
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://elicita.es/' },
+    { '@type': 'ListItem', position: 2, name: 'Licitaciones', item: 'https://elicita.es/licitaciones' },
+    { '@type': 'ListItem', position: 3, name: ccaa.nombre, item: canonicalUrl },
+  ],
+};
+
+const otrasCcaas = CCAA_LIST.filter((c: any) => c.slug !== ccaa.slug);
+
+
+---
+
+<Layout title={`Licitaciones en ${ccaa.nombre} — Elicita`} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} slot="head" />
+  <meta property="og:type" content="article" slot="head" />
+  <meta property="og:title" content={`Licitaciones en ${ccaa.nombre} — Elicita`} slot="head" />
+  <meta property="og:description" content={description} slot="head" />
+  <meta property="og:url" content={canonicalUrl} slot="head" />
+
+  <section class="py-12 md:py-20">
+    <div class="container mx-auto px-4 max-w-6xl">
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-2 text-xs font-mono text-white/50 mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-emerald-400 transition-colors">Inicio</a>
+        <span>/</span>
+        <a href="/licitaciones" class="hover:text-emerald-400 transition-colors">Licitaciones</a>
+        <span>/</span>
+        <span class="text-white/60">{ccaa.nombre}</span>
+      </nav>
+
+      <!-- Hero -->
+      <div class="mb-10">
+        <p class="font-mono text-xs text-emerald-400/70 tracking-widest uppercase mb-3">Comunidad Autónoma</p>
+        <h1 class="text-3xl md:text-5xl font-light text-white tracking-tight mb-4">
+          Licitaciones en {ccaa.nombre}
+        </h1>
+        <p class="text-white/50 text-sm md:text-base max-w-2xl leading-relaxed">
+          Datos públicos de contratación en {ccaa.nombre}: licitaciones activas, organismos principales, sectores con más contratos y adjudicaciones recientes. Actualizado cada 4 horas.
+        </p>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <div class="bg-white/[0.02] border border-white/[0.06] rounded-lg p-5">
+          <p class="font-mono text-xs text-white/50 uppercase tracking-wider mb-1">Contratos</p>
+          <p class="text-2xl md:text-3xl font-mono text-white">{fmtNumber(datos.total)}</p>
+          <p class="text-xs text-white/50 mt-1">Total indexados</p>
+        </div>
+        <div class="bg-white/[0.02] border border-white/[0.06] rounded-lg p-5">
+          <p class="font-mono text-xs text-white/50 uppercase tracking-wider mb-1">Importe total</p>
+          <p class="text-2xl md:text-3xl font-mono text-emerald-400">{fmtMoney(datos.importe_total)}</p>
+          <p class="text-xs text-white/50 mt-1">Suma de licitaciones</p>
+        </div>
+        <div class="bg-white/[0.02] border border-white/[0.06] rounded-lg p-5">
+          <p class="font-mono text-xs text-white/50 uppercase tracking-wider mb-1">Activas</p>
+          <p class="text-2xl md:text-3xl font-mono text-white">{fmtNumber(datos.activas)}</p>
+          <p class="text-xs text-white/50 mt-1">En plazo o abiertas</p>
+        </div>
+        <div class="bg-white/[0.02] border border-white/[0.06] rounded-lg p-5">
+          <p class="font-mono text-xs text-white/50 uppercase tracking-wider mb-1">Fuentes</p>
+          <p class="text-2xl md:text-3xl font-mono text-white">{datos.fuentes_activas}</p>
+          <p class="text-xs text-white/50 mt-1">Cobertura datos</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <!-- Top organismos -->
+        <div class="lg:col-span-1 bg-white/[0.02] border border-white/[0.06] rounded-lg p-5">
+          <h2 class="text-sm font-medium text-white mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Top 5 organismos
+          </h2>
+          <div class="space-y-3">
+            {datos.top_organismos.length === 0 && (
+              <p class="text-xs text-white/50">No hay datos suficientes.</p>
+            )}
+            {datos.top_organismos.map((org: any, i: number) => (
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-sm text-white/80 truncate" title={org.organismo}>{org.organismo}</p>
+                  <p class="text-xs text-white/50 font-mono">{fmtNumber(org.total)} contratos · {fmtMoney(org.importe_total)}</p>
+                </div>
+                <span class="text-xs font-mono text-emerald-400/70">#{i + 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Top sectores -->
+        <div class="lg:col-span-1 bg-white/[0.02] border border-white/[0.06] rounded-lg p-5">
+          <h2 class="text-sm font-medium text-white mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Top 5 sectores CPV
+          </h2>
+          <div class="space-y-3">
+            {datos.top_sectores.length === 0 && (
+              <p class="text-xs text-white/50">No hay datos suficientes.</p>
+            )}
+            {datos.top_sectores.map((sec: any, i: number) => (
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-sm text-white/80 truncate" title={sec.cpv}>{sec.cpv}</p>
+                  <p class="text-xs text-white/50 font-mono">{fmtNumber(sec.total)} contratos</p>
+                </div>
+                <span class="text-xs font-mono text-emerald-400/70">#{i + 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Enlaces cruzados -->
+        <div class="lg:col-span-1 bg-white/[0.02] border border-white/[0.06] rounded-lg p-5">
+          <h2 class="text-sm font-medium text-white mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Otras CCAA
+          </h2>
+          <div class="grid grid-cols-2 gap-2">
+            {otrasCcaas.map((c: any) => (
+              <a href={`/licitaciones/${c.slug}`} class="text-xs text-white/50 hover:text-emerald-400 transition-colors truncate" title={c.nombre}>
+                {c.nombre}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- Últimas licitaciones activas -->
+      <div class="mb-12">
+        <h2 class="text-lg font-medium text-white mb-4">Últimas licitaciones activas</h2>
+        <div class="bg-white/[0.02] border border-white/[0.06] rounded-lg overflow-hidden">
+          {datos.ultimas_licitaciones.length === 0 ? (
+            <div class="p-5 text-xs text-white/50">No hay licitaciones activas registradas.</div>
+          ) : (
+            <table class="w-full text-left">
+              <thead class="border-b border-white/[0.06]">
+                <tr>
+                  <th class="py-3 px-4 text-xs font-mono text-white/50 uppercase tracking-wider">Licitación</th>
+                  <th class="py-3 px-4 text-xs font-mono text-white/50 uppercase tracking-wider">Organismo</th>
+                  <th class="py-3 px-4 text-xs font-mono text-white/50 uppercase tracking-wider text-right">Importe</th>
+                  <th class="py-3 px-4 text-xs font-mono text-white/50 uppercase tracking-wider text-right">Fin plazo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {datos.ultimas_licitaciones.map((lic: any) => (
+                  <tr class="border-b border-white/[0.03] hover:bg-white/[0.02]">
+                    <td class="py-3 px-4">
+                      <a href={urlFichaNormalizada(String(lic.fuente), String(lic.id))} class="text-sm text-emerald-400 hover:text-emerald-300 transition-colors block truncate max-w-md" title={lic.objeto}>
+                        {truncate(displayTitle(lic.objeto, lic.expediente), 70)}
+                      </a>
+                      <p class="text-xs text-white/50 font-mono mt-0.5">{lic.expediente || lic.id}</p>
+                    </td>
+                    <td class="py-3 px-4 text-xs text-white/50 truncate max-w-xs" title={lic.organismo}>{truncate(lic.organismo, 40)}</td>
+                    <td class="py-3 px-4 text-xs font-mono text-white/60 text-right">{fmtMoney(lic.importe_licitacion)}</td>
+                    <td class="py-3 px-4 text-xs font-mono text-white/50 text-right">{fmtDate(lic.fecha_fin)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      <!-- Adjudicaciones recientes -->
+      <div class="mb-12">
+        <h2 class="text-lg font-medium text-white mb-4">Adjudicaciones recientes (últimos 30 días)</h2>
+        <div class="bg-white/[0.02] border border-white/[0.06] rounded-lg overflow-hidden">
+          {datos.adjudicaciones_recientes.length === 0 ? (
+            <div class="p-5 text-xs text-white/50">No hay adjudicaciones recientes registradas.</div>
+          ) : (
+            <table class="w-full text-left">
+              <thead class="border-b border-white/[0.06]">
+                <tr>
+                  <th class="py-3 px-4 text-xs font-mono text-white/50 uppercase tracking-wider">Objeto</th>
+                  <th class="py-3 px-4 text-xs font-mono text-white/50 uppercase tracking-wider">Adjudicatario</th>
+                  <th class="py-3 px-4 text-xs font-mono text-white/50 uppercase tracking-wider text-right">Importe</th>
+                  <th class="py-3 px-4 text-xs font-mono text-white/50 uppercase tracking-wider text-right">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {datos.adjudicaciones_recientes.map((adj: any) => (
+                  <tr class="border-b border-white/[0.03] hover:bg-white/[0.02]">
+                    <td class="py-3 px-4">
+                      <a href={urlFichaNormalizada(String(adj.fuente), String(adj.id))} class="text-sm text-emerald-400 hover:text-emerald-300 transition-colors block truncate max-w-md" title={adj.objeto}>
+                        {truncate(displayTitle(adj.objeto, adj.expediente), 60)}
+                      </a>
+                      <p class="text-xs text-white/50 font-mono mt-0.5">{truncate(adj.organismo, 45)}</p>
+                    </td>
+                    <td class="py-3 px-4 text-xs text-white/50 truncate max-w-xs" title={adj.adjudicatario}>{truncate(adj.adjudicatario || '', 35)}</td>
+                    <td class="py-3 px-4 text-xs font-mono text-emerald-400/80 text-right">{fmtMoney(adj.importe_adjudicacion || 0)}</td>
+                    <td class="py-3 px-4 text-xs font-mono text-white/50 text-right">{fmtDate(adj.fecha_publicacion)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-white/[0.06]">
+        <a href="/buscar" class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-mono px-6 py-3 rounded transition-colors">
+          Buscar licitaciones →
+        </a>
+        <a href="/explorer" class="inline-flex items-center justify-center border border-white/10 hover:border-white/20 text-white/50 hover:text-white/70 text-sm font-mono px-6 py-3 rounded transition-colors">
+          Ver dashboard
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

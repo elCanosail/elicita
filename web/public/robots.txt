@@ -1,0 +1,75 @@
+# robots.txt — Elicita
+# Datos públicos reutilizados bajo Ley 37/2007. Licencia datos: CC BY 4.0.
+# https://elicita.es/reutilizacion-y-atribucion
+
+# === AI crawlers bienvenidos ===
+# Los datos derivados de fuentes públicas se publican bajo CC BY 4.0.
+# Atribución requerida: PLACSP/TED/BORME (fuente oficial) + Elicita.es (intermediario).
+# Ver: https://elicita.es/reutilizacion-y-atribucion
+
+User-agent: *
+Allow: /
+Allow: /buscar
+Allow: /precios
+Allow: /docs
+Allow: /licitacion/
+Allow: /rankings/
+Allow: /cobertura
+Allow: /fuentes
+Allow: /aviso-legal
+Allow: /terms
+Allow: /privacy
+Allow: /derechos-rgpd
+Allow: /reutilizacion-y-atribucion
+Allow: /uso-razonable
+Allow: /estadisticas
+Allow: /metodologia
+Allow: /blog/
+Allow: /about
+Allow: /contact
+
+# Bloquear solo rutas privadas y endpoints de gestión
+Disallow: /api/
+Disallow: /cuenta/
+Disallow: /explorer/
+Disallow: /monitor/
+Disallow: /dashboard
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /mcp/
+
+# === AI Crawlers específicos — permitidos ===
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# Sitemap
+Sitemap: https://elicita.es/sitemap-index.xml
+Sitemap: https://elicita.es/sitemap-lit-index.xml
+Sitemap: https://elicita.es/sitemap-perfiles-index.xml

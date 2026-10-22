@@ -1,0 +1,441 @@
+---
+import DashboardLayout from '../../../layouts/dashboard.astro';
+
+const rawId = Astro.params.id;
+const joinedId = Array.isArray(rawId) ? rawId.join('/') : rawId;
+const id = (joinedId || '').replace(/\/$/, '');
+if (!id) {
+  return new Response('Not found', { status: 404 });
+}
+---
+
+<DashboardLayout title="Licitación — elicita_ monitor">
+
+  <div class="ficha-topbar">
+    <a href="/monitor/activas" class="back-link">← Licitaciones</a>
+    <span class="ficha-id" id="ficha-exp"></span>
+  </div>
+
+  <div class="main-content" id="ficha-root" data-page-id={id}>
+    <div class="loading-text">Cargando…</div>
+  </div>
+
+</DashboardLayout>
+
+<style is:global>
+  .ficha-topbar {
+    padding: 14px 32px;
+    border-bottom: 1px solid hsl(var(--border) / 0.05);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    background: hsl(var(--background));
+    z-index: 10;
+  }
+  .back-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: hsl(var(--foreground) / 0.7); }
+  .ficha-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.3);
+  }
+
+  .main-content {
+    padding: 32px;
+    max-width: 900px;
+  }
+  @media (max-width: 640px) {
+    .main-content { padding: 16px; }
+    .ficha-topbar { padding: 12px 16px; }
+  }
+
+  .loading-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.3);
+  }
+
+  /* Sección label */
+  .ficha-section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+    margin-top: 32px;
+  }
+  .ficha-section-label:first-child { margin-top: 0; }
+
+  /* Texto principal */
+  .ficha-main-text {
+    font-size: 16px;
+    color: hsl(var(--foreground));
+    line-height: 1.6;
+    margin-bottom: 32px;
+    word-break: break-word;
+  }
+  .ficha-sub-text {
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.55);
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+
+  /* Key-value grid */
+  .kv-table {
+    border: 1px solid hsl(var(--border) / 0.06);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .kv-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    border-bottom: 1px solid hsl(var(--border) / 0.04);
+  }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-key {
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: hsl(var(--card));
+    border-right: 1px solid hsl(var(--border) / 0.04);
+    display: flex;
+    align-items: flex-start;
+    white-space: nowrap;
+  }
+  .kv-val {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.75);
+    line-height: 1.5;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .kv-val.prose {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    color: hsl(var(--foreground) / 0.8);
+  }
+
+  /* CTA button */
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: hsl(var(--primary));
+    color: hsl(var(--background));
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    margin-bottom: 32px;
+  }
+  .cta-btn:hover { background: hsl(var(--primary) / 0.8); }
+
+  @media (max-width: 640px) {
+    .kv-row { grid-template-columns: 1fr; }
+    .kv-key { border-right: none; border-bottom: 1px solid hsl(var(--border) / 0.04); }
+    .cta-btn { width: 100%; justify-content: center; }
+  }
+
+  /* Source badge for generic links */
+  .source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.45);
+    border: 1px solid hsl(var(--border) / 0.08);
+    padding: 10px 16px;
+    border-radius: 6px;
+    margin-bottom: 32px;
+  }
+
+  /* Legend under date fields */
+  .field-legend {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.7);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  /* Quality score badge (ficha) */
+  .calidad-mini-link { text-decoration: none; color: inherit; }
+  .calidad-mini-link:hover .calidad-mini { border-color: hsl(var(--primary) / 0.3); background: hsl(var(--primary) / 0.04); }
+  .calidad-mini-link:hover .calidad-mini-name { color: hsl(var(--primary)); }
+  .calidad-mini-link { cursor: pointer; }
+  .calidad-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid hsl(var(--border) / 0.06);
+    background: hsl(var(--card));
+    margin-bottom: 32px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .calidad-mini-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .calidad-mini-info {}
+  .calidad-mini-label {
+    font-size: 9px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 2px;
+  }
+  .calidad-mini-name {
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.55);
+  }
+  .calidad-mini-score {
+    font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    margin-top: 1px;
+  }
+</style>
+
+<script is:inline>
+document.addEventListener('DOMContentLoaded', function() {
+const pageId = document.getElementById('ficha-root')?.dataset.pageId || '';
+function esc(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function titleCase(s) {
+  if (!s) return '';
+  const lowerSet = new Set(['y','e','de','del','la','las','los','el','en','con','para','por']);
+  return s.split(/(\s+|,\s*)/).map((word, i) => {
+    if (/^(S\.?L\.?U?\.?|S\.?A\.?U?\.?|S\.?C\.?|S\.?L\.?P\.?|U\.?T\.?E\.?|A\.?I\.?E\.?)$/i.test(word)) return word.toUpperCase();
+    if (/^\s+$/.test(word) || /^,/.test(word)) return word;
+    const w = word.toLowerCase();
+    if (i > 0 && lowerSet.has(w)) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join('');
+}
+
+function kv(key, val, prose) {
+  return `<div class="kv-row">
+    <div class="kv-key">${esc(key)}</div>
+    <div class="kv-val${prose ? ' prose' : ''}">${val}</div>
+  </div>`;
+}
+
+function fmtFechaDetail(s) {
+  if (!s) return '';
+  if (/^\d{4}-\d{2}/.test(s)) {
+    try { return new Date(s+'T12:00:00Z').toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}); }
+    catch { return s; }
+  }
+  return s;
+}
+
+function normalizeUrl(url, fuente, id) {
+  // Si ya hay URL
+  if (url) {
+    if (url.includes('ted.europa.eu') && url.endsWith('/pdf')) {
+      url = url.slice(0, -4);
+    }
+    return url;
+  }
+  // Generar URL desde ID si no hay
+  const idStr = String(id || '');
+  if ((fuente || '').toUpperCase() === 'TED' || idStr.startsWith('TED:')) {
+    const noticeId = idStr.replace('TED:', '');
+    if (noticeId) return `https://ted.europa.eu/es/notice/-/detail/${noticeId}`;
+  }
+  if ((fuente || '').toUpperCase() === 'BOE' && idStr.startsWith('BOE:')) {
+    const boeId = idStr.replace('BOE:', '');
+    if (boeId) return `https://www.boe.es/diario_boe/txt.php?id=${boeId}`;
+  }
+  return null;
+}
+
+function isFuentePlacsp(fuente) {
+  const f = (fuente || '').toUpperCase();
+  return f === 'PLACSP' || f === 'PLACE' || f === 'NACIONAL' || f === 'CALIDAD';
+}
+
+function buildSourceCta(op, url) {
+  if (url) {
+    return `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="cta-btn" title="Disponibilidad sujeta al organismo de destino">Ver publicación original →</a>`;
+  }
+  if (isFuentePlacsp(op.fuente)) {
+    return `<span class="source-badge">Fuente: ${esc(op.fuente)}</span>`;
+  }
+  return '';
+}
+
+async function load() {
+  const root = document.getElementById('ficha-root');
+  if (!root) return;
+
+  try {
+    const res = await fetch('/api/data?id=' + encodeURIComponent(String(pageId)));
+    if (res.status === 401) {
+      const returnUrl = encodeURIComponent(location.pathname + location.search);
+      location.href = '/sign-in?redirect_url=' + returnUrl;
+      return;
+    }
+    if (res.status === 404) {
+      const err = new Error('Not found');
+      err.status = 404;
+      throw err;
+    }
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+    const op = data.contrato || null;
+
+    if (!op) {
+      root.innerHTML = `
+        <div style="text-align:center;padding:48px 32px;border:1px solid hsl(var(--border) / 0.06);border-radius:8px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:hsl(var(--muted-foreground) / 0.5);margin-bottom:20px">Contrato no encontrado · ${esc(pageId)}</div>
+          <a href="/monitor/activas" class="back-link" style="font-size:13px">← Volver a licitaciones</a>
+        </div>`;
+      return;
+    }
+
+    // Expediente en topbar
+    const expEl = document.getElementById('ficha-exp');
+    if (expEl && op.expediente) expEl.textContent = op.expediente;
+
+    // CPVs — fetch dictionary for names
+    let cpvDict = {};
+    try { cpvDict = await fetch('/api/cpv').then(r => r.json()); } catch(e) {}
+    const cpvsArr = op.cpvs && op.cpvs.length ? op.cpvs : (op.cpv && op.cpv !== '—' ? [op.cpv] : []);
+    const cpvsText = cpvsArr.map(c => {
+      const code = c.replace('.0','');
+      const name = cpvDict[code];
+      return name ? `${code} — ${name.replace(/\.$/,'')}` : code;
+    }).join('<br>') || '—';
+
+    // URL normalizada
+    const url = normalizeUrl(op.url, op.fuente, op.id);
+
+    // CTA botón / badge
+    const ctaHtml = buildSourceCta(op, url);
+
+    // Importe: solo mostrar si hay valor real
+    const importeNum = op.importe_num || 0;
+    const importeDisplay = (importeNum > 0 && op.importe && op.importe !== '—') ? op.importe : '—';
+
+    // Adjudicatario (needed for KV rows AND calidad widget)
+    const adjNif = op.nif_adjudicatario || op.adjudicatario_nif || '';
+    const adjNombre = op.adjudicatario || op.nombre_adjudicatario || '';
+
+    // Campos KV
+    const rows = [
+      op.expediente ? kv('Expediente', esc(op.expediente), false) : '',
+      importeDisplay !== '—' ? kv('Importe', esc(importeDisplay), false) : '',
+      cpvsText !== '—' ? kv('CPVs', cpvsText, true) : '',
+      kv('Fuente', esc(op.fuente || '—'), false),
+      op.fecha_publicacion ? kv('Fecha publicación', esc(fmtFechaDetail(op.fecha_publicacion)), false) : '',
+      kv('Fin presentación', op.fecha_fin ? esc(fmtFechaDetail(op.fecha_fin)) : '<span style="color:hsl(var(--muted-foreground) / 0.5);font-style:italic">No especificada</span>', false),
+      op.fecha_publicacion && isFuentePlacsp(op.fuente)
+        ? `<div class="field-legend">*Fecha de última actualización según la fuente PLACSP. La fecha de publicación original puede diferir.</div>`
+        : '',
+      kv('Estado', esc(op.estado || 'Abierta'), false),
+      adjNombre ? kv('Adjudicatario',
+        adjNif
+          ? '<a href="/explorer/competidores/' + esc(adjNif) + '" class="adj-link">' + esc(titleCase(adjNombre)) + '</a> <span style="color:hsl(var(--muted-foreground) / 0.5);font-size:10px">' + esc(adjNif) + '</span>'
+          : esc(titleCase(adjNombre)), true)
+        : (op.estado && op.estado.toLowerCase().includes('adjudic') ? kv('Adjudicatario', '<span style="color:hsl(var(--muted-foreground) / 0.5);font-style:italic">Pendiente de publicación</span>', true) : ''),
+    ].filter(Boolean).join('');
+
+    root.innerHTML = `
+      <div class="ficha-section-label">Objeto del contrato</div>
+      <div class="ficha-main-text">${esc(op.objeto || op.titulo || '—')}${(op.objeto||op.titulo||'').length > 60 && !(op.objeto||'').endsWith('.') ? '<span style="color:hsl(var(--muted-foreground) / 0.5);font-size:12px;margin-left:6px" title="Título puede estar truncado en la fuente original">ⓘ</span>' : ''}</div>
+
+      <div class="ficha-section-label">Organismo</div>
+      <div class="ficha-sub-text" style="margin-bottom:32px">${esc(op.organismo || '—')}</div>
+
+      <div class="ficha-section-label">Datos</div>
+      <div class="kv-table">${rows}</div>
+
+      <div id="calidad-mini-wrap"></div>
+
+      ${ctaHtml}
+
+      <div>
+        <a href="/monitor/activas" class="back-link" style="margin-top:8px">← Licitaciones</a>
+      </div>
+    `;
+
+    // Load quality score for adjudicatario
+    if (adjNif) {
+      try {
+        const cRes = await fetch('/api/calidad?nif=' + encodeURIComponent(adjNif));
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          if (cData.score !== null) {
+            const score = cData.score;
+            const color = score > 85 ? 'hsl(var(--primary))' : score > 70 ? 'hsl(var(--warning))' : 'hsl(var(--destructive))';
+            const wrap = document.getElementById('calidad-mini-wrap');
+            if (wrap) {
+              wrap.innerHTML = `
+                <div class="ficha-section-label">Adjudicatario — Calidad documental</div>
+                <a href="/explorer/competidores/${encodeURIComponent(adjNif)}" class="calidad-mini-link">
+                <div class="calidad-mini">
+                  <div class="calidad-mini-badge" style="color:${color};border-color:${color}44">${score}</div>
+                  <div class="calidad-mini-info">
+                    <div class="calidad-mini-label">Índice de calidad</div>
+                    <div class="calidad-mini-name">${esc(titleCase(adjNombre) || adjNombre || adjNif)}</div>
+                    <div class="calidad-mini-score">${cData.total.toLocaleString('es-ES')} contratos analizados · ${adjNif}</div>
+                  </div>
+                </div>
+                </a>`;
+            }
+          }
+        }
+      } catch(e) { /* non-fatal */ }
+    }
+  } catch (err) {
+    console.error('[ficha licitacion]', err);
+    const is404 = err && err.status === 404;
+    const message = is404
+      ? 'No encontramos esta licitación. Puede haber sido eliminada o el enlace es incorrecto.'
+      : 'No se pudo cargar el contrato.';
+    const retryButton = is404
+      ? ''
+      : `<button id="ficha-retry" style="margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:12px;padding:10px 18px;border-radius:6px;border:none;background:hsl(var(--primary));color:hsl(var(--background));cursor:pointer">Reintentar</button>`;
+    root.innerHTML = `
+      <div style="text-align:center;padding:48px;border:1px solid hsl(var(--border) / 0.06);border-radius:8px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:hsl(var(--muted-foreground) / 0.5);margin-bottom:20px">${message}</div>
+        ${retryButton}
+        <div style="margin-top:20px"><a href="/monitor/activas" class="back-link" style="font-size:13px">← Volver a licitaciones</a></div>
+      </div>`;
+    const retryBtn = document.getElementById('ficha-retry');
+    if (retryBtn) retryBtn.addEventListener('click', load);
+  }
+}
+load();
+});
+</script>

@@ -1,0 +1,1948 @@
+---
+import DashboardLayout from '../../layouts/dashboard.astro';
+---
+<DashboardLayout title="Universo — elicita_">
+  <style>
+    /* Override main padding for full-canvas layout */
+    .universo-wrap {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 32px); /* 32px = status-bar height */
+      overflow: hidden;
+      background: hsl(var(--background));
+    }
+
+    #graph-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: default;
+    }
+
+    /* Search bar */
+    #search-wrap {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 20;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      #search-wrap { width: calc(100vw - 32px); }
+    }
+
+    #sector-select {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      padding: 8px 28px 8px 12px;
+      background: hsl(var(--background) / 0.9);
+      border: 1px solid hsl(var(--primary) / 0.2);
+      border-radius: 8px;
+      color: hsl(var(--foreground));
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    #sector-select:focus { border-color: hsl(var(--primary) / 0.5); }
+    #sector-wrap { position: relative; }
+    #sector-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: hsl(var(--foreground) / 0.35);
+      font-size: 10px;
+      pointer-events: none;
+    }
+    #sector-select option {
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+    }
+
+    #clear-sector {
+      position: absolute;
+      right: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: hsl(var(--foreground) / 0.35);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      display: none;
+    }
+    #clear-sector:hover { color: hsl(var(--foreground) / 0.65); }
+
+    #search-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: hsl(var(--background) / 0.9);
+      border: 1px solid hsl(var(--primary) / 0.2);
+      border-radius: 8px;
+      color: hsl(var(--foreground));
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 13px;
+      outline: none;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    #search-input::placeholder { color: hsl(var(--foreground) / 0.25); }
+    #search-input:focus { border-color: hsl(var(--primary) / 0.5); }
+
+    #search-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: hsl(var(--background) / 0.95);
+      border: 1px solid hsl(var(--foreground) / 0.08);
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow: hidden;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    #search-dropdown.visible { display: block; }
+
+    .dd-section {
+      padding: 6px 12px 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: hsl(var(--foreground) / 0.25);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .dd-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      color: hsl(var(--foreground) / 0.65);
+      cursor: pointer;
+      transition: background 0.1s;
+      border-left: 2px solid transparent;
+    }
+    .dd-item:hover, .dd-item.sel {
+      background: hsl(var(--primary) / 0.08);
+      border-left-color: hsl(var(--primary));
+      color: hsl(var(--foreground) / 0.9);
+    }
+    .dd-icon { font-size: 11px; flex-shrink: 0; }
+    .dd-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dd-type {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: hsl(var(--foreground) / 0.2);
+      flex-shrink: 0;
+    }
+    .dd-empty {
+      padding: 12px;
+      font-size: 12px;
+      color: hsl(var(--foreground) / 0.2);
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Legend */
+    #legend {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 20;
+      background: hsl(var(--background) / 0.9);
+      border: 1px solid hsl(var(--foreground) / 0.08);
+      border-radius: 8px;
+      padding: 10px 14px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: hsl(var(--foreground) / 0.55);
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Stats bar */
+    #stats-bar {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: hsl(var(--background) / 0.85);
+      border: 1px solid hsl(var(--foreground) / 0.06);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: hsl(var(--foreground) / 0.35);
+      white-space: nowrap;
+    }
+    #snapshot-badge {
+      position: absolute;
+      bottom: 44px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: hsl(var(--background) / 0.85);
+      border: 1px solid hsl(var(--foreground) / 0.06);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: hsl(var(--foreground) / 0.55);
+      white-space: nowrap;
+    }
+
+    /* Tooltip */
+    #tooltip {
+      position: absolute;
+      display: none;
+      z-index: 30;
+      pointer-events: none;
+      background: hsl(var(--background) / 0.92);
+      border: 1px solid hsl(var(--foreground) / 0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 12px;
+      color: hsl(var(--foreground));
+      max-width: 220px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    #tooltip .tt-name { font-weight: 500; margin-bottom: 3px; }
+    #tooltip .tt-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: hsl(var(--foreground) / 0.4); }
+
+    /* Loading overlay */
+    #loading {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 25;
+      background: hsl(var(--background) / 0.5);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: hsl(var(--foreground) / 0.4);
+    }
+    #loading.visible { display: flex; }
+
+    /* Year range selector */
+    #year-range-wrap {
+      display: flex; align-items: center; gap: 4px;
+    }
+    #year-from, #year-to {
+      appearance: none; -webkit-appearance: none;
+      flex: 1; padding: 6px 22px 6px 10px;
+      background: hsl(var(--background) / 0.9);
+      border: 1px solid hsl(var(--primary) / 0.2);
+      border-radius: 6px; color: hsl(var(--foreground));
+      font-family: 'Instrument Sans', sans-serif; font-size: 11px;
+      outline: none; cursor: pointer; box-sizing: border-box;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    #year-from:focus, #year-to:focus { border-color: hsl(var(--primary) / 0.5); }
+    .year-sep { color: hsl(var(--foreground) / 0.3); font-size: 11px; }
+
+    /* Share button */
+    #share-btn {
+      background: hsl(var(--background) / 0.9);
+      border: 1px solid hsl(var(--primary) / 0.2);
+      border-radius: 8px;
+      color: hsl(var(--foreground) / 0.4);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px 12px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.15s;
+      width: 100%;
+      text-align: center;
+    }
+    #share-btn:hover { border-color: hsl(var(--primary) / 0.5); color: hsl(var(--foreground) / 0.7); }
+    #share-btn.copied { color: hsl(var(--primary)); border-color: hsl(var(--primary) / 0.5); }
+    #year-from option, #year-to option { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+
+    /* Node detail panel */
+    #node-panel {
+      position: absolute;
+      top: 0; right: 0;
+      width: 340px;
+      height: 100%;
+      background: hsl(var(--background) / 0.92);
+      border-left: 1px solid hsl(var(--foreground) / 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 40;
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      overflow-y: auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    #node-panel.open { transform: translateX(0); }
+    #np-close {
+      position: absolute; top: 12px; right: 12px;
+      background: none; border: none; color: hsl(var(--foreground) / 0.4);
+      font-size: 20px; cursor: pointer; line-height: 1;
+    }
+    #np-close:hover { color: hsl(var(--foreground) / 0.8); }
+
+    .np-header { margin-bottom: 16px; }
+    .np-type {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .np-type.adj { color: hsl(var(--primary)); }
+    .np-type.org { color: hsl(var(--info)); }
+    .np-name {
+      font-family: 'Instrument Sans', sans-serif; font-size: 16px; font-weight: 500;
+      color: hsl(var(--foreground)); line-height: 1.3;
+    }
+    .np-stats { display: flex; gap: 16px; margin: 16px 0; }
+    .np-stat { }
+    .np-stat-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      color: hsl(var(--foreground) / 0.3); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .np-stat-value {
+      font-family: 'JetBrains Mono', monospace; font-size: 14px;
+      color: hsl(var(--foreground)); margin-top: 2px;
+    }
+    .np-nif {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: hsl(var(--foreground) / 0.4); margin-top: 8px;
+    }
+    .np-action {
+      display: block; width: 100%; margin-top: 16px;
+      padding: 10px; text-align: center;
+      background: hsl(var(--primary) / 0.1); border: 1px solid hsl(var(--primary) / 0.3);
+      border-radius: 8px; color: hsl(var(--primary));
+      font-family: 'Instrument Sans', sans-serif; font-size: 12px;
+      cursor: pointer; transition: all 0.15s;
+      text-decoration: none;
+    }
+    .np-action:hover { background: hsl(var(--primary) / 0.15); border-color: hsl(var(--primary) / 0.5); }
+
+    .np-borme { margin-top: 16px; padding-top: 16px; border-top: 1px solid hsl(var(--foreground) / 0.06); }
+    .np-borme-title {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      color: hsl(var(--foreground) / 0.3); text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .np-borme-row {
+      display: flex; justify-content: space-between; gap: 8px;
+      font-size: 11px; margin-bottom: 4px;
+    }
+    .np-borme-label { color: hsl(var(--foreground) / 0.4); font-family: 'JetBrains Mono', monospace; }
+    .np-borme-val { color: hsl(var(--foreground)); font-family: 'Instrument Sans', sans-serif; text-align: right; }
+    .np-borme-badge {
+      display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      padding: 2px 6px; border-radius: 4px; margin-bottom: 8px;
+    }
+    .np-borme-badge.ok { background: hsl(var(--primary) / 0.15); color: hsl(var(--primary)); }
+    .np-borme-badge.no { background: hsl(var(--warning) / 0.15); color: hsl(var(--warning) / 0.7); }
+    .np-borme-loading { color: hsl(var(--foreground) / 0.3); font-size: 11px; font-style: italic; }
+    .np-metrics { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .np-metric-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      color: hsl(var(--foreground) / 0.3); text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .np-metric-value {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; color: hsl(var(--foreground)); margin-bottom: 4px;
+    }
+    .np-metric-bar {
+      height: 4px; background: hsl(var(--foreground) / 0.06); border-radius: 2px; overflow: hidden;
+    }
+    .np-metric-fill {
+      height: 100%; background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7)); border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* Contratos por organismo (acordeón) */
+    .np-contracts { margin-top: 16px; padding-top: 16px; border-top: 1px solid hsl(var(--foreground) / 0.06); }
+    .np-contracts-title {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      color: hsl(var(--foreground) / 0.3); text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+    .np-org-accordion {
+      border: 1px solid hsl(var(--foreground) / 0.06);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+    .np-org-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; cursor: pointer;
+      background: hsl(var(--foreground) / 0.02);
+      transition: background 0.1s;
+      user-select: none;
+    }
+    .np-org-header:hover { background: hsl(var(--foreground) / 0.05); }
+    .np-org-chevron {
+      font-size: 10px; color: hsl(var(--foreground) / 0.3);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .np-org-accordion.open .np-org-chevron { transform: rotate(90deg); }
+    .np-org-name {
+      flex: 1; font-size: 12px; color: hsl(var(--foreground));
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .np-org-meta {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: hsl(var(--foreground) / 0.35); flex-shrink: 0;
+    }
+    .np-org-body {
+      display: none; padding: 0;
+      max-height: 280px; overflow-y: auto;
+    }
+    .np-org-accordion.open .np-org-body { display: block; }
+    .np-contract-row {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 8px 12px;
+      border-top: 1px solid hsl(var(--foreground) / 0.03);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .np-contract-row:hover { background: hsl(var(--primary) / 0.06); }
+    .np-contract-obj {
+      font-size: 11px; color: hsl(var(--foreground) / 0.7);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .np-contract-meta {
+      display: flex; gap: 12px; align-items: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: hsl(var(--foreground) / 0.3);
+    }
+    .np-contract-meta .np-amount { color: hsl(var(--primary)); }
+    .np-contract-meta .np-state {
+      display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px;
+    }
+    .np-contract-meta .np-state.firm { background: hsl(var(--primary) / 0.12); color: hsl(var(--primary)); }
+    .np-contract-meta .np-state.open { background: hsl(var(--info) / 0.12); color: hsl(var(--info)); }
+    .np-contract-meta .np-state.other { background: hsl(var(--foreground) / 0.06); color: hsl(var(--foreground) / 0.4); }
+    .np-contracts-loading {
+      padding: 8px 12px; font-size: 11px; color: hsl(var(--foreground) / 0.3); font-style: italic;
+    }
+    .np-contracts-empty {
+      padding: 8px 12px; font-size: 11px; color: hsl(var(--foreground) / 0.2);
+    }
+    .np-rel-link {
+      display: block; margin-top: 12px; padding: 8px 12px;
+      text-align: center; font-size: 11px;
+      color: hsl(var(--info) / 0.6); text-decoration: none;
+      border: 1px solid hsl(var(--info) / 0.15); border-radius: 6px;
+      transition: all 0.15s;
+      font-family: 'Instrument Sans', sans-serif;
+    }
+    .np-rel-link:hover { color: hsl(var(--info)); border-color: hsl(var(--info) / 0.3); background: hsl(var(--info) / 0.04); }
+
+    @media (max-width: 480px) {
+      #node-panel { width: 100%; }
+    }
+
+    /* Empty state */
+    #empty-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    #empty-state .es-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.2; }
+    #empty-state .es-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: hsl(var(--foreground) / 0.2);
+      text-align: center;
+      max-width: 300px;
+      line-height: 1.6;
+    }
+  </style>
+
+  <div class="universo-wrap">
+    <!-- Canvas -->
+    <canvas id="graph-canvas"></canvas>
+
+    <!-- Empty state (shown before first search) -->
+    <div id="empty-state">
+      <div class="es-icon">🌐</div>
+      <div class="es-text">Busca una empresa o un organismo para visualizar sus vínculos contractuales</div>
+    </div>
+
+    <!-- Search bar -->
+    <div id="search-wrap">
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Busca una empresa o un organismo…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <div id="sector-wrap">
+        <select id="sector-select">
+          <option value="">Sector: Todos</option>
+        </select>
+        <button id="clear-sector" type="button" title="Limpiar sector">×</button>
+      </div>
+      <div id="year-range-wrap">
+        <select id="year-from"><option value="">Desde</option></select>
+        <span class="year-sep">—</span>
+        <select id="year-to"><option value="">Hasta</option></select>
+      </div>
+      <div id="search-dropdown"></div>
+      <button id="share-btn" type="button" title="Compartir grafo">🔗</button>
+    </div>
+
+    <!-- Legend -->
+    <div id="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:hsl(var(--info))"></div>
+        ← Organismos
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:hsl(var(--primary))"></div>
+        Empresas →
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div id="stats-bar">—</div>
+    <div id="snapshot-badge" style="display:none">📊 Modo snapshot · <span id="snapshot-badge-id"></span> · edges.csv verificado</div>
+
+    <!-- Tooltip -->
+    <div id="tooltip">
+      <div class="tt-name" id="tt-name"></div>
+      <div class="tt-meta" id="tt-meta"></div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">Cargando grafo…</div>
+
+    <!-- Node detail panel -->
+    <div id="node-panel">
+      <button id="np-close" type="button">×</button>
+      <div id="np-content"></div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+(function() {
+  // ── titleCase ──────────────────────────────────────────────────────────────
+  function titleCase(s) {
+    if (!s) return '';
+    const lowerSet = new Set(['y','e','de','del','la','las','los','el','en','con','para','por']);
+    return s.split(/(\s+|,\s*)/).map((word, i) => {
+      if (/^(S\.?L\.?U?\.?|S\.?A\.?U?\.?|S\.?C\.?|S\.?L\.?P\.?|U\.?T\.?E\.?|A\.?I\.?E\.?)$/i.test(word)) return word.toUpperCase();
+      if (/^\s+$/.test(word) || /^,/.test(word)) return word;
+      const w = word.toLowerCase();
+      if (i > 0 && lowerSet.has(w)) return w;
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join('');
+  }
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+  const canvas    = document.getElementById('graph-canvas') as HTMLCanvasElement;
+  const ctx       = canvas.getContext('2d')!;
+  const searchInput  = document.getElementById('search-input') as HTMLInputElement;
+  const sectorSelect = document.getElementById('sector-select') as HTMLSelectElement;
+  const clearSector  = document.getElementById('clear-sector') as HTMLButtonElement;
+  const dropdown  = document.getElementById('search-dropdown')!;
+  const statsBar  = document.getElementById('stats-bar')!;
+  const tooltip   = document.getElementById('tooltip')!;
+  const ttName    = document.getElementById('tt-name')!;
+  const ttMeta    = document.getElementById('tt-meta')!;
+  const loadingEl = document.getElementById('loading')!;
+  const emptyEl   = document.getElementById('empty-state')!;
+  const wrap      = canvas.parentElement!;
+  const yearFrom  = document.getElementById('year-from') as HTMLSelectElement;
+  const yearTo    = document.getElementById('year-to') as HTMLSelectElement;
+  const nodePanel = document.getElementById('node-panel')!;
+  const npContent = document.getElementById('np-content')!;
+  const npClose   = document.getElementById('np-close')!;
+
+  const dpr = window.devicePixelRatio || 1;
+
+  // ── Graph state ──────────────────────────────────────────────────────────
+  interface GNode {
+    id: string;
+    name: string;
+    type: 'adjudicatario' | 'organismo';
+    contratos: number;
+    volumen: number;
+    monopolio_pct?: number;
+    concentracion_pct?: number;
+    dominancia_pct?: number;
+  }
+  interface GEdge {
+    source: string;
+    target: string;
+    contratos: number;
+    volumen: number;
+  }
+
+  let nodes: GNode[] = [];
+  let edges: GEdge[] = [];
+  let centerId = '';
+  let lastQuery = '';
+  let lastType = '';
+  let selectedCpv = '';
+  const expandedNodes = new Set<string>();
+  const expandingNodes = new Set<string>();
+
+  // Physics arrays (Float32 for perf)
+  let px: Float32Array = new Float32Array(0);
+  let py: Float32Array = new Float32Array(0);
+  let vx: Float32Array = new Float32Array(0);
+  let vy: Float32Array = new Float32Array(0);
+
+  // Adjacency list: nodeIndex → [nodeIndex, ...]
+  let adj: number[][] = [];
+
+  // Node index map
+  let nodeIdx: Map<string, number> = new Map();
+
+  // Expand level 3
+  async function expandNode(nodeId: string, nodeType: 'adjudicatario' | 'organismo') {
+    if (snapshotMode) return; // el snapshot es un conjunto cerrado: sin expansión en vivo
+    if (nodeId === centerId || expandedNodes.has(nodeId) || expandingNodes.has(nodeId)) return;
+    expandingNodes.add(nodeId);
+
+    const cpvParam = selectedCpv ? `&cpv=${encodeURIComponent(selectedCpv)}` : '';
+    const yearParams = getYearParams();
+    try {
+      const res = await fetch(`/api/graph?q=${encodeURIComponent(nodeId)}&type=${encodeURIComponent(nodeType)}&expand=1&level=3${cpvParam}${yearParams}`);
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('[universo] expand error', err);
+        return;
+      }
+      const data = await res.json() as { newNodes?: GNode[]; newEdges?: GEdge[] };
+      mergeGraph(data.newNodes || [], data.newEdges || []);
+      expandedNodes.add(nodeId);
+      simEnergy = 1;
+    } catch (err) {
+      console.error('[universo] expand fetch error', err);
+    } finally {
+      expandingNodes.delete(nodeId);
+    }
+  }
+
+  function mergeGraph(newNodes: GNode[], newEdges: GEdge[]) {
+    if (!newNodes.length) return;
+    const existingIds = new Set(nodes.map(n => n.id));
+    const startIdx = nodes.length;
+    const addedIdxs: number[] = [];
+
+    // Grow typed arrays
+    const totalN = startIdx + newNodes.length;
+    const newPx = new Float32Array(totalN);
+    const newPy = new Float32Array(totalN);
+    const newVx = new Float32Array(totalN);
+    const newVy = new Float32Array(totalN);
+    const newAdj: number[][] = Array.from({ length: totalN }, () => []);
+
+    newPx.set(px); newPy.set(py); newVx.set(vx); newVy.set(vy);
+    for (let i = 0; i < adj.length; i++) newAdj[i] = adj[i];
+
+    // Position new nodes near the expanding node if possible
+    const seedIdx = nodeIdx.get(newEdges[0]?.source || '') ?? -1;
+    const baseX = seedIdx >= 0 ? px[seedIdx] : W / 2;
+    const baseY = seedIdx >= 0 ? py[seedIdx] : H / 2;
+    const isOrgBase = seedIdx >= 0 ? nodes[seedIdx].type === 'organismo' : false;
+
+    newNodes.forEach((node, i) => {
+      const idx = startIdx + i;
+      nodeIdx.set(node.id, idx);
+      nodes.push(node);
+      // bipartite target x for new node
+      const targetX = node.type === 'organismo' ? W * 0.3 : W * 0.7;
+      // cluster near expanded node, with jitter
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 40 + Math.random() * 80;
+      newPx[idx] = (seedIdx >= 0 ? baseX : targetX) + Math.cos(angle) * dist;
+      newPy[idx] = (seedIdx >= 0 ? baseY : H / 2) + Math.sin(angle) * dist;
+      newVx[idx] = 0;
+      newVy[idx] = 0;
+      addedIdxs.push(idx);
+    });
+
+    px = newPx; py = newPy; vx = newVx; vy = newVy; adj = newAdj;
+
+    // Add new edges (skip duplicates)
+    const edgeKeySet = new Set(edges.map(e => `${e.source}|||${e.target}`));
+    for (const e of newEdges) {
+      const key = `${e.source}|||${e.target}`;
+      if (edgeKeySet.has(key)) continue;
+      edgeKeySet.add(key);
+      edges.push(e);
+      const si = nodeIdx.get(e.source);
+      const ti = nodeIdx.get(e.target);
+      if (si !== undefined && ti !== undefined) {
+        adj[si].push(ti);
+        adj[ti].push(si);
+      }
+    }
+
+    statsBar.textContent = `${nodes.length} nodos · ${edges.length} conexiones`;
+  }
+
+  // ── Viewport ─────────────────────────────────────────────────────────────
+  let W = 0, H = 0;
+  let scale = 1, tx = 0, ty = 0;
+
+  function resize() {
+    W = wrap.clientWidth;
+    H = wrap.clientHeight;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function fmtVol(v: number): string {
+    if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M€';
+    if (v >= 1e3) return (v / 1e3).toFixed(0) + 'K€';
+    return v.toFixed(0) + '€';
+  }
+
+  function nodeRadius(n: GNode): number {
+    return Math.max(4, Math.min(20, 3 + Math.log10((n.volumen || 1) + 1) * 2));
+  }
+
+  function nodeColor(n: GNode): string {
+    return n.type === 'adjudicatario' ? 'hsl(152, 60%, 40%)' : 'hsl(213, 94%, 68%)';
+  }
+
+  function screenToWorld(sx: number, sy: number): [number, number] {
+    return [(sx - tx) / scale, (sy - ty) / scale];
+  }
+
+  // ── Graph init ────────────────────────────────────────────────────────────
+  function initGraph(data: { center: any; nodes: GNode[]; edges: GEdge[] }) {
+    nodes = data.nodes;
+    edges = data.edges;
+    centerId = data.center.id;
+
+    const n = nodes.length;
+    px = new Float32Array(n);
+    py = new Float32Array(n);
+    vx = new Float32Array(n);
+    vy = new Float32Array(n);
+    adj = Array.from({ length: n }, () => []);
+    nodeIdx = new Map();
+
+    nodes.forEach((node, i) => {
+      nodeIdx.set(node.id, i);
+      // Circular initial layout
+      // Bipartite initial positions: organismos LEFT, empresas RIGHT
+      const isOrg = nodes[i].type === 'organismo';
+      const baseX = isOrg ? W * 0.3 : W * 0.7;
+      const spread = H * 0.35;
+      const orgCount = nodes.filter(nd => nd.type === 'organismo').length;
+      const empCount = nodes.filter(nd => nd.type !== 'organismo').length;
+      const sameTypeIdx = nodes.slice(0, i).filter(nd => (nd.type === 'organismo') === isOrg).length;
+      const sameTypeTotal = isOrg ? orgCount : empCount;
+      const yPos = sameTypeTotal > 1 ? (sameTypeIdx / (sameTypeTotal - 1)) * 2 - 1 : 0;
+      px[i] = baseX + (Math.random() - 0.5) * W * 0.08;
+      py[i] = H / 2 + yPos * spread + (Math.random() - 0.5) * 30;
+    });
+
+    // Center node starts at center
+    const ci = nodeIdx.get(centerId);
+    if (ci !== undefined) {
+      px[ci] = W / 2;
+      py[ci] = H / 2;
+    }
+
+    // Build adjacency
+    for (const e of edges) {
+      const si = nodeIdx.get(e.source);
+      const ti = nodeIdx.get(e.target);
+      if (si !== undefined && ti !== undefined) {
+        adj[si].push(ti);
+        adj[ti].push(si);
+      }
+    }
+
+    // Reset viewport
+    scale = 1;
+    tx = 0;
+    ty = 0;
+
+    // Update stats
+    statsBar.textContent = `${n} nodos · ${edges.length} conexiones`;
+    emptyEl.style.display = 'none';
+
+    // Reset sim energy
+    simEnergy = 1;
+    frameCount = 0;
+  }
+
+  // ── Force simulation ──────────────────────────────────────────────────────
+  let simEnergy = 0;
+  let frameCount = 0;
+
+  function simulate() {
+    if (simEnergy < 0.001) return;
+    simEnergy *= 0.992;
+    frameCount++;
+
+    const n = nodes.length;
+    if (n === 0) return;
+
+    // Bipartite layout: organismos LEFT, empresas RIGHT
+    const leftX = W * 0.3;
+    const rightX = W * 0.7;
+    for (let i = 0; i < n; i++) {
+      const targetX = nodes[i].type === 'organismo' ? leftX : rightX;
+      vx[i] += (targetX - px[i]) * 0.025 * simEnergy;
+      vy[i] += (H / 2 - py[i]) * 0.008 * simEnergy;
+    }
+
+    // Repulsion — spatial grid optimization
+    const cellSize = 80;
+    const grid: Record<string, number[]> = {};
+    for (let i = 0; i < n; i++) {
+      const gx = Math.floor(px[i] / cellSize);
+      const gy = Math.floor(py[i] / cellSize);
+      const key = gx + ',' + gy;
+      if (!grid[key]) grid[key] = [];
+      grid[key].push(i);
+    }
+
+    for (let i = 0; i < n; i++) {
+      const gx = Math.floor(px[i] / cellSize);
+      const gy = Math.floor(py[i] / cellSize);
+      for (let dx = -2; dx <= 2; dx++) {
+        for (let dy = -2; dy <= 2; dy++) {
+          const neighbors = grid[(gx + dx) + ',' + (gy + dy)];
+          if (!neighbors) continue;
+          for (const j of neighbors) {
+            if (j <= i) continue;
+            let rx = px[i] - px[j];
+            let ry = py[i] - py[j];
+            let dist2 = rx * rx + ry * ry;
+            if (dist2 < 1) dist2 = 1;
+            if (dist2 > 25000) continue;
+            const force = 90 * simEnergy / dist2;
+            vx[i] += rx * force;
+            vy[i] += ry * force;
+            vx[j] -= rx * force;
+            vy[j] -= ry * force;
+          }
+        }
+      }
+    }
+
+    // Edge attraction
+    for (const e of edges) {
+      const si = nodeIdx.get(e.source);
+      const ti = nodeIdx.get(e.target);
+      if (si === undefined || ti === undefined) continue;
+      const ox = px[ti] - px[si];
+      const oy = py[ti] - py[si];
+      const f = 0.006 * simEnergy;
+      vx[si] += ox * f;
+      vy[si] += oy * f;
+      vx[ti] -= ox * f;
+      vy[ti] -= oy * f;
+    }
+
+    // Damping + integrate (skip dragged node)
+    for (let i = 0; i < n; i++) {
+      if (i === dragIdx) continue;
+      vx[i] *= 0.82;
+      vy[i] *= 0.82;
+      px[i] += vx[i];
+      py[i] += vy[i];
+    }
+  }
+
+  // ── Interaction state ─────────────────────────────────────────────────────
+  let hoverIdx = -1;
+  let dragIdx  = -1;
+  let isPanning = false;
+  let lastMx = 0, lastMy = 0;
+  let touchDist = 0;
+  let searchHighlight: Set<number> = new Set();
+  let fadeIn = 0; // 0→1 for initial fade
+
+  function hitTest(sx: number, sy: number): number {
+    const [wx, wy] = screenToWorld(sx, sy);
+    let best = -1, bestD = Infinity;
+    for (let i = 0; i < nodes.length; i++) {
+      const dx = px[i] - wx, dy = py[i] - wy;
+      const r = nodeRadius(nodes[i]) / scale + 6 / scale;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < r && d < bestD) { best = i; bestD = d; }
+    }
+    return best;
+  }
+
+  function showTooltip(i: number, sx: number, sy: number) {
+    const n = nodes[i];
+    ttName.textContent = titleCase(n.name) || n.name;
+    ttMeta.textContent = `${n.type === 'adjudicatario' ? '🟢 Empresa' : '🔵 Organismo'} · ${n.contratos} contratos · ${fmtVol(n.volumen)}`;
+    tooltip.style.display = 'block';
+    const ttW = 220, ttH = 56;
+    let lx = sx + 14, ly = sy - 8;
+    if (lx + ttW > W) lx = sx - ttW - 8;
+    if (ly + ttH > H) ly = sy - ttH - 4;
+    tooltip.style.left = lx + 'px';
+    tooltip.style.top  = ly + 'px';
+  }
+
+  // Mouse
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 0.88 : 1.14;
+    const mx = e.offsetX, my = e.offsetY;
+    tx = mx - (mx - tx) * factor;
+    ty = my - (my - ty) * factor;
+    scale *= factor;
+  }, { passive: false });
+
+  canvas.addEventListener('mousedown', (e) => {
+    const hit = hitTest(e.offsetX, e.offsetY);
+    if (hit >= 0) {
+      dragIdx = hit;
+    } else {
+      isPanning = true;
+    }
+    lastMx = e.offsetX;
+    lastMy = e.offsetY;
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    const mx = e.offsetX, my = e.offsetY;
+    if (isPanning) {
+      tx += mx - lastMx;
+      ty += my - lastMy;
+    } else if (dragIdx >= 0) {
+      const [wx, wy] = screenToWorld(mx, my);
+      px[dragIdx] = wx;
+      py[dragIdx] = wy;
+      vx[dragIdx] = 0;
+      vy[dragIdx] = 0;
+    } else {
+      const hit = hitTest(mx, my);
+      hoverIdx = hit;
+      if (hit >= 0) {
+        showTooltip(hit, mx, my);
+        canvas.style.cursor = 'pointer';
+      } else {
+        tooltip.style.display = 'none';
+        canvas.style.cursor = 'default';
+      }
+    }
+    lastMx = mx;
+    lastMy = my;
+  });
+
+  canvas.addEventListener('mouseup', (e) => {
+    if (dragIdx < 0 && !isPanning) {
+      const hit = hitTest(e.offsetX, e.offsetY);
+      if (hit >= 0) {
+        navigateToNode(nodes[hit]);
+      } else {
+        closeNodePanel();
+      }
+    }
+    isPanning = false;
+    dragIdx = -1;
+  });
+
+  // Double-click expands one more level (level 3)
+  canvas.addEventListener('dblclick', async (e) => {
+    const hit = hitTest(e.offsetX, e.offsetY);
+    if (hit < 0) return;
+    const n = nodes[hit];
+    if (n.id === centerId) return;
+    await expandNode(n.id, n.type);
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    hoverIdx = -1;
+    tooltip.style.display = 'none';
+    canvas.style.cursor = 'default';
+    isPanning = false;
+    dragIdx = -1;
+  });
+
+  // Touch
+  let touchStartIdx = -1;
+  let touches0: { x: number; y: number }[] = [];
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches.length === 1) {
+      const tx_ = e.touches[0].clientX - rect.left;
+      const ty_ = e.touches[0].clientY - rect.top;
+      const hit = hitTest(tx_, ty_);
+      if (hit >= 0) { dragIdx = hit; touchStartIdx = hit; }
+      else { isPanning = true; touchStartIdx = -1; }
+      lastMx = tx_; lastMy = ty_;
+    }
+    touches0 = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    if (e.touches.length === 2) {
+      touchDist = Math.hypot(touches0[0].x - touches0[1].x, touches0[0].y - touches0[1].y);
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches.length === 2 && touches0.length === 2) {
+      const newDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = newDist / touchDist;
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      const cy_ = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      tx = cx - (cx - tx) * factor;
+      ty = cy_ - (cy_ - ty) * factor;
+      scale *= factor;
+      touchDist = newDist;
+    } else if (e.touches.length === 1) {
+      const nx = e.touches[0].clientX - rect.left;
+      const ny = e.touches[0].clientY - rect.top;
+      if (dragIdx >= 0) {
+        const [wx, wy] = screenToWorld(nx, ny);
+        px[dragIdx] = wx; py[dragIdx] = wy;
+        vx[dragIdx] = 0; vy[dragIdx] = 0;
+      } else if (isPanning) {
+        tx += nx - lastMx;
+        ty += ny - lastMy;
+      }
+      lastMx = nx; lastMy = ny;
+    }
+    touches0 = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', (e) => {
+    if (dragIdx >= 0 && touchStartIdx >= 0 && e.changedTouches.length === 1) {
+      const rect = canvas.getBoundingClientRect();
+      const ex = e.changedTouches[0].clientX - rect.left;
+      const ey = e.changedTouches[0].clientY - rect.top;
+      const hit = hitTest(ex, ey);
+      if (hit >= 0 && hit === touchStartIdx) navigateToNode(nodes[hit]);
+    }
+    isPanning = false; dragIdx = -1; touchStartIdx = -1;
+  });
+
+  function navigateToNode(n: GNode) {
+    openNodePanel(n);
+  }
+
+  function openNodePanel(n: GNode) {
+    const isAdj = n.type === 'adjudicatario';
+    const typeLabel = isAdj ? '🟢 Empresa' : '🔵 Organismo';
+    const typeClass = isAdj ? 'adj' : 'org';
+    const nif = isAdj ? `<div class="np-nif">NIF: ${escHtml(n.id)}</div>` : '';
+    const actionLabel = isAdj ? 'Ver perfil de competidor →' : 'Ver perfil de organismo →';
+    const actionHref = isAdj
+      ? `/explorer/competidores/${encodeURIComponent(n.id)}`
+      : `/explorer/organismos/${encodeURIComponent(n.name)}`;
+
+    let metricsHtml = '';
+    if (isAdj && (n.monopolio_pct !== undefined || n.concentracion_pct !== undefined)) {
+      const monoBar = n.monopolio_pct !== undefined
+        ? `<div class="np-metric">
+             <div class="np-metric-label">Cuota de mercado del adjudicatario</div>
+             <div class="np-metric-value">${n.monopolio_pct.toFixed(1)}%</div>
+             <div class="np-metric-bar"><div class="np-metric-fill" style="width: ${Math.min(100, Math.max(0, n.monopolio_pct))}%"></div></div>
+           </div>`
+        : '';
+      const concBar = n.concentracion_pct !== undefined
+        ? `<div class="np-metric">
+             <div class="np-metric-label">Concentración (top organismo)</div>
+             <div class="np-metric-value">${n.concentracion_pct.toFixed(1)}%</div>
+             <div class="np-metric-bar"><div class="np-metric-fill" style="width: ${Math.min(100, Math.max(0, n.concentracion_pct))}%"></div></div>
+           </div>`
+        : '';
+      metricsHtml = `<div class="np-metrics">${monoBar}${concBar}</div>`;
+    } else if (!isAdj && n.dominancia_pct !== undefined) {
+      metricsHtml = `<div class="np-metrics">
+        <div class="np-metric">
+          <div class="np-metric-label">Dominancia top empresa</div>
+          <div class="np-metric-value">${n.dominancia_pct.toFixed(1)}%</div>
+          <div class="np-metric-bar"><div class="np-metric-fill" style="width: ${Math.min(100, Math.max(0, n.dominancia_pct))}%"></div></div>
+        </div>
+      </div>`;
+    }
+
+    npContent.innerHTML = `
+      <div class="np-header">
+        <div class="np-type ${typeClass}">${typeLabel}</div>
+        <div class="np-name">${escHtml(titleCase(n.name) || n.name)}</div>
+        ${nif}
+      </div>
+      <div class="np-stats">
+        <div class="np-stat">
+          <div class="np-stat-label">Contratos</div>
+          <div class="np-stat-value">${n.contratos}</div>
+        </div>
+        <div class="np-stat">
+          <div class="np-stat-label">Volumen</div>
+          <div class="np-stat-value">${fmtVol(n.volumen)}</div>
+        </div>
+      </div>
+      ${metricsHtml}
+      <div id="np-borme-section"></div>
+      <div id="np-contracts-section"></div>
+      <a class="np-action" href="${actionHref}">${actionLabel}</a>
+    `;
+    nodePanel.classList.add('open');
+
+    // Fetch BORME info for adjudicatarios
+    if (isAdj) {
+      fetchBormeInfo(n.id);
+    }
+
+    // Fetch contracts summary for both types
+    fetchContractsAccordion(n, isAdj);
+  }
+
+  async function fetchBormeInfo(nif: string) {
+    const section = document.getElementById('np-borme-section');
+    if (!section) return;
+    section.innerHTML = '<div class="np-borme-loading">Cargando registro mercantil…</div>';
+    try {
+      const res = await fetch(`/api/borme-info?nif=${encodeURIComponent(nif)}`);
+      if (!res.ok) { section.innerHTML = ''; return; }
+      const data = await res.json();
+      if (!data.borme && !data.cargos_activos?.length) {
+        section.innerHTML = `<div class="np-borme"><span class="np-borme-badge no">No en BORME</span></div>`;
+        return;
+      }
+      let html = '<div class="np-borme">';
+      if (data.verificado) {
+        html += '<span class="np-borme-badge ok">✓ NIF verificado en BORME</span>';
+      } else {
+        html += '<span class="np-borme-badge no">NIF no verificado</span>';
+      }
+      if (data.borme) {
+        const b = data.borme;
+        html += '<div class="np-borme-title">Registro mercantil</div>';
+        if (b.domicilio) html += `<div class="np-borme-row"><span class="np-borme-label">Domicilio</span><span class="np-borme-val">${escHtml(b.domicilio)}</span></div>`;
+        if (b.capital_euros) html += `<div class="np-borme-row"><span class="np-borme-label">Capital social</span><span class="np-borme-val">${fmtVol(b.capital_euros)} €</span></div>`;
+        if (b.fecha_constitucion) html += `<div class="np-borme-row"><span class="np-borme-label">Constitución</span><span class="np-borme-val">${String(b.fecha_constitucion).slice(0,10)}</span></div>`;
+        if (b.provincia) html += `<div class="np-borme-row"><span class="np-borme-label">Provincia</span><span class="np-borme-val">${escHtml(b.provincia)}</span></div>`;
+      }
+      if (data.cargos_activos?.length) {
+        html += `<div class="np-borme-title" style="margin-top:12px">Cargos activos (${data.cargos_activos.length})</div>`;
+        data.cargos_activos.slice(0,5).forEach((c: any) => {
+          html += `<div class="np-borme-row"><span class="np-borme-label">${escHtml(c.cargo)}</span><span class="np-borme-val">${c.fecha_borme ? String(c.fecha_borme).slice(0,10) : '—'}</span></div>`;
+        });
+      }
+      html += '</div>';
+      section.innerHTML = html;
+    } catch {
+      section.innerHTML = '';
+    }
+  }
+
+  function closeNodePanel() {
+    nodePanel.classList.remove('open');
+  }
+
+  // ── Contratos accordion (Opción C) ────────────────────────────────────────
+  // For adjudicatarios: list organismos in the graph that connect to this node
+  // For organismos: list adjudicatarios in the graph that connect to this node
+  async function fetchContractsAccordion(node: GNode, isAdj: boolean) {
+    const section = document.getElementById('np-contracts-section');
+    if (!section) return;
+
+    // Find connected nodes in the current graph
+    const nodeIdx_ = nodeIdx.get(node.id);
+    if (nodeIdx_ === undefined) { section.innerHTML = ''; return; }
+
+    const connectedIds: string[] = [];
+    for (const ni of adj[nodeIdx_]) {
+      const cn = nodes[ni];
+      if (cn.type === (isAdj ? 'organismo' : 'adjudicatario')) {
+        // For organismo nodes, the "id" is "org:Name" — we need the real name
+        if (isAdj) {
+          // cn is organismo, id is "org:RealName"
+          const realName = cn.id.startsWith('org:') ? cn.id.slice(4) : cn.name;
+          connectedIds.push(realName);
+        } else {
+          // cn is adjudicatario, id is the NIF
+          connectedIds.push(cn.id);
+        }
+      }
+    }
+
+    if (connectedIds.length === 0) { section.innerHTML = ''; return; }
+
+    const titleLabel = isAdj ? 'Contratos por organismo' : 'Contratos por empresa';
+    const firstRelHref = buildFirstRelHref(node, connectedIds, isAdj);
+    let html = `<div class="np-contracts" id="np-contracts-wrap">
+      <div class="np-contracts-title">${titleLabel} (${connectedIds.length})</div>
+    `;
+
+    for (const targetId of connectedIds) {
+      const displayName = isAdj ? titleCase(targetId) : targetId;
+      const nifParam = isAdj ? encodeURIComponent(node.id) : encodeURIComponent(targetId);
+      const orgParam = isAdj ? encodeURIComponent(targetId) : encodeURIComponent(node.id.startsWith('org:') ? node.id.slice(4) : node.name);
+      const relHref = `/explorer/universo/relacion/${nifParam}/${orgParam}`;
+
+      html += `
+        <div class="np-org-accordion" data-target="${esc(targetId)}">
+          <div class="np-org-header">
+            <span class="np-org-chevron">▶</span>
+            <span class="np-org-name">${escHtml(displayName)}</span>
+            <span class="np-org-meta" data-meta>…</span>
+          </div>
+          <div class="np-org-body" data-body></div>
+        </div>
+      `;
+    }
+
+    html += `<a class="np-rel-link" href="${firstRelHref}">Ver página de relación completa →</a>`;
+    html += '</div>';
+    section.innerHTML = html;
+
+    // Wire accordion toggles + lazy load
+    section.querySelectorAll('.np-org-accordion').forEach(acc => {
+      const header = acc.querySelector('.np-org-header') as HTMLElement;
+      const body = acc.querySelector('[data-body]') as HTMLElement;
+      const meta = acc.querySelector('[data-meta]') as HTMLElement;
+      const targetId = acc.dataset.target || '';
+      let loaded = false;
+
+      header.addEventListener('click', async () => {
+        acc.classList.toggle('open');
+        if (acc.classList.contains('open') && !loaded) {
+          loaded = true;
+          await loadContractRows(body, meta, node, targetId, isAdj);
+        }
+      });
+    });
+
+    // Preload meta (count + volume) for all — lightweight
+    for (const targetId of connectedIds) {
+      preloadContractMeta(section, node, targetId, isAdj);
+    }
+  }
+
+  async function preloadContractMeta(section: HTMLElement, node: GNode, targetId: string, isAdj: boolean) {
+    const nif = isAdj ? node.id : targetId;
+    const org = isAdj ? targetId : (node.id.startsWith('org:') ? node.id.slice(4) : node.name);
+    try {
+      const res = await fetch(`/api/graph-contracts?nif=${encodeURIComponent(nif)}&organismo=${encodeURIComponent(org)}&limit=1`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const acc = section.querySelector(`.np-org-accordion[data-target="${targetId.replace(/"/g, '\\"')}"`);
+      if (!acc) return;
+      const meta = acc.querySelector('[data-meta]') as HTMLElement;
+      if (meta) {
+        const total = data.stats.total;
+        const vol = fmtVol(data.stats.volumen);
+        meta.textContent = `${total} · ${vol}`;
+      }
+    } catch {}
+  }
+
+  async function loadContractRows(body: HTMLElement, meta: HTMLElement, node: GNode, targetId: string, isAdj: boolean) {
+    const nif = isAdj ? node.id : targetId;
+    const org = isAdj ? targetId : (node.id.startsWith('org:') ? node.id.slice(4) : node.name);
+    body.innerHTML = '<div class="np-contracts-loading">Cargando contratos…</div>';
+    try {
+      const res = await fetch(`/api/graph-contracts?nif=${encodeURIComponent(nif)}&organismo=${encodeURIComponent(org)}&limit=50`);
+      if (!res.ok) { body.innerHTML = '<div class="np-contracts-empty">Error al cargar</div>'; return; }
+      const data = await res.json();
+      if (!data.contratos || data.contratos.length === 0) {
+        body.innerHTML = '<div class="np-contracts-empty">Sin contratos</div>';
+        return;
+      }
+      const total = data.stats.total;
+      const vol = fmtVol(data.stats.volumen);
+      meta.textContent = `${total} · ${vol}`;
+
+      let html = '';
+      for (const c of data.contratos.slice(0, 20)) {
+        const stateClass = c.estado === 'Firmado' || c.estado === 'Adjudicado' ? 'firm' : (c.estado === 'Abierto' || c.estado === 'En curso' ? 'open' : 'other');
+        const date = c.fecha || '—';
+        const amount = c.importe > 0 ? fmtVol(c.importe) : '—';
+        const link = c.url ? c.url : '';
+        const safeLink = link ? link.replace(/'/g, '%27').replace(/"/g, '%22') : '';
+        const obj = c.objeto.length > 60 ? c.objeto.slice(0, 58) + '…' : c.objeto;
+        html += `<div class="np-contract-row"${safeLink ? ` onclick="window.open('${safeLink}','_blank')"` : ''}>
+          <div class="np-contract-obj">${escHtml(obj)}</div>
+          <div class="np-contract-meta">
+            <span class="np-amount">${amount}</span>
+            <span>${date}</span>
+            <span class="np-state ${stateClass}">${escHtml(c.estado || '—')}</span>
+          </div>
+        </div>`;
+      }
+      if (total > 20) {
+        const relHref = `/explorer/universo/relacion/${encodeURIComponent(nif)}/${encodeURIComponent(org)}`;
+        html += `<a class="np-rel-link" href="${relHref}">Ver los ${total} contratos →</a>`;
+      }
+      body.innerHTML = html;
+    } catch {
+      body.innerHTML = '<div class="np-contracts-empty">Error al cargar</div>';
+    }
+  }
+
+  // ── Helper to build first relation link ───────────────────────────────────
+  function buildFirstRelHref(node: GNode, connectedIds: string[], isAdj: boolean): string {
+    if (!connectedIds.length) return '#';
+    const first = connectedIds[0];
+    const nif = isAdj ? node.id : first;
+    const org = isAdj ? first : (node.id.startsWith('org:') ? node.id.slice(4) : node.name);
+    return `/explorer/universo/relacion/${encodeURIComponent(nif)}/${encodeURIComponent(org)}`;
+  }
+
+  npClose.addEventListener('click', closeNodePanel);
+
+  // ── Render loop ───────────────────────────────────────────────────────────
+  function draw() {
+    requestAnimationFrame(draw);
+    simulate();
+    ctx.clearRect(0, 0, W, H);
+
+    if (nodes.length === 0) return;
+
+    // Zone labels (background)
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    ctx.font = 'bold 14px Instrument Sans, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'hsl(213, 94%, 68%)';
+    ctx.fillText('ORGANISMOS', W * 0.3, 30);
+    ctx.fillStyle = 'hsl(152, 60%, 40%)';
+    ctx.fillText('ADJUDICATARIOS', W * 0.7, 30);
+    // Divider line
+    ctx.strokeStyle = 'hsla(155, 5%, 96%, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 8]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 10);
+    ctx.lineTo(W / 2, H - 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Fade in
+    fadeIn = Math.min(1, fadeIn + 0.025);
+
+    const hasHover   = hoverIdx >= 0;
+    const hasSearch  = searchHighlight.size > 0;
+    const hasFocus   = hasHover || hasSearch;
+
+    // Hover neighborhood
+    const hoverSet = new Set<number>();
+    if (hasHover) {
+      hoverSet.add(hoverIdx);
+      for (const ni of adj[hoverIdx]) hoverSet.add(ni);
+    }
+
+    ctx.save();
+    ctx.globalAlpha = fadeIn;
+    ctx.translate(tx, ty);
+    ctx.scale(scale, scale);
+
+    // Edges
+    for (const e of edges) {
+      const si = nodeIdx.get(e.source);
+      const ti = nodeIdx.get(e.target);
+      if (si === undefined || ti === undefined) continue;
+
+      const isHoverEdge  = hasHover && hoverSet.has(si) && hoverSet.has(ti);
+      const isSearchEdge = hasSearch && (searchHighlight.has(si) || searchHighlight.has(ti));
+
+      let alpha = 0.08;
+      let lw = Math.max(0.5, Math.min(2, 0.5 + e.contratos * 0.02));
+      if (hasFocus && !isHoverEdge && !isSearchEdge) {
+        alpha = 0.015;
+      } else if (isHoverEdge) {
+        alpha = 0.5;
+        lw = Math.max(1, lw * 1.5);
+      }
+
+      ctx.strokeStyle = `hsla(155, 5%, 96%, ${alpha})`;
+      ctx.lineWidth = lw / scale;
+      ctx.beginPath();
+      ctx.moveTo(px[si], py[si]);
+      ctx.lineTo(px[ti], py[ti]);
+      ctx.stroke();
+    }
+
+    // Nodes
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      const r = nodeRadius(n);
+      const isCenter  = n.id === centerId;
+      const isHovered = hoverIdx === i;
+      const isSearch  = searchHighlight.has(i);
+
+      let alpha = fadeIn;
+      if (hasFocus && !hoverSet.has(i) && !searchHighlight.has(i)) {
+        alpha = fadeIn * 0.12;
+      }
+
+      ctx.globalAlpha = alpha;
+
+      // Glow for center node
+      if (isCenter) {
+        ctx.globalAlpha = alpha * 0.25;
+        ctx.fillStyle = nodeColor(n);
+        ctx.beginPath();
+        ctx.arc(px[i], py[i], r * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.beginPath();
+        ctx.arc(px[i], py[i], r * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha;
+      }
+
+      // Halo for hovered/search
+      if ((isHovered || isSearch) && alpha > 0.3) {
+        ctx.globalAlpha = alpha * 0.3;
+        ctx.fillStyle = nodeColor(n);
+        ctx.beginPath();
+        ctx.arc(px[i], py[i], r * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha;
+      }
+
+      // Main node
+      // Expansion ring for expanded nodes
+      if (expandedNodes.has(n.id)) {
+        ctx.globalAlpha = alpha * 0.4;
+        ctx.strokeStyle = 'hsla(152, 60%, 40%, 0.4)';
+        ctx.lineWidth = 2 / scale;
+        ctx.beginPath();
+        ctx.arc(px[i], py[i], r * 1.8, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = alpha;
+      }
+
+      ctx.fillStyle = nodeColor(n);
+      ctx.beginPath();
+      ctx.arc(px[i], py[i], isCenter ? r * 1.4 : r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label
+      const showLabel = scale > 1.4 || isHovered || isSearch || isCenter;
+      if (showLabel) {
+        const fontSize = Math.max(8, 10 / scale);
+        ctx.globalAlpha = alpha * 0.9;
+        ctx.fillStyle = 'hsl(155, 5%, 96%)';
+        ctx.font = `${fontSize}px Instrument Sans, sans-serif`;
+        ctx.textAlign = 'center';
+        const _tcName = titleCase(n.name) || n.name;
+        const label = _tcName.length > 28 ? _tcName.slice(0, 26) + '…' : _tcName;
+        ctx.fillText(label, px[i], py[i] - r * (isCenter ? 1.6 : 1) - 4 / scale);
+      }
+    }
+
+    ctx.restore();
+  }
+
+  requestAnimationFrame(draw);
+
+  // ── CPV sector options (top-level divisions used across the app) ─────────
+  const CPV_SECTORS: { code: string; name: string }[] = [
+    { code: '03', name: 'Productos agrícolas, ganaderos, pesqueros' },
+    { code: '09', name: 'Combustibles y energía' },
+    { code: '14', name: 'Minería, metales y productos afines' },
+    { code: '15', name: 'Alimentos, bebidas y tabaco' },
+    { code: '16', name: 'Maquinaria agrícola' },
+    { code: '18', name: 'Vestido, calzado y accesorios' },
+    { code: '19', name: 'Piel, textiles, plástico y caucho' },
+    { code: '22', name: 'Impresos y productos relacionados' },
+    { code: '24', name: 'Productos químicos' },
+    { code: '30', name: 'Máquinas de oficina e informática' },
+    { code: '31', name: 'Aparatos eléctricos e iluminación' },
+    { code: '32', name: 'Radio, TV, comunicaciones y telecomunicaciones' },
+    { code: '33', name: 'Equipamiento médico y farmacéutico' },
+    { code: '34', name: 'Equipos de transporte' },
+    { code: '35', name: 'Seguridad, extinción, policía y defensa' },
+    { code: '37', name: 'Instrumentos musicales, deporte, juegos' },
+    { code: '38', name: 'Equipo de laboratorio, óptico y precisión' },
+    { code: '39', name: 'Mobiliario, electrodomésticos y limpieza' },
+    { code: '41', name: 'Agua recogida y depurada' },
+    { code: '42', name: 'Maquinaria industrial' },
+    { code: '43', name: 'Maquinaria de minería y construcción' },
+    { code: '44', name: 'Estructuras y materiales de construcción' },
+    { code: '45', name: 'Trabajos de construcción' },
+    { code: '48', name: 'Software y sistemas de información' },
+    { code: '50', name: 'Reparación y mantenimiento' },
+    { code: '51', name: 'Instalación (excepto software)' },
+    { code: '55', name: 'Hostelería y restauración' },
+    { code: '60', name: 'Transporte' },
+    { code: '63', name: 'Transporte auxiliar y agencias de viajes' },
+    { code: '64', name: 'Correos y telecomunicaciones' },
+    { code: '65', name: 'Servicios públicos' },
+    { code: '66', name: 'Servicios financieros y de seguros' },
+    { code: '70', name: 'Servicios inmobiliarios' },
+    { code: '71', name: 'Arquitectura, construcción e ingeniería' },
+    { code: '72', name: 'Servicios TI / Telecom' },
+    { code: '73', name: 'Investigación y desarrollo' },
+    { code: '75', name: 'Administración pública y defensa' },
+    { code: '76', name: 'Industria del gas y petróleo' },
+    { code: '77', name: 'Servicios agrícolas y forestales' },
+    { code: '79', name: 'Servicios a empresas' },
+    { code: '80', name: 'Educación y formación' },
+    { code: '85', name: 'Sanidad y asistencia social' },
+    { code: '90', name: 'Medio ambiente, alcantarillado y residuos' },
+    { code: '92', name: 'Ocio, cultura y deporte' },
+    { code: '98', name: 'Otros servicios comunitarios y personales' },
+  ];
+
+  // ── Sectores Market Intelligence: presets multidivisión (cada uno mapea a
+  // las divisiones CPV de su taxonomía). Auto-centran el grafo en el comprador
+  // dominante del sector vía /api/graph-public/featured?cpv=… (determinista). ─
+  const MI_SECTOR_PRESETS: { code: string; name: string; dataset: string }[] = [
+    { code: '48,72', name: 'Tecnología', dataset: 'technology' },
+    { code: '45', name: 'Construcción', dataset: 'construction' },
+    { code: '33,85', name: 'Salud', dataset: 'salud' },
+    { code: '31,65', name: 'Energía', dataset: 'energia' },
+    { code: '90', name: 'Limpieza y medio ambiente', dataset: 'limpieza' },
+    { code: '35', name: 'Defensa y armamento', dataset: 'defensa' },
+    { code: '60', name: 'Transporte', dataset: 'transporte' },
+  ];
+
+  function populateSectorSelect() {
+    sectorSelect.innerHTML = '<option value="">Sector: Todos</option>';
+    const gMI = document.createElement('optgroup');
+    gMI.label = 'Sectores Market Intelligence';
+    for (const preset of MI_SECTOR_PRESETS) {
+      const opt = document.createElement('option');
+      opt.value = preset.code;
+      opt.textContent = `★ ${preset.name}`;
+      gMI.appendChild(opt);
+    }
+    sectorSelect.appendChild(gMI);
+    const gCPV = document.createElement('optgroup');
+    gCPV.label = 'Divisiones CPV';
+    for (const sector of CPV_SECTORS) {
+      const opt = document.createElement('option');
+      opt.value = sector.code;
+      opt.textContent = `${sector.code} — ${sector.name}`;
+      gCPV.appendChild(opt);
+    }
+    sectorSelect.appendChild(gCPV);
+  }
+  populateSectorSelect();
+
+  function updateClearSectorVisibility() {
+    clearSector.style.display = selectedCpv ? 'block' : 'none';
+  }
+
+  sectorSelect.addEventListener('change', () => {
+    selectedCpv = sectorSelect.value;
+    updateClearSectorVisibility();
+    const q = searchInput.value.trim();
+    if (q) {
+      // Re-run current search with new filter if we have a selection
+      const type = ddResults.find(r => (r.id === q || r.name === q))?.type;
+      if (type) loadGraph(q, type);
+      return;
+    }
+    // Preset MI sin búsqueda activa: grafo del sector en modo snapshot (edges.csv verificado)
+    const preset = MI_SECTOR_PRESETS.find(p => p.code === selectedCpv);
+    if (preset && !q) {
+      loadSnapshotGraph(preset.dataset);
+    }
+  });
+
+  let snapshotMode = false;
+
+  // CSV mínimo consciente de comillas (nombres con comas: "JANSSEN CILAG, S.A.")
+  function parseCsvText(text: string): string[][] {
+    const rows: string[][] = [];
+    let row: string[] = [];
+    let field = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else inQuotes = false;
+        } else field += ch;
+      } else if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(field); field = '';
+      } else if (ch === '\n') {
+        row.push(field); field = '';
+        rows.push(row); row = [];
+      } else if (ch !== '\r') {
+        field += ch;
+      }
+    }
+    if (field !== '' || row.length > 0) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  async function loadSnapshotGraph(dataset: string) {
+    loadingEl.classList.add('visible');
+    searchHighlight.clear();
+    hoverIdx = -1;
+    fadeIn = 0;
+    try {
+      const [csvRes, snapRes] = await Promise.all([
+        fetch(`/data/market-intelligence/${dataset}/latest/edges.csv`),
+        fetch(`/data/market-intelligence/${dataset}/latest/snapshot.json`),
+      ]);
+      if (!csvRes.ok || !snapRes.ok) return;
+      const rows = parseCsvText(await csvRes.text());
+      if (rows.length < 2) return;
+      const idx = (h: string) => rows[0]!.indexOf(h);
+      const iBuyerId = idx('buyer_id'), iBuyerName = idx('buyer_name'), iNif = idx('nif'), iCompany = idx('company_name'), iContracts = idx('analytic_contracts'), iAmount = idx('observed_amount_eur');
+      const nodeMap = new Map<string, GNode>();
+      const edgeMap = new Map<string, GEdge>();
+      for (const r of rows.slice(1)) {
+        const buyerId = r[iBuyerId] ?? '';
+        const nif = r[iNif] ?? '';
+        if (!buyerId || !nif) continue;
+        const contratos = Number(r[iContracts]) || 0;
+        const volumen = Number(r[iAmount]) || 0;
+        const orgId = `org:${buyerId}`;
+        const adjId = `adj:${nif}`;
+        let org = nodeMap.get(orgId);
+        if (!org) { org = { id: orgId, name: r[iBuyerName] ?? buyerId, type: 'organismo', contratos: 0, volumen: 0 }; nodeMap.set(orgId, org); }
+        org.contratos += contratos; org.volumen += volumen;
+        let adj = nodeMap.get(adjId);
+        if (!adj) { adj = { id: adjId, name: r[iCompany] ?? nif, type: 'adjudicatario', contratos: 0, volumen: 0 }; nodeMap.set(adjId, adj); }
+        adj.contratos += contratos; adj.volumen += volumen;
+        const key = `${orgId}|||${adjId}`;
+        const pair = edgeMap.get(key);
+        if (pair) { pair.contratos += contratos; pair.volumen += volumen; }
+        else edgeMap.set(key, { source: orgId, target: adjId, contratos, volumen });
+      }
+      if (!nodeMap.size) return;
+      // Centro: el comprador con más volumen agregado del sector (determinista)
+      let center = nodeMap.get('org:' + (rows[1]![iBuyerId] ?? ''))!;
+      for (const node of nodeMap.values()) {
+        if (node.type === 'organismo' && node.volumen > center.volumen) center = node;
+      }
+      initGraph({ center, nodes: [...nodeMap.values()], edges: [...edgeMap.values()] });
+      snapshotMode = true;
+      lastQuery = '';
+      lastType = '';
+      searchInput.value = '';
+      try {
+        const snap = await snapRes.json();
+        (document.getElementById('snapshot-badge-id') as HTMLElement).textContent = snap.snapshot_id ?? dataset;
+      } catch { /* badge sin id */ }
+      (document.getElementById('snapshot-badge') as HTMLElement).style.display = 'block';
+    } catch (err) {
+      console.error('[universo] snapshot load error', err);
+    } finally {
+      loadingEl.classList.remove('visible');
+    }
+  }
+
+  function exitSnapshotMode() {
+    snapshotMode = false;
+    (document.getElementById('snapshot-badge') as HTMLElement).style.display = 'none';
+  }
+
+  clearSector.addEventListener('click', () => {
+    selectedCpv = '';
+    sectorSelect.value = '';
+    updateClearSectorVisibility();
+    exitSnapshotMode();
+    const q = searchInput.value.trim();
+    const type = ddResults.find(r => (r.id === q || r.name === q))?.type;
+    if (type) loadGraph(q, type);
+  });
+
+  // ── Search autocomplete ───────────────────────────────────────────────────
+  let ddResults: Array<{ name: string; id: string; type: string }> = [];
+  let ddSel = -1;
+  let debounce: ReturnType<typeof setTimeout> | null = null;
+
+  function renderDropdown() {
+    if (!ddResults.length) {
+      dropdown.innerHTML = '<div class="dd-empty">Sin resultados</div>';
+      dropdown.classList.add('visible');
+      return;
+    }
+
+    const empresas = ddResults.filter(r => r.type === 'adjudicatario');
+    const orgs     = ddResults.filter(r => r.type === 'organismo');
+
+    let html = '';
+    let idx = 0;
+
+    if (empresas.length) {
+      html += '<div class="dd-section">🟢 Empresas</div>';
+      for (const r of empresas) {
+        const sel = idx === ddSel ? ' sel' : '';
+        html += `<div class="dd-item${sel}" data-idx="${idx}" data-id="${esc(r.id)}" data-type="${esc(r.type)}">
+          <span class="dd-icon">🏢</span>
+          <span class="dd-name">${escHtml(r.name)}</span>
+          <span class="dd-type">NIF</span>
+        </div>`;
+        idx++;
+      }
+    }
+    if (orgs.length) {
+      html += '<div class="dd-section">🔵 Organismos</div>';
+      for (const r of orgs) {
+        const sel = idx === ddSel ? ' sel' : '';
+        html += `<div class="dd-item${sel}" data-idx="${idx}" data-id="${esc(r.id)}" data-type="${esc(r.type)}">
+          <span class="dd-icon">🏛</span>
+          <span class="dd-name">${escHtml(r.name)}</span>
+        </div>`;
+        idx++;
+      }
+    }
+
+    dropdown.innerHTML = html;
+    dropdown.classList.add('visible');
+
+    dropdown.querySelectorAll('.dd-item').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        ddSel = Number((el as HTMLElement).dataset.idx);
+        renderDropdown();
+      });
+      el.addEventListener('pointerdown', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const id   = (el as HTMLElement).dataset.id || '';
+        const type = (el as HTMLElement).dataset.type || '';
+        selectResult(id, type);
+      });
+    });
+  }
+
+  function esc(s: string) { return s.replace(/"/g, '&quot;'); }
+  function escHtml(s: string) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  async function doSearch(q: string) {
+    if (q.length < 2) { dropdown.classList.remove('visible'); return; }
+    const res = await fetch(`/api/graph-search?q=${encodeURIComponent(q)}`);
+    if (res.status === 401) {
+      const returnUrl = encodeURIComponent(location.pathname + location.search);
+      location.href = '/sign-in?redirect_url=' + returnUrl;
+      return;
+    }
+    if (!res.ok) return;
+    ddResults = await res.json();
+    ddSel = ddResults.length > 0 ? 0 : -1;
+    renderDropdown();
+  }
+
+  searchInput.addEventListener('input', () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => doSearch(searchInput.value.trim()), 300);
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (!dropdown.classList.contains('visible')) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      ddSel = Math.min(ddSel + 1, ddResults.length - 1);
+      renderDropdown();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      ddSel = Math.max(ddSel - 1, 0);
+      renderDropdown();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const r = ddResults[ddSel >= 0 ? ddSel : 0];
+      if (r) selectResult(r.id, r.type);
+    } else if (e.key === 'Escape') {
+      dropdown.classList.remove('visible');
+    }
+  });
+
+  document.addEventListener('pointerdown', (e) => {
+    if (!searchInput.contains(e.target as Node) && !dropdown.contains(e.target as Node)) {
+      dropdown.classList.remove('visible');
+    }
+  });
+
+  async function selectResult(id: string, type: string) {
+    dropdown.classList.remove('visible');
+    searchInput.blur();
+    searchInput.value = id;
+    await loadGraph(id, type);
+  }
+
+  async function loadGraph(q: string, type: string) {
+    loadingEl.classList.add('visible');
+    searchHighlight.clear();
+    hoverIdx = -1;
+    fadeIn = 0;
+    lastQuery = q;
+    lastType = type;
+
+    const cpvParam = selectedCpv ? `&cpv=${encodeURIComponent(selectedCpv)}` : '';
+    const yearParams = getYearParams();
+    try {
+      const res = await fetch(`/api/graph?q=${encodeURIComponent(q)}&type=${encodeURIComponent(type)}${cpvParam}${yearParams}`);
+      if (res.status === 401) {
+        const returnUrl = encodeURIComponent(location.pathname + location.search);
+        location.href = '/sign-in?redirect_url=' + returnUrl;
+        return;
+      }
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('[universo] graph error', err);
+        return;
+      }
+      const data = await res.json();
+      exitSnapshotMode();
+      initGraph(data);
+    } catch (err) {
+      console.error('[universo] fetch error', err);
+    } finally {
+      loadingEl.classList.remove('visible');
+    }
+  }
+
+  function getYearParams(): string {
+    const yf = yearFrom.value;
+    const yt = yearTo.value;
+    let params = '';
+    if (yf) params += `&year=${encodeURIComponent(yf)}`;
+    if (yt) params += `&year_end=${encodeURIComponent(yt)}`;
+    return params;
+  }
+
+  function populateYearSelects() {
+    const currentYear = new Date().getFullYear();
+    for (let y = 2015; y <= currentYear; y++) {
+      yearFrom.add(new Option(String(y), String(y)));
+      yearTo.add(new Option(String(y), String(y)));
+    }
+  }
+  populateYearSelects();
+
+  function maybeReloadGraph() {
+    if (nodes.length > 0 && lastQuery && lastType) {
+      loadGraph(lastQuery, lastType);
+    }
+  }
+
+  yearFrom.addEventListener('change', maybeReloadGraph);
+  yearTo.addEventListener('change', maybeReloadGraph);
+
+  // ── Share button ────────────────────────────────────────────────
+  const shareBtn = document.getElementById('share-btn') as HTMLButtonElement;
+  shareBtn.addEventListener('click', async () => {
+    if (!lastQuery || !lastType) return;
+    const params = new URLSearchParams();
+    params.set('q', lastQuery);
+    params.set('type', lastType);
+    if (selectedCpv) params.set('cpv', selectedCpv);
+    if (yearFrom.value) params.set('year', yearFrom.value);
+    if (yearTo.value) params.set('year_end', yearTo.value);
+    const shareUrl = `${window.location.origin}/explorer/universo?${params.toString()}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      shareBtn.textContent = '✓ Enlace copiado';
+      shareBtn.classList.add('copied');
+      setTimeout(() => { shareBtn.textContent = '🔗'; shareBtn.classList.remove('copied'); }, 2000);
+    } catch {
+      // Fallback para navegadores sin clipboard API
+      const ta = document.createElement('textarea');
+      ta.value = shareUrl;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      shareBtn.textContent = '✓ Enlace copiado';
+      shareBtn.classList.add('copied');
+      setTimeout(() => { shareBtn.textContent = '🔗'; shareBtn.classList.remove('copied'); }, 2000);
+    }
+  });
+
+  // ── Load from URL params on init ────────────────────────────────
+  (function loadFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get('q');
+    const type = urlParams.get('type');
+    if (q && type) {
+      const cpvParam = urlParams.get('cpv');
+      const yearParam = urlParams.get('year');
+      const yearEndParam = urlParams.get('year_end');
+      if (cpvParam) { selectedCpv = cpvParam; sectorSelect.value = cpvParam; updateClearSectorVisibility(); }
+      if (yearParam) yearFrom.value = yearParam;
+      if (yearEndParam) yearTo.value = yearEndParam;
+      searchInput.value = q;
+      loadGraph(q, type);
+    }
+  })();
+
+  // Search highlight (filter nodes matching text)
+  searchInput.addEventListener('keyup', () => {
+    const q = searchInput.value.toLowerCase().trim();
+    searchHighlight.clear();
+    if (q.length >= 2 && nodes.length > 0) {
+      nodes.forEach((n, i) => {
+        if (n.name.toLowerCase().includes(q) || n.id.toLowerCase().includes(q)) {
+          searchHighlight.add(i);
+        }
+      });
+      // Pan to first match
+      if (searchHighlight.size > 0 && nodes.length > 0) {
+        const first = searchHighlight.values().next().value;
+        tx = W / 2 - px[first] * scale;
+        ty = H / 2 - py[first] * scale;
+      }
+    }
+  });
+
+})();
+</script>

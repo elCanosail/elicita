@@ -1,0 +1,53 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# Tingle codebase map (generated)
+.tinglemap.md
+ingesta/data/
+ingesta/logs/
+mineru-spike/
+mcp-server/node_modules/
+mcp-server/logs/
+mcp-server/dist/
+
+# backup files
+*.bak
+*.bak.*
+*.orig
+# test artifacts
+test_agent.duckdb
+
+# datos de runtime escritos en ejecución (propuestas-2026-10-07-1600, A):
+# permanecen en disco en la misma ruta; los lectores (api/cobertura, api/feedback,
+# form-guard) no cambian. Nunca commitear estado de ejecución.
+data/boe_contracts.json
+data/feedback/
+# root-level legacy build (web/ es el build real)
+/dist/
+__pycache__/
+
+# wrangler local state
+ops/uptime-worker/.wrangler/
+node_modules

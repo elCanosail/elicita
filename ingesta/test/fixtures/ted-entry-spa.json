@@ -1,0 +1,15 @@
+{
+  "publication-number": "001234-2026",
+  "notice-identifier": null,
+  "publication-date": "2026-10-01",
+  "notice-type": "cn-social",
+  "title-lot": [
+    { "@language": "eng", "#text": "Municipal facilities cleaning service" },
+    { "@language": "spa", "#text": "Servicio de limpieza de instalaciones municipales" }
+  ],
+  "organisation-name-buyer": "Ayuntamiento de Prueba (fixture anónimo)",
+  "estimated-value-lot": ["150000.00"],
+  "classification-cpv": ["45210000", "45210000", "45211100"],
+  "deadline-date-lot": "2026-11-01T23:59:00Z",
+  "links": { "html": { "SPA": "https://ted.europa.eu/es/notice/-/detail/001234-2026" } }
+}

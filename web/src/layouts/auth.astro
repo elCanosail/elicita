@@ -1,0 +1,26 @@
+---
+import '../styles/global.css';
+
+const { title = "elicita_ — Acceder", description = "Accede a Elicita. 63M+ registros oficiales, BORME, predicciones y alertas." } = Astro.props;
+const canonicalUrl = new URL(Astro.url.pathname, 'https://elicita.es').href;
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+    <!-- Plausible Analytics -->
+    <script defer data-domain="elicita.es" src="https://analytics.elicita.es/js/script.js"></script>
+    <slot name="head" />
+  </head>
+  <body class="min-h-screen bg-[hsl(var(--card))] text-foreground/85 antialiased dark">
+    <slot />
+  </body>
+</html>

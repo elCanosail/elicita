@@ -1,0 +1,615 @@
+---
+// /explorer/onboard — Onboarding multi-step: CIF → perfilado → selección CPVs
+---
+
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configura tu empresa — elicita_</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<style is:global>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Instrument Sans', sans-serif;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  /* ── Steps indicator ── */
+  .steps-wrap {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 32px;
+  }
+  .step-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: hsl(var(--muted-foreground) / 0.2);
+    transition: background 0.2s;
+  }
+  .step-dot.active { background: hsl(var(--primary)); }
+  .step-dot.done { background: hsl(var(--primary) / 0.35); }
+  .step-line {
+    flex: 1; height: 1px;
+    background: hsl(var(--border) / 0.06);
+  }
+  .step-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: hsl(var(--muted-foreground) / 0.5);
+    letter-spacing: 0.06em;
+  }
+  .step-label.active { color: hsl(var(--primary)); }
+
+  /* ── Cards ── */
+  .card {
+    width: 100%; max-width: 520px;
+    padding: 40px 36px;
+    border: 1px solid hsl(var(--border) / 0.07);
+    border-radius: 12px;
+    background: hsl(var(--card));
+  }
+  .card--wide { max-width: 680px; padding: 36px 36px; }
+
+  @media (max-width: 600px) {
+    .card, .card--wide { padding: 24px 20px; }
+  }
+
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; color: hsl(var(--muted-foreground) / 0.7);
+    margin-bottom: 28px; text-decoration: none; display: inline-block;
+  }
+  .logo span { color: hsl(var(--primary)); }
+
+  .icon { font-size: 28px; margin-bottom: 16px; }
+
+  h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px; font-weight: 500;
+    color: hsl(var(--foreground)); margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 13px; color: hsl(var(--muted-foreground) / 0.7);
+    line-height: 1.55; margin-bottom: 28px;
+  }
+
+  /* ── Form ── */
+  .field { margin-bottom: 14px; }
+  label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: hsl(var(--muted-foreground) / 0.6); text-transform: uppercase;
+    letter-spacing: 0.08em; margin-bottom: 6px;
+  }
+  input[type="text"] {
+    width: 100%; padding: 10px 14px;
+    background: hsl(var(--background) / 0.04); border: 1px solid hsl(var(--border) / 0.08);
+    border-radius: 6px; color: hsl(var(--foreground));
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    outline: none; transition: border-color 0.15s;
+  }
+  input[type="text"]:focus { border-color: hsl(var(--primary) / 0.4); }
+  input[type="text"]::placeholder { color: hsl(var(--muted-foreground) / 0.3); }
+
+  /* ── Buttons ── */
+  .btn {
+    width: 100%; padding: 12px;
+    background: hsl(var(--primary)); color: hsl(var(--background));
+    border: none; border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: background 0.15s, opacity 0.15s;
+    margin-top: 20px;
+  }
+  .btn:hover { background: hsl(var(--primary) / 0.8); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn--ghost {
+    background: transparent; color: hsl(var(--foreground) / 0.4);
+    border: 1px solid hsl(var(--border) / 0.08);
+    margin-top: 10px;
+  }
+  .btn--ghost:hover { background: hsl(var(--card)); color: hsl(var(--foreground) / 0.7); }
+  .btn--skip {
+    display: block; width: 100%; text-align: center;
+    margin-top: 16px; padding: 8px;
+    background: none; border: none;
+    font-family: 'Instrument Sans', sans-serif; font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.5); cursor: pointer;
+    text-decoration: none; transition: color 0.15s;
+  }
+  .btn--skip:hover { color: hsl(var(--muted-foreground)); }
+
+  /* ── Progress ── */
+  .progress-wrap { margin-top: 24px; }
+  .progress-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.8); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid hsl(var(--primary) / 0.2); border-top-color: hsl(var(--primary));
+    border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .progress-track {
+    height: 3px; background: hsl(var(--border) / 0.06);
+    border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: hsl(var(--primary)); border-radius: 2px;
+    width: 0%; transition: width 0.5s ease;
+  }
+
+  /* ── Alerts ── */
+  .alert {
+    display: none; margin-top: 16px; padding: 12px 14px; border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5;
+  }
+  .alert.visible { display: block; }
+  .alert--error { background: hsl(var(--destructive) / 0.08); border: 1px solid hsl(var(--destructive) / 0.2); color: hsl(var(--destructive) / 0.85); }
+  .alert--warn { background: hsl(var(--warning) / 0.06); border: 1px solid hsl(var(--warning) / 0.15); color: hsl(var(--warning) / 0.7); }
+
+  .back-link {
+    display: inline-block; margin-top: 20px; font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.4); text-decoration: none; transition: color 0.15s;
+  }
+  .back-link:hover { color: hsl(var(--muted-foreground) / 0.7); }
+
+  /* ── CPV Step ── */
+  .cpv-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .cpv-stat {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: hsl(var(--primary) / 0.7);
+  }
+  .cpv-actions { display: flex; gap: 8px; }
+  .cpv-action-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: hsl(var(--muted-foreground) / 0.6); background: none; border: 1px solid hsl(var(--border) / 0.07);
+    border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: color 0.1s;
+  }
+  .cpv-action-btn:hover { color: hsl(var(--foreground) / 0.6); }
+
+  .cpv-search-input {
+    width: 100%; padding: 8px 12px;
+    background: hsl(var(--background) / 0.04); border: 1px solid hsl(var(--border) / 0.08);
+    border-radius: 6px; color: hsl(var(--foreground) / 0.7);
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    outline: none; margin-bottom: 10px;
+  }
+  .cpv-search-input:focus { border-color: hsl(var(--primary) / 0.3); }
+
+  .cpv-list {
+    max-height: 340px; overflow-y: auto;
+    border: 1px solid hsl(var(--border) / 0.06); border-radius: 8px;
+  }
+  .cpv-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; cursor: pointer;
+    border-bottom: 1px solid hsl(var(--border) / 0.03);
+    transition: background 0.1s;
+  }
+  .cpv-row:last-child { border-bottom: none; }
+  .cpv-row:hover { background: hsl(var(--card)); }
+  .cpv-row.selected { background: hsl(var(--primary) / 0.05); }
+  .cpv-chk {
+    width: 15px; height: 15px; flex-shrink: 0;
+    border: 1px solid hsl(var(--foreground) / 0.2); border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; transition: all 0.1s;
+  }
+  .cpv-row.selected .cpv-chk { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: hsl(var(--background)); }
+  .cpv-info { flex: 1; min-width: 0; }
+  .cpv-name-row {
+    font-size: 12px; color: hsl(var(--foreground) / 0.7);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .cpv-meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: hsl(var(--muted-foreground) / 0.5); margin-top: 2px;
+  }
+  .cpv-code-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: hsl(var(--primary) / 0.4); flex-shrink: 0;
+  }
+  .cpv-contracts {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: hsl(var(--muted-foreground) / 0.5); flex-shrink: 0; white-space: nowrap;
+  }
+</style>
+
+<!-- STEP 1: CIF form -->
+<div class="card" id="step1">
+  <a href="/monitor/activas" class="logo">elicita<span>_</span></a>
+  <div class="steps-wrap">
+    <span class="step-label active">01 empresa</span>
+    <div class="step-line"></div>
+    <span class="step-label">02 CPVs</span>
+  </div>
+  <div class="icon">🏛</div>
+  <h1>Vincula tu empresa</h1>
+  <p class="subtitle">
+    Introduce tu CIF o NIF y buscaremos tus licitaciones en 63M de registros.
+    Podrás confirmar los sectores detectados en el siguiente paso.
+  </p>
+  <form id="cif-form">
+    <div class="field">
+      <label for="cif">CIF o NIF</label>
+      <input id="cif" type="text" placeholder="B12345678 o 12345678A" maxlength="9" autocomplete="off" spellcheck="false" />
+    </div>
+    <div class="field">
+      <label for="nombre">Nombre <span style="opacity:0.4">(opcional, mejora la búsqueda)</span></label>
+      <input id="nombre" type="text" placeholder="Mi Empresa SL" autocomplete="off" />
+    </div>
+    <button class="btn" type="submit" id="cif-btn">Analizar empresa →</button>
+  </form>
+  <div class="progress-wrap" id="cif-progress" style="display:none">
+    <div class="progress-label">
+      <div class="spinner"></div>
+      <span id="cif-progress-text">Analizando 63M registros…</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="cif-progress-fill"></div></div>
+  </div>
+  <div class="alert alert--error" id="cif-error"></div>
+  <div class="alert alert--warn" id="cif-warn">No encontramos adjudicaciones previas. Podrás elegir tus sectores manualmente en el siguiente paso.</div>
+
+  <a href="/monitor/activas" class="btn--skip">Saltar por ahora →</a>
+</div>
+
+<!-- STEP 2: CPV selection -->
+<div class="card card--wide" id="step2" style="display:none">
+  <a href="/monitor/activas" class="logo">elicita<span>_</span></a>
+  <div class="steps-wrap">
+    <span class="step-label done">01 empresa</span>
+    <div class="step-line"></div>
+    <span class="step-label active">02 CPVs</span>
+  </div>
+  <div class="icon">🎯</div>
+  <h1 id="cpv-title">Confirma tus sectores</h1>
+  <p class="subtitle" id="cpv-subtitle">Hemos detectado los CPVs en los que has participado históricamente. Confirma o ajusta la selección.</p>
+
+  <div class="cpv-header">
+    <span class="cpv-stat" id="cpv-count-label">0 seleccionados</span>
+    <div class="cpv-actions">
+      <button class="cpv-action-btn" id="btn-all">Todos</button>
+      <button class="cpv-action-btn" id="btn-none">Ninguno</button>
+      <button class="cpv-action-btn" id="btn-top">Top 20</button>
+    </div>
+  </div>
+  <input class="cpv-search-input" id="cpv-search" type="text" placeholder="Buscar por nombre o código CPV…" />
+  <div class="cpv-list" id="cpv-list"></div>
+
+  <button class="btn" id="btn-save" type="button" style="margin-top:20px">Guardar y acceder al Explorer →</button>
+  <button class="btn btn--ghost" id="btn-back" type="button">← Volver</button>
+  <a href="/monitor/activas" class="btn--skip" id="btn-skip-step2" onclick="fetch('/api/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({onboarded:false})}).catch(){}">Saltar por ahora →</a>
+  <div class="alert alert--error" id="cpv-error"></div>
+</div>
+
+<script>
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function normCpv(r) { return r ? r.toString().replace(/\.0$/,'').trim() : ''; }
+function fmtEur(n) {
+  if (!n || n === 0) return '';
+  if (n >= 1e6) return `${(n/1e6).toFixed(1)}M€`;
+  if (n >= 1e3) return `${(n/1e3).toFixed(0)}K€`;
+  return `${n.toFixed(0)}€`;
+}
+
+// ── State ──
+let cpvDict = {};
+let allCpvs = []; // { code, name, contratos, volumen }
+let selected = new Set();
+let currentCif = '';
+let renderFilter = '';
+
+// ── Step nav ──
+function showStep(n) {
+  document.getElementById('step1').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('step2').style.display = n === 2 ? 'block' : 'none';
+}
+
+// ── Render CPV list ──
+function renderCpvList() {
+  const fl = renderFilter.toLowerCase();
+  const list = document.getElementById('cpv-list');
+  if (!list) return;
+
+  const visible = fl
+    ? allCpvs.filter(c => c.name.toLowerCase().includes(fl) || c.code.includes(fl))
+    : allCpvs;
+
+  if (!visible.length) {
+    list.innerHTML = `<div style="padding:24px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:hsl(var(--muted-foreground) / 0.5)">Sin resultados</div>`;
+    return;
+  }
+
+  list.innerHTML = visible.map(c => {
+    const on = selected.has(c.code);
+    return `<div class="cpv-row${on?' selected':''}" data-code="${esc(c.code)}">
+      <div class="cpv-chk">${on?'✓':''}</div>
+      <div class="cpv-info">
+        <div class="cpv-name-row">${esc(c.name)}</div>
+        <div class="cpv-meta">${c.contratos} licitaciones · ${esc(fmtEur(c.volumen))}</div>
+      </div>
+      <div class="cpv-code-tag">${esc(c.code)}</div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.cpv-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const code = row.dataset.code;
+      if (selected.has(code)) selected.delete(code);
+      else selected.add(code);
+      updateCount();
+      renderCpvList();
+    });
+  });
+}
+
+function updateCount() {
+  const el = document.getElementById('cpv-count-label');
+  if (el) el.textContent = `${selected.size} seleccionados`;
+}
+
+// ── Step 2 setup ──
+function buildCpvStep(profile) {
+  currentCif = profile.cif || '';
+  const empresa = profile.empresa || currentCif;
+
+  // Build CPV list from cpvs_activos — deduplicate by code, merge contratos+volumen
+  const byCode = new Map();
+  (profile.cpvs_activos || []).forEach(c => {
+    const code = normCpv(c.cpv || '');
+    if (!code) return;
+    const name = cpvDict[code] ? cpvDict[code].replace(/\.$/, '') : code;
+    if (!byCode.has(code)) {
+      byCode.set(code, { code, name, contratos: 0, volumen: 0 });
+    }
+    const entry = byCode.get(code);
+    entry.contratos += (c.contratos || 0);
+    entry.volumen += (c.volumen || 0);
+  });
+
+  // Sort by contratos desc
+  allCpvs = Array.from(byCode.values()).sort((a, b) => b.contratos - a.contratos);
+
+  // Pre-select: cpvs_seleccionados si existen, sino top-10 por contratos
+  selected.clear();
+  if (profile.cpvs_seleccionados && profile.cpvs_seleccionados.length > 0) {
+    profile.cpvs_seleccionados.forEach(c => selected.add(normCpv(c)));
+  } else {
+    allCpvs.slice(0, 10).forEach(c => selected.add(c.code));
+  }
+
+  const n = allCpvs.length;
+  document.getElementById('cpv-title').textContent = `Sectores de ${empresa}`;
+  document.getElementById('cpv-subtitle').textContent =
+    `Detectados ${n} CPVs en los que has participado históricamente. Confirma los relevantes para tu perfil de alertas.`;
+
+  updateCount();
+  renderCpvList();
+  showStep(2);
+}
+
+// ── CPV search ──
+document.getElementById('cpv-search').addEventListener('input', e => {
+  renderFilter = e.target.value.trim();
+  renderCpvList();
+});
+
+// ── Bulk actions ──
+document.getElementById('btn-all').addEventListener('click', () => {
+  allCpvs.forEach(c => selected.add(c.code));
+  updateCount(); renderCpvList();
+});
+document.getElementById('btn-none').addEventListener('click', () => {
+  selected.clear();
+  updateCount(); renderCpvList();
+});
+document.getElementById('btn-top').addEventListener('click', () => {
+  selected.clear();
+  allCpvs.slice(0, 20).forEach(c => selected.add(c.code));
+  updateCount(); renderCpvList();
+});
+document.getElementById('btn-back').addEventListener('click', () => showStep(1));
+
+// ── Save ──
+document.getElementById('btn-save').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-save');
+  const err = document.getElementById('cpv-error');
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+  err.classList.remove('visible');
+
+  try {
+    const res = await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cif: currentCif, nombre: document.getElementById('nombre')?.value?.trim() || '', cpvs_seleccionados: Array.from(selected) }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Error guardando');
+    // Force Clerk session reload so middleware picks up the new CIF claim
+    try {
+      await window.Clerk?.session?.reload?.();
+    } catch {}
+    window.location.href = '/monitor/activas?onboarded=1';
+  } catch (e) {
+    err.textContent = e.message;
+    err.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = 'Guardar y acceder al Explorer →';
+  }
+});
+
+// ── Ensure CPV dict is loaded ──
+async function ensureCpvDict() {
+  if (Object.keys(cpvDict).length > 0) return;
+  try {
+    const r = await fetch('/api/cpv');
+    if (r.ok) cpvDict = await r.json();
+  } catch {}
+}
+
+// ── Manual CPV selection (no history) ──
+function buildManualCpvStep(cifVal, nombreVal) {
+  currentCif = cifVal;
+  const label = nombreVal || cifVal;
+
+  // Build full CPV list from dictionary — top-level divisions (2-digit prefix)
+  const byDiv = new Map();
+  for (const [code, name] of Object.entries(cpvDict)) {
+    const div = code.slice(0, 2);
+    if (!byDiv.has(div)) {
+      byDiv.set(div, { code: div + '000000', name: name.replace(/\.$/, ''), contratos: 0, volumen: 0, children: 0 });
+    }
+    byDiv.get(div).children++;
+  }
+
+  allCpvs = Array.from(byDiv.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  selected.clear();
+
+  document.getElementById('cpv-title').textContent = 'Elige tus sectores';
+  document.getElementById('cpv-subtitle').textContent =
+    `No encontramos adjudicaciones previas para ${label}. Selecciona los sectores en los que trabajas o quieres licitar.`;
+
+  updateCount();
+  renderCpvList();
+  showStep(2);
+}
+
+// ── PROGRESS STEPS ──
+const STEPS = [
+  { pct: 12, text: 'Validando CIF…' },
+  { pct: 25, text: 'Conectando con DuckDB (63M registros)…' },
+  { pct: 40, text: 'Buscando adjudicaciones nacionales…' },
+  { pct: 55, text: 'Consultando TED EU…' },
+  { pct: 68, text: 'Detectando competidores…' },
+  { pct: 80, text: 'Analizando CPVs y mercado…' },
+  { pct: 90, text: 'Generando proyecciones…' },
+  { pct: 96, text: 'Finalizando perfil…' },
+];
+
+let stepIdx = 0, stepTimer = null;
+function startProgress() {
+  stepIdx = 0;
+  const fill = document.getElementById('cif-progress-fill');
+  fill.style.width = '5%';
+  document.getElementById('cif-progress-text').textContent = 'Iniciando análisis…';
+  function next() {
+    if (stepIdx < STEPS.length) {
+      const s = STEPS[stepIdx++];
+      fill.style.width = s.pct + '%';
+      document.getElementById('cif-progress-text').textContent = s.text;
+      stepTimer = setTimeout(next, 12000 + Math.random() * 6000);
+    }
+  }
+  stepTimer = setTimeout(next, 1500);
+}
+function stopProgress() { if (stepTimer) clearTimeout(stepTimer); }
+
+// ── FORM SUBMIT ──
+document.getElementById('cif-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const cif = document.getElementById('cif').value.trim().toUpperCase();
+  const nombre = document.getElementById('nombre').value.trim();
+  const errorEl = document.getElementById('cif-error');
+  const warnEl = document.getElementById('cif-warn');
+  const btn = document.getElementById('cif-btn');
+  const progress = document.getElementById('cif-progress');
+
+  errorEl.classList.remove('visible');
+  warnEl.classList.remove('visible');
+
+  if (!cif) { errorEl.textContent = 'Introduce tu CIF o NIF.'; errorEl.classList.add('visible'); return; }
+  // CIF: letra + 8 dígitos (B12345678) | NIF: 8 dígitos + letra (12345678A) | NIE: X/Y/Z + 7 dígitos + letra
+  if (!/^[A-Za-z]\d{7,8}[A-Za-z]?$/.test(cif) && !/^\d{8}[A-Za-z]$/.test(cif)) {
+    errorEl.textContent = 'Formato no válido. Introduce un CIF (ej: B12345678) o NIF (ej: 12345678A)';
+    errorEl.classList.add('visible'); return;
+  }
+
+  btn.disabled = true;
+  progress.style.display = 'block';
+  startProgress();
+
+  // Load CPV dict — MUST complete before buildCpvStep
+  await ensureCpvDict();
+
+  try {
+    const res = await fetch('/api/onboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cif, nombre }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || 'Error al iniciar análisis');
+
+    if (body.alreadyExists) {
+      // Ya existe → cargar perfil directamente y saltar a step 2
+      stopProgress();
+      const pRes = await fetch(`/api/profile?cif=${cif}`);
+      const pj = await pRes.json();
+      buildCpvStep(pj.data || {});
+      return;
+    }
+
+    // Poll job
+    const jobId = body.jobId;
+    const MAX = 5 * 60 * 1000;
+    const start = Date.now();
+    while (Date.now() - start < MAX) {
+      await new Promise(r => setTimeout(r, 4000));
+      try {
+        const jRes = await fetch(`/api/onboard?jobId=${jobId}`);
+        const job = await jRes.json();
+        if (job.status === 'completed') {
+          stopProgress();
+          const total = job.data?.adjudicaciones_total || 0;
+          if (total === 0) {
+            // No history → manual CPV selection
+            progress.style.display = 'none';
+            await ensureCpvDict();
+            buildManualCpvStep(cif, nombre);
+            return;
+          }
+          // Load full profile → step 2
+          const pRes = await fetch(`/api/profile?cif=${cif}`);
+          const pj = await pRes.json();
+          buildCpvStep(pj.data || job.data || {});
+          return;
+        }
+        if (job.status === 'error') {
+          throw new Error(job.error || 'Error generando perfil');
+        }
+      } catch (pollErr) {
+        if (pollErr.message && pollErr.message !== 'Failed to fetch') throw pollErr;
+      }
+    }
+    throw new Error('Tiempo de espera agotado. Recarga en un momento.');
+  } catch (err) {
+    stopProgress();
+    progress.style.display = 'none';
+    errorEl.textContent = err.message;
+    errorEl.classList.add('visible');
+    btn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>

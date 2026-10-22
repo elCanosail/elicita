@@ -1,0 +1,1194 @@
+{
+  "total_contratos": 94886,
+  "importe_total_eur": 39080475191.58,
+  "adjudicatarios_unicos": 12996,
+  "hhi": 174.96,
+  "top20_cuota_pct": 47.35,
+  "concentration": {
+    "top1": 7.52,
+    "top5": 22.99,
+    "top10": 34.34,
+    "top20": 47.35
+  },
+  "evolucion_anual": {
+    "2016": {
+      "contratos": 1648,
+      "importe_eur": 649145683.11,
+      "hhi": 527.39
+    },
+    "2017": {
+      "contratos": 2632,
+      "importe_eur": 1302025557.74,
+      "hhi": 870.12
+    },
+    "2018": {
+      "contratos": 3909,
+      "importe_eur": 1231507756.56,
+      "hhi": 325.46
+    },
+    "2019": {
+      "contratos": 5290,
+      "importe_eur": 1688471183.23,
+      "hhi": 510.48
+    },
+    "2020": {
+      "contratos": 8603,
+      "importe_eur": 2684406003.29,
+      "hhi": 209.54
+    },
+    "2021": {
+      "contratos": 11801,
+      "importe_eur": 4716677079.09,
+      "hhi": 393.22
+    },
+    "2022": {
+      "contratos": 13397,
+      "importe_eur": 5115942697.77,
+      "hhi": 224.93
+    },
+    "2023": {
+      "contratos": 15028,
+      "importe_eur": 6602206405.85,
+      "hhi": 237.68
+    },
+    "2024": {
+      "contratos": 15629,
+      "importe_eur": 7623683636.5,
+      "hhi": 279.0
+    },
+    "2025": {
+      "contratos": 16275,
+      "importe_eur": 7356318509.71,
+      "hhi": 271.71
+    },
+    "2026": {
+      "contratos": 674,
+      "importe_eur": 110090678.73,
+      "hhi": 313.69
+    }
+  },
+  "top20_por_importe": [
+    {
+      "rank": 1,
+      "nombre": "INDRA SOLUCIONES TECNOLOGIAS DE LA INFORMACION",
+      "contratos": 1824,
+      "importe_eur": 2939030657.25,
+      "cuota_pct": 7.52,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 2,
+      "nombre": "TELEFONICA SOLUCIONES",
+      "contratos": 2208,
+      "importe_eur": 2382269777.4,
+      "cuota_pct": 6.1,
+      "categoria": "Teleco"
+    },
+    {
+      "rank": 3,
+      "nombre": "INETUM ESPANA",
+      "contratos": 2121,
+      "importe_eur": 1493214725.07,
+      "cuota_pct": 3.82,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 4,
+      "nombre": "SEIDOR",
+      "contratos": 1779,
+      "importe_eur": 1114296008.69,
+      "cuota_pct": 2.85,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 5,
+      "nombre": "IBM",
+      "contratos": 310,
+      "importe_eur": 1055144373.47,
+      "cuota_pct": 2.7,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 6,
+      "nombre": "NTT DATA",
+      "contratos": 726,
+      "importe_eur": 1007216644.71,
+      "cuota_pct": 2.58,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 7,
+      "nombre": "FUJITSU TECHNOLOGY SOLUTIONS",
+      "contratos": 716,
+      "importe_eur": 1005810759.3,
+      "cuota_pct": 2.57,
+      "categoria": "Tecnología/Integrador"
+    },
+    {
+      "rank": 8,
+      "nombre": "T-SYSTEMS ITC IBERIA",
+      "contratos": 778,
+      "importe_eur": 842609472.46,
+      "cuota_pct": 2.16,
+      "categoria": "Teleco"
+    },
+    {
+      "rank": 9,
+      "nombre": "ORACLE IBERICA",
+      "contratos": 875,
+      "importe_eur": 800106125.67,
+      "cuota_pct": 2.05,
+      "categoria": "Tecnología/Integrador"
+    },
+    {
+      "rank": 10,
+      "nombre": "SCC (SPECIALIST COMPUTER CENTRES)",
+      "contratos": 837,
+      "importe_eur": 779457551.42,
+      "cuota_pct": 1.99,
+      "categoria": "Tecnología/Integrador"
+    },
+    {
+      "rank": 11,
+      "nombre": "AYESA ADVANCED TECHNOLOGIES",
+      "contratos": 495,
+      "importe_eur": 706241693.11,
+      "cuota_pct": 1.81,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 12,
+      "nombre": "INDRA SISTEMAS",
+      "contratos": 454,
+      "importe_eur": 677949363.33,
+      "cuota_pct": 1.73,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 13,
+      "nombre": "TELEFONICA DE ESPANA",
+      "contratos": 164,
+      "importe_eur": 634106485.91,
+      "cuota_pct": 1.62,
+      "categoria": "Teleco"
+    },
+    {
+      "rank": 14,
+      "nombre": "ACCENTURE",
+      "contratos": 474,
+      "importe_eur": 565375636.96,
+      "cuota_pct": 1.45,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 15,
+      "nombre": "FCC MEDIO AMBIENTE",
+      "contratos": 5,
+      "importe_eur": 505376973.2,
+      "cuota_pct": 1.29,
+      "categoria": "Otros"
+    },
+    {
+      "rank": 16,
+      "nombre": "EVERIS SPAIN",
+      "contratos": 454,
+      "importe_eur": 503131037.2,
+      "cuota_pct": 1.29,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 17,
+      "nombre": "ATOS",
+      "contratos": 768,
+      "importe_eur": 482167364.26,
+      "cuota_pct": 1.23,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 18,
+      "nombre": "IBERMATICA",
+      "contratos": 522,
+      "importe_eur": 426451549.77,
+      "cuota_pct": 1.09,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 19,
+      "nombre": "UTE NTT DATA SPAIN INFRASTRUCTURES ENGINEERING SL NTT DATA SPAIN",
+      "contratos": 3,
+      "importe_eur": 300000000.0,
+      "cuota_pct": 0.77,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 20,
+      "nombre": "TECNICOS ASOCIADOS INFORMATICA (TAI)",
+      "contratos": 531,
+      "importe_eur": 283782463.83,
+      "cuota_pct": 0.73,
+      "categoria": "Consultoría IT"
+    }
+  ],
+  "top20_por_contratos": [
+    {
+      "rank": 1,
+      "nombre": "TELEFONICA SOLUCIONES",
+      "contratos": 2208,
+      "importe_eur": 2382269777.4,
+      "categoria": "Teleco"
+    },
+    {
+      "rank": 2,
+      "nombre": "INETUM ESPANA",
+      "contratos": 2121,
+      "importe_eur": 1493214725.07,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 3,
+      "nombre": "INDRA SOLUCIONES TECNOLOGIAS DE LA INFORMACION",
+      "contratos": 1824,
+      "importe_eur": 2939030657.25,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 4,
+      "nombre": "SEIDOR",
+      "contratos": 1779,
+      "importe_eur": 1114296008.69,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 5,
+      "nombre": "HIBERUS IT",
+      "contratos": 1480,
+      "importe_eur": 162907734.34,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 6,
+      "nombre": "ORACLE IBERICA",
+      "contratos": 875,
+      "importe_eur": 800106125.67,
+      "categoria": "Tecnología/Integrador"
+    },
+    {
+      "rank": 7,
+      "nombre": "SCC (SPECIALIST COMPUTER CENTRES)",
+      "contratos": 837,
+      "importe_eur": 779457551.42,
+      "categoria": "Tecnología/Integrador"
+    },
+    {
+      "rank": 8,
+      "nombre": "T-SYSTEMS ITC IBERIA",
+      "contratos": 778,
+      "importe_eur": 842609472.46,
+      "categoria": "Teleco"
+    },
+    {
+      "rank": 9,
+      "nombre": "ATOS",
+      "contratos": 768,
+      "importe_eur": 482167364.26,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 10,
+      "nombre": "NTT DATA",
+      "contratos": 726,
+      "importe_eur": 1007216644.71,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 11,
+      "nombre": "FUJITSU TECHNOLOGY SOLUTIONS",
+      "contratos": 716,
+      "importe_eur": 1005810759.3,
+      "categoria": "Tecnología/Integrador"
+    },
+    {
+      "rank": 12,
+      "nombre": "OESIA",
+      "contratos": 706,
+      "importe_eur": 136326961.7,
+      "categoria": "Otros"
+    },
+    {
+      "rank": 13,
+      "nombre": "ESPUBLICO SERVICIOS PARA LA ADMINISTRACION",
+      "contratos": 698,
+      "importe_eur": 126590870.01,
+      "categoria": "Otros"
+    },
+    {
+      "rank": 14,
+      "nombre": "ALTEN SOLUCIONES",
+      "contratos": 675,
+      "importe_eur": 220120986.03,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 15,
+      "nombre": "SERVICIOS MICROINFORMATICA",
+      "contratos": 667,
+      "importe_eur": 41339912.13,
+      "categoria": "Otros"
+    },
+    {
+      "rank": 16,
+      "nombre": "AYTOS SOLUCIONES INFORMATICAS",
+      "contratos": 651,
+      "importe_eur": 63233778.78,
+      "categoria": "Otros"
+    },
+    {
+      "rank": 17,
+      "nombre": "SIN NOMBRE",
+      "contratos": 644,
+      "importe_eur": 0.0,
+      "categoria": "Otros"
+    },
+    {
+      "rank": 18,
+      "nombre": "ALTIA CONSULTORES",
+      "contratos": 576,
+      "importe_eur": 239023428.97,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 19,
+      "nombre": "TECNICOS ASOCIADOS INFORMATICA (TAI)",
+      "contratos": 531,
+      "importe_eur": 283782463.83,
+      "categoria": "Consultoría IT"
+    },
+    {
+      "rank": 20,
+      "nombre": "IBERMATICA",
+      "contratos": 522,
+      "importe_eur": 426451549.77,
+      "categoria": "Consultoría IT"
+    }
+  ],
+  "tipo_contrato": {
+    "Servicios": 27253743216.53,
+    "Suministros": 11774043702.18,
+    "Privado": 15953254.37,
+    "Obras": 14192908.65,
+    "Patrimonial": 11530169.38,
+    "Administrativo Especial": 3537440.68,
+    "999": 3353787.16,
+    "22": 3344439.82,
+    "Gestión Servicios Públicos": 483397.0,
+    "Concesión Servicios": 292875.81
+  },
+  "procedimiento": {
+    "Abierto": 24037838054.17,
+    "Negociado con publicidad": 5353792438.34,
+    "Restringido": 4951937381.2,
+    "Contrato menor": 1855544541.74,
+    "Basado en acuerdo marco": 794728220.56,
+    "13": 582143240.54,
+    "Basado en sistema dinámico": 576186418.39,
+    "Negociado sin publicidad": 544870336.92,
+    "Otros": 360041316.93,
+    "Diálogo competitivo": 22381166.67
+  },
+  "top_organs": [
+    {
+      "nombre": "Dirección General de Racionalización y Centralización de la Contratación-Junta de Contratación Centralizada",
+      "contratos": 10143,
+      "importe_eur": 5081843682.46
+    },
+    {
+      "nombre": "Agencia Digital de Andalucía",
+      "contratos": 201,
+      "importe_eur": 2326613932.12
+    },
+    {
+      "nombre": "Centre de Telecomunicacions i Tecnologies de la Informació de la Generalitat de Catalunya",
+      "contratos": 811,
+      "importe_eur": 1036882086.96
+    },
+    {
+      "nombre": "Servicio Andaluz de Salud",
+      "contratos": 205,
+      "importe_eur": 937101793.03
+    },
+    {
+      "nombre": "Dirección General Económico-Financiera de la Entidad Pública Empresarial RENFE-Operadora",
+      "contratos": 1297,
+      "importe_eur": 860021548.85
+    },
+    {
+      "nombre": "Junta de Contratación del Ministerio de Asuntos Exteriores, Unión Europea y Cooperación",
+      "contratos": 45,
+      "importe_eur": 685344427.99
+    },
+    {
+      "nombre": "Gerencia de Informática de la Seguridad Social",
+      "contratos": 99,
+      "importe_eur": 669053558.51
+    },
+    {
+      "nombre": "Dirección General de Tecnologías de la Información y las Comunicaciones",
+      "contratos": 221,
+      "importe_eur": 636553696.67
+    },
+    {
+      "nombre": "Junta de Contratación del Ministerio de Justicia",
+      "contratos": 113,
+      "importe_eur": 602256740.24
+    },
+    {
+      "nombre": "Axencia para a Modernización Tecnolóxica de Galicia (AMTEGA)",
+      "contratos": 792,
+      "importe_eur": 580040237.59
+    }
+  ],
+  "top_contratos": [
+    {
+      "adjudicatario": "INDRA SISTEMAS ,S.A.",
+      "organo": "Subdirección General de Adquisiciones de Armamento y Material DGAM",
+      "importe_eur": 308264462.81,
+      "fecha": "2025-12-29 00:00:00",
+      "objeto": "Modernización de los sistemas de guerra electrónica desplegables del ET y la Armada,  Fase I (SIGEDES)"
+    },
+    {
+      "adjudicatario": "UTE AETICAT: Electrònica Saltó, SL, Telefónica Soluciones de Informática y Comunicaciones de España, SA, Servicios Microinformática, SA",
+      "organo": "Centre de Telecomunicacions i Tecnologies de la Informació de la Generalitat de Catalunya",
+      "importe_eur": 117249810.0,
+      "fecha": "2021-07-14 00:00:00",
+      "objeto": "El present Acord Marc té com objecte la selecció d'un únic proveïdor per a cada lot, per a dur a terme la prestació de l'entrega de serveis TIC de lloc de treball a les persones i als edificis de la Generalitat de Catalunya i el seu sector públic. L'Acord Marc per l'entrega de serveis a l'usuari i operació de les infraestructures d'edifici inclou els serveis d'atenció, acompanyament i suport a usuaris, el suport presencial, l'operació de les plataformes tecnològiques i l'operació de les infraestructures TIC dels edificis. L'Acord Marc s'estructura en els quatre lots següents:\nB.1- àmbit educatiu.\nB.2- Àmbit assistencial\nB.3- Àmbits 1: Departament de la Presidència. Departament de la Vicepresidència, Polítiques Digitals i Territori. Departament d'Economia i Hisenda. Departament d'Acció Exterior i Govern Obert. Departament de Drets Socials. Departament d'Igualtat i Feminismes. Departament d'Empresa i Treball. Departament de Recerca i Universitats. I les entitats no adscrites.\nB.4- Àmbits 2: Departament de Justícia. Departament d'Interior. Departament d'Acció Climàtica, Alimentació i Agenda Rural. Departament de Cultura."
+    },
+    {
+      "adjudicatario": "FCC MEDIO AMBIENTE SA",
+      "organo": "Junta de Gobierno del Ayuntamiento de Torrent",
+      "importe_eur": 101075394.64,
+      "fecha": "2023-01-20 00:00:00",
+      "objeto": "Servicio de limpieza viaria, recogida de residuos y su control de calidad en el municipio de Torrent. 2 Lotes"
+    },
+    {
+      "adjudicatario": "FCC MEDIO AMBIENTE SA",
+      "organo": "Junta de Gobierno del Ayuntamiento de Torrent",
+      "importe_eur": 101075394.64,
+      "fecha": "2023-01-20 00:00:00",
+      "objeto": "Servicio de limpieza viaria, recogida de residuos y su control de calidad en el municipio de Torrent. 2 Lotes"
+    },
+    {
+      "adjudicatario": "FCC MEDIO AMBIENTE SA",
+      "organo": "Junta de Gobierno del Ayuntamiento de Torrent",
+      "importe_eur": 101075394.64,
+      "fecha": "2023-01-20 00:00:00",
+      "objeto": "Servicio de limpieza viaria, recogida de residuos y su control de calidad en el municipio de Torrent. 2 Lotes"
+    },
+    {
+      "adjudicatario": "FCC MEDIO AMBIENTE SA",
+      "organo": "Junta de Gobierno del Ayuntamiento de Torrent",
+      "importe_eur": 101075394.64,
+      "fecha": "2023-01-20 00:00:00",
+      "objeto": "Servicio de limpieza viaria, recogida de residuos y su control de calidad en el municipio de Torrent. 2 Lotes"
+    },
+    {
+      "adjudicatario": "FCC MEDIO AMBIENTE SA",
+      "organo": "Junta de Gobierno del Ayuntamiento de Torrent",
+      "importe_eur": 101075394.64,
+      "fecha": "2023-01-20 00:00:00",
+      "objeto": "Servicio de limpieza viaria, recogida de residuos y su control de calidad en el municipio de Torrent. 2 Lotes"
+    },
+    {
+      "adjudicatario": "UTE NTT DATA SPAIN INFRASTRUCTURES ENGINEERING SL NTT DATA SPAIN SL",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "FUJITSU TECHNOLOGY SOLUTIONS SA",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "T-SYSTEMS ITC IBERIA, SAU",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "UTE NTT DATA SPAIN INFRASTRUCTURES ENGINEERING SL NTT DATA SPAIN SL",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "UTE NTT DATA SPAIN INFRASTRUCTURES ENGINEERING SL NTT DATA SPAIN SL",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "T-SYSTEMS ITC IBERIA, SAU",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "UTE SOLUTIA INNOVAWORD TECHNOLOGIES SL SEIDOR SOLUTIONS, SL",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "INDRA SOLUCIONES TECNOLOGÍAS DE LA INFORMACIÓN S.L.U.",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "UTE SOLTEL IT SOLUTIONS SOCIEDAD LIMITADA ACCENTURE SL",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "UTE SOLTEL IT SOLUTIONS SOCIEDAD LIMITADA ACCENTURE SL",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "FUJITSU TECHNOLOGY SOLUTIONS SA",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "INDRA SOLUCIONES TECNOLOGÍAS DE LA INFORMACIÓN S.L.U.",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    },
+    {
+      "adjudicatario": "AYESA ADVANCED TECHNOLOGIES SA",
+      "organo": "Agencia Digital de Andalucía",
+      "importe_eur": 100000000.0,
+      "fecha": "2024-05-10 00:00:00",
+      "objeto": "Acuerdo marco de servicios de explotación de sistemas de información"
+    }
+  ],
+  "cumulative_curve": [
+    {
+      "rank": 1,
+      "name": "INDRA SOLUCIONES TECNOLOGIAS DE LA INFORMACION",
+      "total": 2939030657.25,
+      "cumulative_pct": 7.52
+    },
+    {
+      "rank": 2,
+      "name": "TELEFONICA SOLUCIONES",
+      "total": 2382269777.4,
+      "cumulative_pct": 13.62
+    },
+    {
+      "rank": 3,
+      "name": "INETUM ESPANA",
+      "total": 1493214725.07,
+      "cumulative_pct": 17.44
+    },
+    {
+      "rank": 4,
+      "name": "SEIDOR",
+      "total": 1114296008.69,
+      "cumulative_pct": 20.29
+    },
+    {
+      "rank": 5,
+      "name": "IBM",
+      "total": 1055144373.47,
+      "cumulative_pct": 22.99
+    },
+    {
+      "rank": 6,
+      "name": "NTT DATA",
+      "total": 1007216644.71,
+      "cumulative_pct": 25.57
+    },
+    {
+      "rank": 7,
+      "name": "FUJITSU TECHNOLOGY SOLUTIONS",
+      "total": 1005810759.3,
+      "cumulative_pct": 28.14
+    },
+    {
+      "rank": 8,
+      "name": "T-SYSTEMS ITC IBERIA",
+      "total": 842609472.46,
+      "cumulative_pct": 30.3
+    },
+    {
+      "rank": 9,
+      "name": "ORACLE IBERICA",
+      "total": 800106125.67,
+      "cumulative_pct": 32.34
+    },
+    {
+      "rank": 10,
+      "name": "SCC (SPECIALIST COMPUTER CENTRES)",
+      "total": 779457551.42,
+      "cumulative_pct": 34.34
+    },
+    {
+      "rank": 11,
+      "name": "AYESA ADVANCED TECHNOLOGIES",
+      "total": 706241693.11,
+      "cumulative_pct": 36.14
+    },
+    {
+      "rank": 12,
+      "name": "INDRA SISTEMAS",
+      "total": 677949363.33,
+      "cumulative_pct": 37.88
+    },
+    {
+      "rank": 13,
+      "name": "TELEFONICA DE ESPANA",
+      "total": 634106485.91,
+      "cumulative_pct": 39.5
+    },
+    {
+      "rank": 14,
+      "name": "ACCENTURE",
+      "total": 565375636.96,
+      "cumulative_pct": 40.95
+    },
+    {
+      "rank": 15,
+      "name": "FCC MEDIO AMBIENTE",
+      "total": 505376973.2,
+      "cumulative_pct": 42.24
+    },
+    {
+      "rank": 16,
+      "name": "EVERIS SPAIN",
+      "total": 503131037.2,
+      "cumulative_pct": 43.53
+    },
+    {
+      "rank": 17,
+      "name": "ATOS",
+      "total": 482167364.26,
+      "cumulative_pct": 44.76
+    },
+    {
+      "rank": 18,
+      "name": "IBERMATICA",
+      "total": 426451549.77,
+      "cumulative_pct": 45.85
+    },
+    {
+      "rank": 19,
+      "name": "UTE NTT DATA SPAIN INFRASTRUCTURES ENGINEERING SL NTT DATA SPAIN",
+      "total": 300000000.0,
+      "cumulative_pct": 46.62
+    },
+    {
+      "rank": 20,
+      "name": "TECNICOS ASOCIADOS INFORMATICA (TAI)",
+      "total": 283782463.83,
+      "cumulative_pct": 47.35
+    },
+    {
+      "rank": 21,
+      "name": "EVOLUTIO",
+      "total": 252986371.15,
+      "cumulative_pct": 48.0
+    },
+    {
+      "rank": 22,
+      "name": "ALTIA CONSULTORES",
+      "total": 239023428.97,
+      "cumulative_pct": 48.61
+    },
+    {
+      "rank": 23,
+      "name": "ALTEN SOLUCIONES",
+      "total": 220120986.03,
+      "cumulative_pct": 49.17
+    },
+    {
+      "rank": 24,
+      "name": "UTE SOLTEL IT SOLUTIONS SOCIEDAD LIMITADA ACCENTURE",
+      "total": 200000000.0,
+      "cumulative_pct": 49.68
+    },
+    {
+      "rank": 25,
+      "name": "UTE 2022/7205 MINSAIT - BABEL",
+      "total": 193284266.7,
+      "cumulative_pct": 50.18
+    },
+    {
+      "rank": 26,
+      "name": "SISTEMAS INFORMATICOS ABIERTOS",
+      "total": 176864808.29,
+      "cumulative_pct": 50.63
+    },
+    {
+      "rank": 27,
+      "name": "CAPGEMINI ESPANA",
+      "total": 166985296.32,
+      "cumulative_pct": 51.06
+    },
+    {
+      "rank": 28,
+      "name": "HIBERUS IT",
+      "total": 162907734.34,
+      "cumulative_pct": 51.47
+    },
+    {
+      "rank": 29,
+      "name": "VIEWNEXT",
+      "total": 162681442.31,
+      "cumulative_pct": 51.89
+    },
+    {
+      "rank": 30,
+      "name": "IT CORTPORATE SOLUTIONS SPAIN, S.L.U. - AXPE CONSULTING",
+      "total": 161585183.55,
+      "cumulative_pct": 52.3
+    },
+    {
+      "rank": 31,
+      "name": "EY TRANSFORMA SERVICIOS DE CONSULTORIA",
+      "total": 154844455.5,
+      "cumulative_pct": 52.7
+    },
+    {
+      "rank": 32,
+      "name": "DELOITTE CONSULTING",
+      "total": 143955999.65,
+      "cumulative_pct": 53.07
+    },
+    {
+      "rank": 33,
+      "name": "TECNOLOGIAS PLEXUS",
+      "total": 137564463.2,
+      "cumulative_pct": 53.42
+    },
+    {
+      "rank": 34,
+      "name": "OESIA",
+      "total": 136326961.7,
+      "cumulative_pct": 53.77
+    },
+    {
+      "rank": 35,
+      "name": "SOPRA STERIA ESPANA",
+      "total": 135615217.02,
+      "cumulative_pct": 54.12
+    },
+    {
+      "rank": 36,
+      "name": "ESPUBLICO SERVICIOS PARA LA ADMINISTRACION",
+      "total": 126590870.01,
+      "cumulative_pct": 54.44
+    },
+    {
+      "rank": 37,
+      "name": "BABEL SISTEMAS DE INFORMACION",
+      "total": 120523818.1,
+      "cumulative_pct": 54.75
+    },
+    {
+      "rank": 38,
+      "name": "UTE AETICAT: ELECTRONICA SALTO, SL, TELEFONICA SOLUCIONES DE INFORMATICA Y COMUNICACIONES DE ESPANA, SA, SERVICIOS MICROINFORMATICA",
+      "total": 117249810.0,
+      "cumulative_pct": 55.05
+    },
+    {
+      "rank": 39,
+      "name": "IQVIA INFORMATION",
+      "total": 116842914.08,
+      "cumulative_pct": 55.35
+    },
+    {
+      "rank": 40,
+      "name": "ESRI ESPANA SOLUCIONES GEOESPACIALES",
+      "total": 115062214.62,
+      "cumulative_pct": 55.64
+    },
+    {
+      "rank": 41,
+      "name": "INFORMATICA EL CORTE INGLES",
+      "total": 114728795.67,
+      "cumulative_pct": 55.93
+    },
+    {
+      "rank": 42,
+      "name": "SENER AEROSPACIAL S.A",
+      "total": 102832701.26,
+      "cumulative_pct": 56.2
+    },
+    {
+      "rank": 43,
+      "name": "UTE SOLUTIA INNOVAWORD TECHNOLOGIES SL SEIDOR SOLUTIONS",
+      "total": 100000000.0,
+      "cumulative_pct": 56.45
+    },
+    {
+      "rank": 44,
+      "name": "UTE SOPRA STERIA ESPANA SAU BABEL SISTEMAS DE INFORMACION",
+      "total": 94248000.0,
+      "cumulative_pct": 56.69
+    },
+    {
+      "rank": 45,
+      "name": "GESTION TRIBUTARIA TERRITORIAL",
+      "total": 92956719.93,
+      "cumulative_pct": 56.93
+    },
+    {
+      "rank": 46,
+      "name": "DXC TECHNOLOGY SERVICIOS ESPANA",
+      "total": 89650358.21,
+      "cumulative_pct": 57.16
+    },
+    {
+      "rank": 47,
+      "name": "IZERTIS",
+      "total": 89448616.77,
+      "cumulative_pct": 57.39
+    },
+    {
+      "rank": 48,
+      "name": "UTE SERVICIOS MICROINFORMATICA, AVENET IT, TECNICOS ASOCIADOS INF. SPHERA, DATEK",
+      "total": 87776571.79,
+      "cumulative_pct": 57.62
+    },
+    {
+      "rank": 49,
+      "name": "UTE PROCESIA-GETRONICS",
+      "total": 85843394.4,
+      "cumulative_pct": 57.84
+    },
+    {
+      "rank": 50,
+      "name": "SQILLS PRODUCTS B.V.",
+      "total": 85542834.69,
+      "cumulative_pct": 58.05
+    },
+    {
+      "rank": 51,
+      "name": "INETUM CATALUNA",
+      "total": 85479572.71,
+      "cumulative_pct": 58.27
+    },
+    {
+      "rank": 52,
+      "name": "INETUM ESPAA",
+      "total": 84534099.6,
+      "cumulative_pct": 58.49
+    },
+    {
+      "rank": 53,
+      "name": "COS MANTENIMIENTO, S. A.",
+      "total": 84496687.96,
+      "cumulative_pct": 58.71
+    },
+    {
+      "rank": 54,
+      "name": "UTE TDE-TME",
+      "total": 83247032.2,
+      "cumulative_pct": 58.92
+    },
+    {
+      "rank": 55,
+      "name": "TEKNEI INFORMATION TECHNOLOGY",
+      "total": 82820391.92,
+      "cumulative_pct": 59.13
+    },
+    {
+      "rank": 56,
+      "name": "SOFTWARE AG ESPANA",
+      "total": 82693507.24,
+      "cumulative_pct": 59.34
+    },
+    {
+      "rank": 57,
+      "name": "LABERIT SISTEMAS, S.L - MINSAIT",
+      "total": 81827328.0,
+      "cumulative_pct": 59.55
+    },
+    {
+      "rank": 58,
+      "name": "LOGIRAIL SME",
+      "total": 81557820.56,
+      "cumulative_pct": 59.76
+    },
+    {
+      "rank": 59,
+      "name": "GLOBAL ROSETTA S.L.U",
+      "total": 79300012.59,
+      "cumulative_pct": 59.96
+    },
+    {
+      "rank": 60,
+      "name": "UTE LURRALDEBUS DFG",
+      "total": 78979388.32,
+      "cumulative_pct": 60.16
+    },
+    {
+      "rank": 61,
+      "name": "SISTEMAS AVANZADOS DE TECNOLOGIA",
+      "total": 78325942.84,
+      "cumulative_pct": 60.37
+    },
+    {
+      "rank": 62,
+      "name": "URBASER,S.A",
+      "total": 74974291.11,
+      "cumulative_pct": 60.56
+    },
+    {
+      "rank": 63,
+      "name": "ATECH ADVANCED SOLUTIONS",
+      "total": 72548808.61,
+      "cumulative_pct": 60.74
+    },
+    {
+      "rank": 64,
+      "name": "VODAFONE ESPANA",
+      "total": 72474177.41,
+      "cumulative_pct": 60.93
+    },
+    {
+      "rank": 65,
+      "name": "GMV SOLUCIONES GLOBALES INTERNET",
+      "total": 71757545.67,
+      "cumulative_pct": 61.11
+    },
+    {
+      "rank": 66,
+      "name": "CGM CLINICAL ESPANA",
+      "total": 70964612.43,
+      "cumulative_pct": 61.29
+    },
+    {
+      "rank": 67,
+      "name": "LOGICALIS SPAIN",
+      "total": 70535071.93,
+      "cumulative_pct": 61.47
+    },
+    {
+      "rank": 68,
+      "name": "BECHTLE DIRECT",
+      "total": 70199095.86,
+      "cumulative_pct": 61.65
+    },
+    {
+      "rank": 69,
+      "name": "SAP ESPANA",
+      "total": 68917635.61,
+      "cumulative_pct": 61.83
+    },
+    {
+      "rank": 70,
+      "name": "UTE GESEIN – SOLUTIA SDA 25/2022",
+      "total": 67825984.1,
+      "cumulative_pct": 62.0
+    },
+    {
+      "rank": 71,
+      "name": "UTE ACCENTURE - EMERGYA",
+      "total": 67812396.7,
+      "cumulative_pct": 62.18
+    },
+    {
+      "rank": 72,
+      "name": "GUADALTEL",
+      "total": 67029707.91,
+      "cumulative_pct": 62.35
+    },
+    {
+      "rank": 73,
+      "name": "UTE INFORMATICA EL CORTE INGLES, S.A.U. - GESEIN, S.L. - EVERIS SPAIN",
+      "total": 65873495.52,
+      "cumulative_pct": 62.52
+    },
+    {
+      "rank": 74,
+      "name": "APLICACIONES Y TRATAMIENTOS DE SISTEMAS",
+      "total": 64872348.98,
+      "cumulative_pct": 62.68
+    },
+    {
+      "rank": 75,
+      "name": "DARS TELECOM",
+      "total": 63608791.01,
+      "cumulative_pct": 62.85
+    },
+    {
+      "rank": 76,
+      "name": "AYTOS SOLUCIONES INFORMATICAS",
+      "total": 63233778.78,
+      "cumulative_pct": 63.01
+    },
+    {
+      "rank": 77,
+      "name": "ASAC COMUNICACIONES",
+      "total": 60841811.32,
+      "cumulative_pct": 63.16
+    },
+    {
+      "rank": 78,
+      "name": "UNISYS",
+      "total": 60733999.26,
+      "cumulative_pct": 63.32
+    },
+    {
+      "rank": 79,
+      "name": "INSTRUMENTACION Y COMPONENTES",
+      "total": 60016491.34,
+      "cumulative_pct": 63.47
+    },
+    {
+      "rank": 80,
+      "name": "UTE ACCENTURE SL - AYESA SERVICIOS DIGITALES AVANZADOS",
+      "total": 59924592.0,
+      "cumulative_pct": 63.63
+    },
+    {
+      "rank": 81,
+      "name": "LOGIRAIL S.M.E.",
+      "total": 59719548.0,
+      "cumulative_pct": 63.78
+    },
+    {
+      "rank": 82,
+      "name": "SERIKAT CONSULTORIA E INFORMATICA",
+      "total": 59719041.95,
+      "cumulative_pct": 63.93
+    },
+    {
+      "rank": 83,
+      "name": "PROSODIE IBERICA",
+      "total": 59273503.8,
+      "cumulative_pct": 64.08
+    },
+    {
+      "rank": 84,
+      "name": "BILBOMATICA",
+      "total": 57302925.86,
+      "cumulative_pct": 64.23
+    },
+    {
+      "rank": 85,
+      "name": "UTE TELEFONICA MOVILES ESPANA, S.A.U. - TELEFONICA SOLUCIONES DE INFORMATICA Y COMUNICACIONES DE ESPANA",
+      "total": 57097727.64,
+      "cumulative_pct": 64.38
+    },
+    {
+      "rank": 86,
+      "name": "UTE CAPGEMINI - EVOLUTIO",
+      "total": 56585994.76,
+      "cumulative_pct": 64.52
+    },
+    {
+      "rank": 87,
+      "name": "KIO NETWORKS ESPANA",
+      "total": 56553981.47,
+      "cumulative_pct": 64.67
+    },
+    {
+      "rank": 88,
+      "name": "ALTRAN INNOVACION",
+      "total": 55726757.52,
+      "cumulative_pct": 64.81
+    },
+    {
+      "rank": 89,
+      "name": "UTE TSOL - SYVALUE",
+      "total": 55080742.5,
+      "cumulative_pct": 64.95
+    },
+    {
+      "rank": 90,
+      "name": "INTERNACIONAL PERIFERICOS Y MEMORIAS ESPANA",
+      "total": 54990616.22,
+      "cumulative_pct": 65.09
+    },
+    {
+      "rank": 91,
+      "name": "ATMIRA ESPACIO DE CONSULTORIA",
+      "total": 54432920.0,
+      "cumulative_pct": 65.23
+    },
+    {
+      "rank": 92,
+      "name": "UTE DXC-PULSIA 2",
+      "total": 53606784.0,
+      "cumulative_pct": 65.37
+    },
+    {
+      "rank": 93,
+      "name": "UNIVERSITAS XXI SOLUCIONES Y TECNOLOGIA PARA LA UNIVERSIDAD",
+      "total": 53571471.81,
+      "cumulative_pct": 65.5
+    },
+    {
+      "rank": 94,
+      "name": "ORANGE ESPAGNE",
+      "total": 53353242.72,
+      "cumulative_pct": 65.64
+    },
+    {
+      "rank": 95,
+      "name": "TELEFONICA",
+      "total": 53157871.89,
+      "cumulative_pct": 65.78
+    },
+    {
+      "rank": 96,
+      "name": "SOCIEDAD IBERICA DE CONSTRUCCIONES ELECTRICAS",
+      "total": 53016798.29,
+      "cumulative_pct": 65.91
+    },
+    {
+      "rank": 97,
+      "name": "CRAYON SOFTWARE EXPERTS SPAIN",
+      "total": 52509997.8,
+      "cumulative_pct": 66.05
+    },
+    {
+      "rank": 98,
+      "name": "COS MANTENIMIENTO",
+      "total": 52417550.81,
+      "cumulative_pct": 66.18
+    },
+    {
+      "rank": 99,
+      "name": "SYVALUE",
+      "total": 51968324.41,
+      "cumulative_pct": 66.31
+    },
+    {
+      "rank": 100,
+      "name": "DELOITTE CONSULTING S.L.U",
+      "total": 51543773.14,
+      "cumulative_pct": 66.44
+    }
+  ]
+}

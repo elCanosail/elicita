@@ -1,0 +1,754 @@
+{
+  "total_contratos": 6573,
+  "total_importe": 20025961024.61,
+  "media_importe": 3046700.292805416,
+  "mediana_importe": 349642.88,
+  "distribucion_anual": [
+    {
+      "ano": 2016,
+      "num_contratos": 345,
+      "total_adj": 286105358.15
+    },
+    {
+      "ano": 2017,
+      "num_contratos": 451,
+      "total_adj": 469670020.73
+    },
+    {
+      "ano": 2018,
+      "num_contratos": 10,
+      "total_adj": 35430463.73
+    },
+    {
+      "ano": 2019,
+      "num_contratos": 118,
+      "total_adj": 666368684.28
+    },
+    {
+      "ano": 2020,
+      "num_contratos": 673,
+      "total_adj": 870946406.66
+    },
+    {
+      "ano": 2021,
+      "num_contratos": 1181,
+      "total_adj": 3553027047.98
+    },
+    {
+      "ano": 2022,
+      "num_contratos": 982,
+      "total_adj": 4203944786.65
+    },
+    {
+      "ano": 2023,
+      "num_contratos": 913,
+      "total_adj": 4025580161.41
+    },
+    {
+      "ano": 2024,
+      "num_contratos": 1025,
+      "total_adj": 3218936045.55
+    },
+    {
+      "ano": 2025,
+      "num_contratos": 856,
+      "total_adj": 2682059385.29
+    },
+    {
+      "ano": 2026,
+      "num_contratos": 19,
+      "total_adj": 13892664.18
+    }
+  ],
+  "top20_adj_num": [
+    {
+      "adjudicatario": "LOKIMICA SA",
+      "num_contratos": 167,
+      "total_adj": 11274710.25
+    },
+    {
+      "adjudicatario": "ARCELORMITTAL ESPAÑA SA",
+      "num_contratos": 84,
+      "total_adj": 515147465.32
+    },
+    {
+      "adjudicatario": "UTE LOTE 7 RAM",
+      "num_contratos": 76,
+      "total_adj": 15457065.23
+    },
+    {
+      "adjudicatario": "ASOCIACION DE ACCION FERROVIARIA",
+      "num_contratos": 71,
+      "total_adj": 6900738.67
+    },
+    {
+      "adjudicatario": "UTE MIV LOTE NORTE",
+      "num_contratos": 69,
+      "total_adj": 15377180.86
+    },
+    {
+      "adjudicatario": "UTE MANTENIMIENTO LOTE 2 NOROESTE",
+      "num_contratos": 68,
+      "total_adj": 17556348.080000002
+    },
+    {
+      "adjudicatario": "UTE MIV NORESTE",
+      "num_contratos": 56,
+      "total_adj": 15066868.879999999
+    },
+    {
+      "adjudicatario": "SIEMENS RAIL AUTOMATION SA",
+      "num_contratos": 49,
+      "total_adj": 263589233.77
+    },
+    {
+      "adjudicatario": "UTE MIV SUR",
+      "num_contratos": 47,
+      "total_adj": 15503969.78
+    },
+    {
+      "adjudicatario": "UTE MANTENIMIENTO ENERGIA NORTE",
+      "num_contratos": 46,
+      "total_adj": 15715348.81
+    },
+    {
+      "adjudicatario": "TELEFONOS LINEAS Y CENTRALES SA",
+      "num_contratos": 45,
+      "total_adj": 33250957.080000002
+    },
+    {
+      "adjudicatario": "THALES ESPAÑA GRP SAU",
+      "num_contratos": 43,
+      "total_adj": 213340464.28
+    },
+    {
+      "adjudicatario": "ENCLAVAMIENTOS SEÑALIZA FERROVIARIA",
+      "num_contratos": 42,
+      "total_adj": 184003189.04
+    },
+    {
+      "adjudicatario": "COBRA INSTALACIONES Y SERVICIOS SA",
+      "num_contratos": 41,
+      "total_adj": 59142012.74
+    },
+    {
+      "adjudicatario": "SAITEC SA",
+      "num_contratos": 39,
+      "total_adj": 20661937.65
+    },
+    {
+      "adjudicatario": "AYESA INGENIERIA Y ARQUITECTURA SAU",
+      "num_contratos": 39,
+      "total_adj": 28999195.46
+    },
+    {
+      "adjudicatario": "COMSA SAU",
+      "num_contratos": 38,
+      "total_adj": 164353881.87
+    },
+    {
+      "adjudicatario": "TECSA EMPRESA CONSTRUCTORA SA",
+      "num_contratos": 38,
+      "total_adj": 41261307.13
+    },
+    {
+      "adjudicatario": "UTE MIV CENTRO",
+      "num_contratos": 38,
+      "total_adj": 40732924.76
+    },
+    {
+      "adjudicatario": "VOESTALPINE RAILWAY SYSTEMS JEZ SL",
+      "num_contratos": 36,
+      "total_adj": 97082607.14
+    }
+  ],
+  "top20_adj_imp": [
+    {
+      "adjudicatario": "ARCELORMITTAL ESPAÑA SA",
+      "num_contratos": 84,
+      "total_adj": 515147465.32
+    },
+    {
+      "adjudicatario": "UTE FERROVIAL-COMSA-FCC",
+      "num_contratos": 1,
+      "total_adj": 446614679.32
+    },
+    {
+      "adjudicatario": "UTE DRAGADOS-TECSA-SAN JOSE-PUENTES",
+      "num_contratos": 1,
+      "total_adj": 373205864.06
+    },
+    {
+      "adjudicatario": "UTE DRAGADOS-TECSA-ROVER-ROVER RAIL",
+      "num_contratos": 1,
+      "total_adj": 366440482.4
+    },
+    {
+      "adjudicatario": "UTE Ferrovial-fcc-convensa",
+      "num_contratos": 1,
+      "total_adj": 323053000.0
+    },
+    {
+      "adjudicatario": "UTE OHL-SANDO-HORMIGONES AA",
+      "num_contratos": 1,
+      "total_adj": 271001160.1
+    },
+    {
+      "adjudicatario": "SIEMENS RAIL AUTOMATION SA",
+      "num_contratos": 49,
+      "total_adj": 263589233.77
+    },
+    {
+      "adjudicatario": "SACYR CONSTRUCCION SAU",
+      "num_contratos": 3,
+      "total_adj": 241326408.35
+    },
+    {
+      "adjudicatario": "UTE Puentes-rover-geotunel",
+      "num_contratos": 1,
+      "total_adj": 234121871.2
+    },
+    {
+      "adjudicatario": "VIAS Y CONSTRUCCIONES SA",
+      "num_contratos": 25,
+      "total_adj": 225296604.62
+    },
+    {
+      "adjudicatario": "THALES ESPAÑA GRP SAU",
+      "num_contratos": 43,
+      "total_adj": 213340464.28
+    },
+    {
+      "adjudicatario": "FERROVIAL CONSTRUCCION SA",
+      "num_contratos": 12,
+      "total_adj": 210158497.98
+    },
+    {
+      "adjudicatario": "UTE COPASA-PUENTES-SAN JOSE-LURPELA",
+      "num_contratos": 1,
+      "total_adj": 196905170.1
+    },
+    {
+      "adjudicatario": "UTE FERROVIAL-ACCIONA",
+      "num_contratos": 4,
+      "total_adj": 194777564.45
+    },
+    {
+      "adjudicatario": "ENCLAVAMIENTOS SEÑALIZA FERROVIARIA",
+      "num_contratos": 42,
+      "total_adj": 184003189.04
+    },
+    {
+      "adjudicatario": "UTE Ferrovial-vias-zarzuela",
+      "num_contratos": 1,
+      "total_adj": 178364580.0
+    },
+    {
+      "adjudicatario": "UTE CAF FCC REVENGA",
+      "num_contratos": 1,
+      "total_adj": 176831813.4
+    },
+    {
+      "adjudicatario": "UTE VIAS-COMSA-AZVI-SAN JOSE",
+      "num_contratos": 1,
+      "total_adj": 171045942.51
+    },
+    {
+      "adjudicatario": "UTE TECSA-DRAGADOS",
+      "num_contratos": 7,
+      "total_adj": 166497950.64
+    },
+    {
+      "adjudicatario": "CAF SIGNALLING SL",
+      "num_contratos": 18,
+      "total_adj": 164437506.7
+    }
+  ],
+  "top20_contratos": [
+    {
+      "expediente": "3.22/06110.0199",
+      "ano": 2022,
+      "objeto": "Ejecución de las obras de los Proyectos de Construcción del soterramiento de la Línea R2 de cercanías de Barcelona a su paso por el casco urbano de Montcada i Reixac (Barcelona) y de la Nueva Estación de Montcada i Reixac",
+      "adjudicatario": "UTE FERROVIAL-COMSA-FCC",
+      "importe_adjudicacion": 446614679.32,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.23/20830.0127",
+      "ano": 2023,
+      "objeto": "Ejecución de las obras del Proyecto \"Nuevo complejo ferroviario de la Estación de Atocha (Madrid). Proyecto constructivo de la Fase 2. Estación Pasante\".",
+      "adjudicatario": "UTE DRAGADOS-TECSA-SAN JOSE-PUENTES",
+      "importe_adjudicacion": 373205864.06,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "4.22/20830.0195",
+      "ano": 2022,
+      "objeto": "Proyectos de construcción del nuevo canal de acceso para la integración de la Alta Velocidad en la ciudad de Valencia, de la ampliación y remodelación de la Estación de Valencia – Joaquín Sorolla y de la ampliación del aparcamiento de Valencia – Joaquín Srolla",
+      "adjudicatario": "UTE DRAGADOS-TECSA-ROVER-ROVER RAIL",
+      "importe_adjudicacion": 366440482.4,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.25/20830.0015",
+      "ano": 2025,
+      "objeto": "Obras de ejecución del proyecto de construcción de la plataforma de la Línea de Alta Velocidad de la conexión Madrid-País Vasco-Frontera Francesa. Tramo: Burgos-Vitoria. Subtramo: Pancorbo-Ameyugo.",
+      "adjudicatario": "UTE Ferrovial-fcc-convensa",
+      "importe_adjudicacion": 323053000.0,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.23/20830.0091",
+      "ano": 2023,
+      "objeto": "Obras de ejecución del proyecto de construcción del corredor mediterráneo de Alta Velocidad. Tramo: Integración del ferrocarril en Lorca. Plataforma y Estación.",
+      "adjudicatario": "UTE OHL-SANDO-HORMIGONES AA",
+      "importe_adjudicacion": 271001160.1,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.25/20830.0030",
+      "ano": 2025,
+      "objeto": "Obras de ejecución del proyecto de construcción de plataforma de la línea de Alta Velocidad Antequera-Granada. Tramo: variante de Loja. Valle del Genil.",
+      "adjudicatario": "UTE Puentes-rover-geotunel",
+      "importe_adjudicacion": 234121871.2,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.23/20830.0116",
+      "ano": 2023,
+      "objeto": "Obras de ejecución del proyecto de construcción de plataforma del Corredor Cantábrico Mediterráneo de Alta Velocidad. Tramo: Tafalla- Campanas (Navarra)",
+      "adjudicatario": "UTE COPASA-PUENTES-SAN JOSE-LURPELA",
+      "importe_adjudicacion": 196905170.1,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.25/20830.0017",
+      "ano": 2025,
+      "objeto": "Obras de ejecución del proyecto de construcción de la remodelación de la Estación de Valladolid Campo Grande. Término municipal de Valladolid.",
+      "adjudicatario": "UTE Ferrovial-vias-zarzuela",
+      "importe_adjudicacion": 178364580.0,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "4.23/20830.0209",
+      "ano": 2024,
+      "objeto": "Redacción de los proyectos básicos y constructivos, ejecución de las obras, conservación y mantenimiento de las instalaciones de enclavamientos, sistema de protección del tren, CTC, sistemas auxiliares de detección, telecomunicaciones fijas y sistema de suministro de energía de la LAV Murcia-Almería y ramal Pulpí-Águilas",
+      "adjudicatario": "UTE CAF FCC REVENGA",
+      "importe_adjudicacion": 176831813.4,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.21/20830.0034",
+      "ano": 2021,
+      "objeto": "Ejecución de las obras del proyecto de construcción de plataforma del Corredor Mediterráneo de Alta Velocidad Murcia-Almería. Tramo: Lorca- Pulpí (ON 006/21)",
+      "adjudicatario": "UTE FERROVIAL-ACCIONA",
+      "importe_adjudicacion": 171441775.0,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.21/20830.0142",
+      "ano": 2021,
+      "objeto": "Ejecución de las Obras del: Proyecto de Construcción de ampliación y remodelación de la playa de vía y andenes de alta velocidad y del edificio de viajeros de la Estación de Chamartín (Madrid); Proyecto de Construcción del nuevo edificio técnico dealta velocidad en la cabecera norte de la Estación de Madrid-Chamartín; Proyecto de Construcción de conexión del vestíbulo de cercanías bajo vías con metro y futuro paso inferior de alta velocidad de la Estación de Madrid-Chamartín; Proyecto de Construcción de cimentaciones y pilas del lateral este (C/Hiedra) del cubrimiento de la Cabecera Sur de la Estación de Chamartín y Proyecto de Construcción para la demolición del Edificio 23 de la Estación de Madrid-Chamartín-Clara Campoamor y la reordenación del espacio liberado. Fase I",
+      "adjudicatario": "UTE VIAS-COMSA-AZVI-SAN JOSE",
+      "importe_adjudicacion": 171045942.51,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.22/20830.0016",
+      "ano": 2022,
+      "objeto": "Obras de ejecución del Proyecto de construcción de plataforma del Corredor Mediterráneo de Alta Velocidad Murcia-Almería. Tramo: Totana- Totana",
+      "adjudicatario": "UTE CONVENSA-SANDO",
+      "importe_adjudicacion": 152475000.0,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "4.23/20830.0059",
+      "ano": 2023,
+      "objeto": "Obras de Ejecución del Proyecto de Construcción de la Integración del Ferrocarril en Almería. Fase 2.",
+      "adjudicatario": "SACYR CONSTRUCCION SAU",
+      "importe_adjudicacion": 136973690.81,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.24/20830.0061",
+      "ano": 2024,
+      "objeto": "Obras de ejecución de los proyectos de construcción para la reordenación y transformación del edificio de viajeros de la Estación de Barcelona Sants: Proyecto nº1.- Fase 1. Proyecto nº2.- Plaza Països Catalans. Proyecto nº3.- Entornos",
+      "adjudicatario": "UTE ACCIONA CONSTRUCCION-COPCISA",
+      "importe_adjudicacion": 126715623.74,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.24/20830.0150",
+      "ano": 2024,
+      "objeto": "Obras de ejecución del proyecto de construcción de plataforma de la línea de alta velocidad Antequera- Granada. Tramo: Variante de Loja. A- 92.",
+      "adjudicatario": "UTE COPISA-COPASA-CHM-TUNELAN",
+      "importe_adjudicacion": 122877180.83,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.23/06110.0066",
+      "ano": 2023,
+      "objeto": "Ejecución de las obras de los proyectos de construcción del soterramiento de la Línea R2 de Cercanías de Barcelona a su paso por el casco urbano de Montcada i Reixac (Barcelona). Variante de Vallbona y bifurcación aguas y de las medidas correctorashidrogelógicas de la LAV Barcelona – Figueres a su paso por Vallbona (Barcelona)",
+      "adjudicatario": "UTE ROVER-ROVER RAIL-GAIMAZ",
+      "importe_adjudicacion": 119585157.69,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.23/20810.0077",
+      "ano": 2024,
+      "objeto": "Acuerdo marco para el suministro y transporte de carril para nuevas líneas en construcción y duplicación de vía de líneas existentes",
+      "adjudicatario": "JSW STEEL ITALY PIOMBINO SPA",
+      "importe_adjudicacion": 110734752.44,
+      "tipo_contrato": "Suministros"
+    },
+    {
+      "expediente": "3.22/20830.0167",
+      "ano": 2022,
+      "objeto": "Obras de ejecución del proyecto de construcción de plataforma. Conexión Murcia-Cartagena.Tramo: Riquelme-Cartagena. T1: Riquelme- Torre Pacheco.",
+      "adjudicatario": "UTE ACCIONA-AZVI",
+      "importe_adjudicacion": 109981605.59,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.24/27507.0161",
+      "ano": 2024,
+      "objeto": "Ejecución de las obras del proyecto de construcción para la implantación del ancho estándar en el Corredor Mediterráneo. Tramo: Castellbisbal - Murcia. Subtramo: La Encina-Bifurcación. Alicante. Vía y electrificación",
+      "adjudicatario": "UTE Syneox-rover R-rover I",
+      "importe_adjudicacion": 106979325.71,
+      "tipo_contrato": "Obras"
+    },
+    {
+      "expediente": "3.23/20830.0246",
+      "ano": 2024,
+      "objeto": "Proyecto de construcción de plataforma de Alta Velocidad. Conexión Murcia-Cartagena. Tramo: Torre Pacheco-Cartagena.",
+      "adjudicatario": "UTE San Jose-acsa-trade",
+      "importe_adjudicacion": 106096545.77,
+      "tipo_contrato": "Obras"
+    }
+  ],
+  "tipos_contrato": [
+    {
+      "tipo_contrato": "Obras",
+      "num": 2111,
+      "total": 13697105942.23
+    },
+    {
+      "tipo_contrato": "Servicios",
+      "num": 3192,
+      "total": 3519182957.93
+    },
+    {
+      "tipo_contrato": "Suministros",
+      "num": 1270,
+      "total": 2809672124.45
+    }
+  ],
+  "procedimientos": [
+    {
+      "procedimiento": "Abierto",
+      "num": 3287,
+      "total": 17144463047.66
+    },
+    {
+      "procedimiento": "Negociado con publicidad",
+      "num": 1068,
+      "total": 1676673269.5
+    },
+    {
+      "procedimiento": "Contrato menor",
+      "num": 1493,
+      "total": 666724190.99
+    },
+    {
+      "procedimiento": "13",
+      "num": 5,
+      "total": 261563115.54
+    },
+    {
+      "procedimiento": "Negociado sin publicidad",
+      "num": 39,
+      "total": 143995504.93
+    },
+    {
+      "procedimiento": "Basado en sistema dinámico",
+      "num": 678,
+      "total": 115410263.51
+    },
+    {
+      "procedimiento": "Restringido",
+      "num": 3,
+      "total": 17131632.48
+    }
+  ],
+  "duraciones": [
+    {
+      "duracion": "12.0",
+      "duracion_unidad": "MON",
+      "num": 887,
+      "total": 1387477431.24
+    },
+    {
+      "duracion": "24.0",
+      "duracion_unidad": "MON",
+      "num": 598,
+      "total": 1933871764.99
+    },
+    {
+      "duracion": "4.0",
+      "duracion_unidad": "MON",
+      "num": 525,
+      "total": 215073865.36
+    },
+    {
+      "duracion": "6.0",
+      "duracion_unidad": "MON",
+      "num": 460,
+      "total": 323570827.09
+    },
+    {
+      "duracion": "3.0",
+      "duracion_unidad": "MON",
+      "num": 370,
+      "total": 91138202.48
+    },
+    {
+      "duracion": "36.0",
+      "duracion_unidad": "MON",
+      "num": 266,
+      "total": 1369380928.22
+    },
+    {
+      "duracion": "2.0",
+      "duracion_unidad": "MON",
+      "num": 265,
+      "total": 38828150.9
+    },
+    {
+      "duracion": "48.0",
+      "duracion_unidad": "MON",
+      "num": 254,
+      "total": 1582292928.33
+    },
+    {
+      "duracion": "0.0",
+      "duracion_unidad": "DAY",
+      "num": 247,
+      "total": 603699153.74
+    },
+    {
+      "duracion": "8.0",
+      "duracion_unidad": "MON",
+      "num": 209,
+      "total": 355034564.96
+    },
+    {
+      "duracion": "18.0",
+      "duracion_unidad": "MON",
+      "num": 184,
+      "total": 634710531.95
+    },
+    {
+      "duracion": "5.0",
+      "duracion_unidad": "MON",
+      "num": 180,
+      "total": 73865071.45
+    },
+    {
+      "duracion": "10.0",
+      "duracion_unidad": "MON",
+      "num": 177,
+      "total": 428956678.46
+    },
+    {
+      "duracion": "9.0",
+      "duracion_unidad": "MON",
+      "num": 174,
+      "total": 304011070.0
+    },
+    {
+      "duracion": "7.0",
+      "duracion_unidad": "MON",
+      "num": 135,
+      "total": 100135660.08
+    }
+  ],
+  "cpv": [
+    {
+      "cpv": "45111200.0",
+      "num": 224,
+      "total": 3670909631.81
+    },
+    {
+      "cpv": "45234110.0",
+      "num": 235,
+      "total": 1990979717.37
+    },
+    {
+      "cpv": "45234115.0",
+      "num": 191,
+      "total": 1925997795.46
+    },
+    {
+      "cpv": "45221242.0",
+      "num": 52,
+      "total": 852567858.73
+    },
+    {
+      "cpv": "50220000.0",
+      "num": 221,
+      "total": 838620390.98
+    },
+    {
+      "cpv": "45234100.0",
+      "num": 210,
+      "total": 764109799.55
+    },
+    {
+      "cpv": "50225000.0",
+      "num": 392,
+      "total": 759640798.34
+    },
+    {
+      "cpv": "45234116.0",
+      "num": 40,
+      "total": 720845699.08
+    },
+    {
+      "cpv": "34946110.0",
+      "num": 97,
+      "total": 679309613.25
+    },
+    {
+      "cpv": "45213321.0",
+      "num": 35,
+      "total": 526284587.46
+    },
+    {
+      "cpv": "71356000.0",
+      "num": 722,
+      "total": 519460614.78
+    },
+    {
+      "cpv": "45111100.0",
+      "num": 22,
+      "total": 463476928.84
+    },
+    {
+      "cpv": "45234160.0",
+      "num": 104,
+      "total": 405042058.78
+    },
+    {
+      "cpv": "34940000.0",
+      "num": 147,
+      "total": 366324708.91
+    },
+    {
+      "cpv": "34947100.0",
+      "num": 118,
+      "total": 331904652.78
+    },
+    {
+      "cpv": "45450000.0",
+      "num": 198,
+      "total": 275212319.71
+    },
+    {
+      "cpv": "71300000.0",
+      "num": 246,
+      "total": 242611151.99
+    },
+    {
+      "cpv": "45213320.0",
+      "num": 41,
+      "total": 235318940.45999998
+    },
+    {
+      "cpv": "45221119.0",
+      "num": 91,
+      "total": 226740553.63
+    },
+    {
+      "cpv": "9310000.0",
+      "num": 7,
+      "total": 219443649.10999998
+    }
+  ],
+  "nuts": [
+    {
+      "nuts": "ES",
+      "num": 1928,
+      "total": 5434026518.95
+    },
+    {
+      "nuts": "ES300",
+      "num": 920,
+      "total": 1842795519.41
+    },
+    {
+      "nuts": "ES511",
+      "num": 387,
+      "total": 1565366045.79
+    },
+    {
+      "nuts": "ES523",
+      "num": 218,
+      "total": 1140755848.43
+    },
+    {
+      "nuts": "ES620",
+      "num": 91,
+      "total": 1007129022.45
+    },
+    {
+      "nuts": "ES414",
+      "num": 68,
+      "total": 490896197.21
+    },
+    {
+      "nuts": "ES614",
+      "num": 39,
+      "total": 433768719.18
+    },
+    {
+      "nuts": "ES6",
+      "num": 15,
+      "total": 403517692.3
+    },
+    {
+      "nuts": "ES120",
+      "num": 216,
+      "total": 395503626.69
+    },
+    {
+      "nuts": "ES432",
+      "num": 50,
+      "total": 388301625.35
+    },
+    {
+      "nuts": "ES418",
+      "num": 100,
+      "total": 373613278.18
+    },
+    {
+      "nuts": "ES412",
+      "num": 41,
+      "total": 363018898.52
+    },
+    {
+      "nuts": "ES51",
+      "num": 94,
+      "total": 348039151.44
+    },
+    {
+      "nuts": "ES61",
+      "num": 98,
+      "total": 345256846.5
+    },
+    {
+      "nuts": "ES220",
+      "num": 55,
+      "total": 307168588.39
+    }
+  ]
+}

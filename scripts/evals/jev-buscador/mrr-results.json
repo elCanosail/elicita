@@ -1,0 +1,10 @@
+{
+  "fecha": "2026-09-20T20:53:58.723Z",
+  "n_consultas": 5,
+  "n_con_relevantes": 4,
+  "mrr_clasico": 0.625,
+  "mrr_jev": 1,
+  "recall5_clasico": 0.484375,
+  "recall5_jev": 0.7170138888888888,
+  "jev_ms_media": 424.8
+}

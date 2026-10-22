@@ -1,0 +1,179 @@
+---
+import Layout from '../layouts/main.astro';
+import PricingCards from '@/components/PricingCards.astro';
+import { PRICING_PLANS } from '@/lib/pricing';
+
+const metadata = {
+  title: "Planes y precios — Elicita",
+  description: "Empieza gratis con Elicita. Datos oficiales actualizados cada 4 horas. Plan Pro a €29/mes con buscador ilimitado, alertas, Universo, BORME, API y MCP.",
+};
+
+const faqs = [
+  {
+    question: '¿Los precios incluyen IVA?',
+    answer: 'Sí. Todos los precios mostrados incluyen el IVA correspondiente. Lo que ves es lo que pagas.',
+  },
+  {
+    question: '¿Puedo cancelar en cualquier momento?',
+    answer: 'Sí. Puedes cancelar tu suscripción desde tu cuenta en cualquier momento, sin permanencia ni penalizaciones. La cancelación es efectiva al final del período de facturación en curso.',
+  },
+  {
+    question: '¿Hay prueba gratuita?',
+    answer: 'El plan Free es gratuito para siempre: 3 búsquedas/día y fichas de mercado de 7 sectores. Para búsquedas ilimitadas, alertas, API y MCP autenticado, necesitas el plan Pro a €29/mes. No requerimos tarjeta para registrarte.',
+  },
+  {
+    question: '¿Qué incluye el plan Pro?',
+    answer: 'Pro incluye búsquedas ilimitadas en el histórico PLACSP 2022+ (13,4M+ registros), grafo Universo con presets de 7 sectores, Market Intelligence determinista con artefactos descargables y checksums, perfil de competidores, export CSV, BORME (registro mercantil), alertas de competidores y compradores, y API + MCP autenticado para tu asistente de IA. Todo por €29/mes. Sin planes manuales ni adaptaciones — todo lo automatizable está incluido.',
+  },
+  {
+    question: '¿Qué fuentes cubre Elicita?',
+    answer: 'Más de 13,4M de registros de PLACSP (nacional), TED europeo, boletines y plataformas de 7 comunidades autónomas (Cataluña, Madrid, Galicia, Andalucía, Euskadi, Asturias, Valencia) más feeds del BOE, BORME (registro mercantil, 26M+ registros) y datos de calidad de contratos. Actualizados cada 4 horas. Ver detalle completo en /fuentes.',
+  },
+  {
+    question: '¿Puedo usar los datos comercialmente?',
+    answer: 'Sí. Los datos derivados de fuentes públicas se publican bajo licencia Creative Commons Attribution 4.0 (CC BY 4.0). Puedes usarlos, transformarlos y distribuirlos comercialmente citando la fuente: PLACSP/TED/BORME (fuente oficial) y Elicita.es (intermediario técnico). Ver /reutilizacion-y-atribucion para detalle y formatos de cita.',
+  },
+  {
+    question: '¿Qué incluye la API?',
+    answer: 'La API REST permite buscar licitaciones, consultar fichas de empresas, obtener datos de BORME y acceder a indicadores de calidad. Incluye autenticación por API key y rate-limit generoso. Disponible en el plan Pro. El plan Free incluye 3 búsquedas/día vía la interfaz web (sin API). Ver documentación técnica en /docs.',
+  },
+  {
+    question: '¿Qué es el MCP y para qué sirve?',
+    answer: 'MCP (Model Context Protocol) es un estándar abierto que permite a asistentes de IA como Claude, GPT o Gemini conectarse a Elicita y consultar datos en tiempo real. El acceso público permite consultar estadísticas, cobertura y CPV. Con el plan Pro y una API key personal, tu asistente de IA puede buscar licitaciones directamente desde tu conversación. Es la forma más rápida de integrar inteligencia de contratación en tu workflow de IA.',
+  },
+  {
+    question: '¿Cómo se compara Elicita con Axesor o Informa?',
+    answer: 'Axesor e Informa son servicios de información empresarial con informes de riesgo y scoring. Elicita es distinto: se centra en contratación pública (no información comercial genérica), añade la capa semántica que el dato en crudo no da — identidad verificada por NIF, grupos empresariales con evidencia pública y metodología determinista reproducible —, incluye conectores autonómicos que ellos no cubren, y ofrece API + MCP para integración técnica. Elicita no emite informes de riesgo ni scoring de crédito — ese no es nuestro foco.',
+  },
+  {
+    question: '¿Elicita es una fuente oficial?',
+    answer: 'No. Elicita es un servicio técnico privado e independiente que reutiliza información pública al amparo de la Ley 37/2007. No está afiliado a PLACSP, BOE, BORME ni ningún organismo público. Para trámites oficiales, consulta siempre la fuente original. Ver /aviso-legal para el marco legal completo.',
+  },
+  {
+    question: '¿Cada cuánto se actualizan los datos?',
+    answer: 'Las fuentes con API en tiempo real (PLACSP, autonómicos) se actualizan cada 4 horas. El BORME se procesa con un día de retraso (D+1). Los datasets abiertos (Asturias, calidad) se recargan mensualmente. El BOE alerta temprana es diario. Ver /fuentes para la frecuencia de cada fuente.',
+  },
+  {
+    question: '¿Puedo exportar datos?',
+    answer: 'Sí. La API permite exportación programática en JSON y el plan Pro incluye export CSV de búsquedas. Los datasets abiertos de Market Intelligence se descargan en CSV/JSON con checksums SHA-256 desde cada ficha de mercado. Para exports masivos (datasets completos), contáctanos en hola@elicita.es.',
+  },
+  {
+    question: '¿Qué es Universo?',
+    answer: 'Universo es el grafo de relaciones de Elicita. Cruza datos de BORME (cargos compartidos, socios, administradores) con contratos públicos para revelar conexiones entre empresas que no son obvias. Por ejemplo: si dos empresas competidoras tienen el mismo administrador, Universo lo detecta. Disponible en el plan Pro con expansión hasta nivel 3.',
+  },
+  {
+    question: '¿Ofrecéis descuento anual?',
+    answer: 'Sí. El plan Pro anual cuesta €290/año (2 meses gratis frente al pago mensual). Se aplica automáticamente al seleccionar facturación anual.',
+  },
+  {
+    question: '¿Necesito formación técnica para usar Elicita?',
+    answer: 'No. La interfaz web está diseñada para profesionales de contratación, compras y negocio. La API y el MCP están pensados para desarrolladores que quieran integrar Elicita en sus propios sistemas. Ambos perfiles pueden usar el plan Pro sin barreras técnicas.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: metadata.title,
+  description: metadata.description,
+  url: 'https://elicita.es/precios',
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: PRICING_PLANS.map((plan) => ({
+      '@type': 'ListItem',
+      item: {
+        '@type': 'Offer',
+        name: `Elicita ${plan.name}`,
+        description: plan.description,
+        price: plan.priceMonthly,
+        priceCurrency: 'EUR',
+        priceValidUntil: '2027-12-31',
+        availability: 'https://schema.org/InStock',
+        url: 'https://elicita.es/precios',
+      },
+    })),
+  },
+};
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+};
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: 'https://elicita.es/',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Precios',
+      item: 'https://elicita.es/precios',
+    },
+  ],
+};
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} slot="head" />
+
+  <section class="py-20 md:py-32">
+    <div class="container mx-auto px-4">
+      <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center space-y-4 mb-16">
+          <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-4">Pricing</p>
+          <h1 class="text-4xl md:text-6xl font-light text-white">
+            Planes y precios
+          </h1>
+          <p class="text-xl text-white/40 max-w-2xl mx-auto">
+            Empieza gratis. Pásate a Pro cuando necesites búsquedas sin límite.
+          </p>
+          <p class="font-mono text-xs text-white/40 tracking-wide">
+            Dataset vivo — actualizado cada 4 horas. El mismo para la web, la API y el MCP.
+          </p>
+        </div>
+
+        <!-- Plans -->
+        <PricingCards variant="page" />
+
+        <!-- FAQ -->
+        <div class="max-w-3xl mx-auto mb-16">
+          <h2 class="text-center text-2xl font-light text-white mb-10">Preguntas frecuentes</h2>
+          <div class="space-y-0 border-t border-white/7">
+            {faqs.map((faq) => (
+              <details class="group border-b border-white/7 py-4">
+                <summary class="flex items-center justify-between cursor-pointer list-none text-white/70 font-medium text-sm hover:text-white transition-colors">
+                  {faq.question}
+                  <span class="text-emerald-400/60 group-open:rotate-180 transition-transform duration-200 ml-4">▼</span>
+                </summary>
+                <p class="mt-3 text-white/40 text-sm leading-relaxed">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <!-- Footer note -->
+        <p class="text-center text-white/15 text-xs font-mono">
+          Todos los precios incluyen IVA. Cancela en cualquier momento.
+        </p>
+      </div>
+    </div>
+  </section>
+</Layout>

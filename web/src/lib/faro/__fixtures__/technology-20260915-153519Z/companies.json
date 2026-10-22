@@ -1,0 +1,68 @@
+{
+  "snapshotId": "technology-20260915-153519Z",
+  "rows": [
+    {
+      "rank": 1,
+      "nif": "A78053147",
+      "name": "TELEFÓNICA SOLUCIONES DE INFORMÁTICA Y COMUNICACIONES DE ESPAÑA, S.A.U.",
+      "contracts": 1306,
+      "amountEur": 1221006415.49,
+      "shareAmountPct": 7.33911446,
+      "shareContractsPct": 1.84330496
+    },
+    {
+      "rank": 2,
+      "nif": "B88018098",
+      "name": "INDRA SOLUCIONES TECNOLOGÍAS DE LA INFORMACIÓN, S.L.U.",
+      "contracts": 999,
+      "amountEur": 997349626.1,
+      "shareAmountPct": 5.99477854,
+      "shareContractsPct": 1.41000127
+    },
+    {
+      "rank": 3,
+      "nif": "A28855260",
+      "name": "INETUM ESPAÑA, S.A.",
+      "contracts": 1247,
+      "amountEur": 710191289.55,
+      "shareAmountPct": 4.2687533,
+      "shareContractsPct": 1.76003162
+    },
+    {
+      "rank": 4,
+      "nif": "A28599033",
+      "name": "INDRA SISTEMAS, S.A.",
+      "contracts": 138,
+      "amountEur": 524376178.55,
+      "shareAmountPct": 3.1518727,
+      "shareContractsPct": 0.19477495
+    },
+    {
+      "rank": 5,
+      "nif": "B78361482",
+      "name": "ORACLE IBERICA, S.R.L.",
+      "contracts": 499,
+      "amountEur": 435764446.48,
+      "shareAmountPct": 2.61925335,
+      "shareContractsPct": 0.70429493
+    },
+    {
+      "rank": 6,
+      "nif": "B61172219",
+      "name": "Seidor Solutions",
+      "contracts": 558,
+      "amountEur": 381209144.26,
+      "shareAmountPct": 2.2913373,
+      "shareContractsPct": 0.78756828
+    },
+    {
+      "rank": 7,
+      "nif": "B82387770",
+      "name": "NTT DATA SPAIN, S.L.U.",
+      "contracts": 386,
+      "amountEur": 363571826.66,
+      "shareAmountPct": 2.18532451,
+      "shareContractsPct": 0.5448053
+    }
+  ]
+}

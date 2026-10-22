@@ -1,0 +1,19 @@
+{
+  "snapshotId": "technology-20260915-153519Z",
+  "rows": {
+    "companies_amount": {
+      "hhi": 209.91567037,
+      "top1": 8.40333002,
+      "top5": 26.76310937,
+      "top10": 37.78159714,
+      "denominator": 14530030505.83
+    },
+    "companies_contracts": {
+      "hhi": 24.28813369,
+      "top1": 1.93220991,
+      "top5": 6.19757068,
+      "top10": 8.99528044,
+      "denominator": 67591.0
+    }
+  }
+}

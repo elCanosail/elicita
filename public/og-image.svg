@@ -1,0 +1,35 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2540"/>
+      <stop offset="100%" style="stop-color:#1b3a5c"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="80%" cy="20%" r="50%">
+      <stop offset="0%" style="stop-color:#27864f;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#27864f;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="900" cy="100" r="300" fill="url(#glow1)"/>
+  
+  <!-- Brand -->
+  <text x="600" y="200" text-anchor="middle" font-family="monospace" font-size="110" font-weight="normal" fill="#f7f6f2">elicita<tspan fill="#27864f" font-weight="400">_</tspan></text>
+  
+  <!-- Tagline -->
+  <text x="600" y="300" text-anchor="middle" font-family="sans-serif" font-size="42" font-weight="600" fill="#f7f6f2">Las alertas ya no son suficientes.</text>
+  <text x="600" y="360" text-anchor="middle" font-family="sans-serif" font-size="42" font-weight="600" fill="#f7f6f2">Necesitas el <tspan fill="#27864f">edge</tspan>.</text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="440" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#d1f0de">Inteligencia aplicada sobre 44M+ contratos públicos</text>
+  
+  <!-- Stats -->
+  <text x="300" y="550" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="bold" fill="#c9952a">26 años</text>
+  <text x="300" y="585" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#a1a1aa">de datos</text>
+  
+  <text x="600" y="550" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="bold" fill="#c9952a">6-9 meses</text>
+  <text x="600" y="585" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#a1a1aa">de anticipación</text>
+  
+  <text x="900" y="550" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="bold" fill="#c9952a">100%</text>
+  <text x="900" y="585" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#a1a1aa">datos públicos</text>
+</svg>

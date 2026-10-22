@@ -1,0 +1,29 @@
+{
+  "rows": [
+    {"analytic_id":"fixture-001","award_date":"2024-01-15","cpv":"72262000-9","supplier_nif":"B12345674","supplier_name":"Proveedor Tecnológico, S.A.","buyer_key":"buyer-demo-1","buyer_name":"Organismo Demostración Uno","observed_amount_eur":120000,"ute":false},
+    {"analytic_id":"fixture-002","award_date":"2024-02-10","cpv":"32420000-3","supplier_nif":"B76543214","supplier_name":"Redes Públicas, S.L.","buyer_key":"buyer-demo-1","buyer_name":"Organismo Demostración Uno","observed_amount_eur":80000,"ute":false},
+    {"analytic_id":"fixture-003","award_date":"2025-03-20","cpv":"72262000-9","supplier_nif":null,"supplier_name":"UTE de ejemplo","buyer_key":"buyer-demo-2","buyer_name":"Organismo Demostración Dos","observed_amount_eur":50000,"ute":true},
+    {"analytic_id":"fixture-004","award_date":"2025-04-01","cpv":null,"supplier_nif":"B12345674","supplier_name":"Proveedor Tecnológico, S.A.","buyer_key":"buyer-demo-2","buyer_name":"Organismo Demostración Dos","observed_amount_eur":20000,"ute":false},
+    {"analytic_id":"fixture-005","award_date":"2025-04-03","cpv":"99999999-9","supplier_nif":"B12345674","supplier_name":"Proveedor Tecnológico, S.A.","buyer_key":"buyer-demo-2","buyer_name":"Organismo Demostración Dos","observed_amount_eur":10000,"ute":false}
+  ],
+  "taxonomy": {
+    "schema":"elicita.cpv-taxonomy/v1","version":"1.0.0","dataset":"technology",
+    "rules":[
+      {"cpv":"72262000","label":"Software","subsector":"software_licences","status":"include","reason":"Software development services","decision_date":"2026-09-14","decision_source":"P0 fixture methodology"},
+      {"cpv":"32420000","label":"Network equipment","subsector":"networks_telecommunications","status":"include","reason":"Network equipment","decision_date":"2026-09-14","decision_source":"P0 fixture methodology"},
+      {"cpv":"99999999","label":"Out of scope fixture code","subsector":"unknown","status":"exclude","reason":"Explicit fixture exclusion","decision_date":"2026-09-14","decision_source":"P0 fixture methodology"}
+    ]
+  },
+  "identityRegistry": {
+    "schema":"elicita.identity-registry/v1","version":"1.0.0",
+    "companies":[
+      {"nif":"B12345674","company_name":"Proveedor Tecnológico, S.A.","reviewed_at":"2026-09-14","registry_version":"1.0.0"},
+      {"nif":"B76543214","company_name":"Redes Públicas, S.L.","reviewed_at":"2026-09-14","registry_version":"1.0.0"}
+    ],
+    "groups":[],"utes":[],
+    "buyers":[
+      {"buyer_id":"buyer-demo-1","buyer_name":"Organismo Demostración Uno","aliases":["ORGANISMO DEMO 1"],"valid_from":"2020-01-01","valid_to":null,"reviewed_at":"2026-09-14","registry_version":"1.0.0"},
+      {"buyer_id":"buyer-demo-2","buyer_name":"Organismo Demostración Dos","aliases":[],"valid_from":"2020-01-01","valid_to":null,"reviewed_at":"2026-09-14","registry_version":"1.0.0"}
+    ]
+  }
+}

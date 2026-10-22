@@ -1,0 +1,349 @@
+---
+import Layout from '../layouts/main.astro';
+
+const metadata = {
+  title: "Demo en vivo — Elicita",
+  description: "Explora licitaciones reales de contratación pública española sin registro. Datos en vivo de 63M+ registros.",
+};
+
+const presets = [
+  { id: 'software', label: 'Software y TI', icon: '💻', desc: 'Desarrollo, licencias, soporte, infraestructura tecnológica' },
+  { id: 'construccion', label: 'Construcción y obras', icon: '🏗', desc: 'Edificación, infraestructura, saneamiento, reformas' },
+  { id: 'sanidad', label: 'Sanidad', icon: '🏥', desc: 'Material médico, equipamiento hospitalario, farmacia' },
+  { id: 'consultoria', label: 'Consultoría', icon: '📋', desc: 'Asesoría, estudios técnicos, auditorías, formación' },
+  { id: 'climatizacion', label: 'Climatización', icon: '❄️', desc: 'HVAC, refrigeración, ventilación, mantenimiento térmico' },
+];
+---
+
+<Layout title={metadata.title} description={metadata.description}>
+  <div class="demo-wrap mx-auto px-6 py-16 max-w-5xl">
+
+    <!-- Hero -->
+    <div class="text-center mb-16">
+      <p class="font-mono text-emerald-400 text-xs tracking-widest uppercase mb-4">Demo en vivo · Sin registro</p>
+      <h1 class="text-4xl md:text-5xl font-light text-white tracking-tight mb-4">
+        Datos reales. Sin compromiso.
+      </h1>
+      <p class="text-white/40 max-w-2xl mx-auto leading-relaxed">
+        Explora licitaciones reales de contratación pública española. Los mismos datos que verías con una cuenta Pro, limitados a 5 resultados por sector. Sin email, sin tarjeta.
+      </p>
+    </div>
+
+    <!-- Preset cards -->
+    <div class="preset-grid">
+      {presets.map(p => (
+        <button class="preset-card" data-preset={p.id}>
+          <div class="preset-icon">{p.icon}</div>
+          <div class="preset-label">{p.label}</div>
+          <div class="preset-desc">{p.desc}</div>
+          <div class="preset-cta">Ver 5 licitaciones →</div>
+        </button>
+      ))}
+    </div>
+
+    <!-- Results panel -->
+    <div id="demo-results" class="demo-results hidden">
+      <div class="results-header">
+        <div>
+          <h2 id="results-title" class="text-2xl font-light text-white"></h2>
+          <p id="results-desc" class="text-white/40 text-sm mt-1"></p>
+        </div>
+        <button id="demo-close" type="button" class="close-btn">×</button>
+      </div>
+      <div id="results-loading" class="loading hidden">Buscando en 63M+ registros…</div>
+      <div id="results-body"></div>
+      <div id="results-more" class="results-more hidden">
+        <div class="more-card">
+          <p class="more-text">Esto es solo el 0.0001% de lo que Elicita puede mostrar.</p>
+          <p class="more-sub">Con una cuenta Pro accedes a los 63M+ registros completos, filtros avanzados, alertas y exportación.</p>
+          <a href="/sign-up" class="more-cta">Crear cuenta gratis →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</Layout>
+
+<style is:global>
+.demo-wrap { padding: 24px; }
+
+/* Preset grid */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 48px;
+}
+.preset-card {
+  text-align: left;
+  background: hsl(var(--foreground) / 0.02);
+  border: 1px solid hsl(var(--foreground) / 0.06);
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: inherit;
+  font: inherit;
+}
+.preset-card:hover {
+  border-color: hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary) / 0.03);
+  transform: translateY(-2px);
+}
+.preset-icon { font-size: 2rem; margin-bottom: 12px; }
+.preset-label { font-size: 1.1rem; font-weight: 500; color: hsl(var(--foreground) / 0.85); margin-bottom: 6px; }
+.preset-desc { font-size: 0.8rem; color: hsl(var(--foreground) / 0.35); line-height: 1.5; margin-bottom: 16px; }
+.preset-cta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: hsl(var(--primary));
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.preset-card:hover .preset-cta { opacity: 1; }
+
+/* Results */
+.demo-results {
+  border-top: 1px solid hsl(var(--foreground) / 0.06);
+  padding-top: 40px;
+}
+.results-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.close-btn {
+  background: none;
+  border: 1px solid hsl(var(--foreground) / 0.1);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  color: hsl(var(--foreground) / 0.4);
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.close-btn:hover { color: hsl(var(--foreground) / 0.7); border-color: hsl(var(--foreground) / 0.2); }
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: hsl(var(--foreground) / 0.3);
+  font-size: 14px;
+}
+
+.demo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.demo-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid hsl(var(--foreground) / 0.08);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: hsl(var(--foreground) / 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.demo-table td {
+  padding: 12px;
+  border-bottom: 1px solid hsl(var(--foreground) / 0.04);
+  color: hsl(var(--foreground) / 0.7);
+  line-height: 1.4;
+}
+.demo-table tbody tr { cursor: pointer; transition: background 0.1s; }
+.demo-table tbody tr:hover { background: hsl(var(--foreground) / 0.03); }
+.demo-table .col-obj { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.demo-table .col-org { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.demo-table .col-imp { text-align: right; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.demo-table .col-fecha { text-align: right; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: hsl(var(--foreground) / 0.4); }
+.demo-table .col-fuente { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: hsl(var(--foreground) / 0.3); }
+
+.demo-row-detail {
+  display: none;
+  padding: 16px 12px;
+  background: hsl(var(--foreground) / 0.02);
+  border-bottom: 1px solid hsl(var(--foreground) / 0.06);
+}
+.demo-row-detail.open { display: table-row; }
+.demo-row-detail td { border: none; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+.detail-field { font-size: 12px; }
+.detail-label { color: hsl(var(--foreground) / 0.25); font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; }
+.detail-value { color: hsl(var(--foreground) / 0.6); word-break: break-word; }
+.detail-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary) / 0.25);
+  padding: 6px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.detail-link:hover { background: hsl(var(--primary) / 0.06); border-color: hsl(var(--primary) / 0.4); }
+
+/* Upsell */
+.results-more { margin-top: 32px; }
+.more-card {
+  text-align: center;
+  border: 1px solid hsl(var(--primary) / 0.15);
+  background: hsl(var(--primary) / 0.03);
+  border-radius: 12px;
+  padding: 32px 24px;
+}
+.more-text { font-size: 1.1rem; color: hsl(var(--foreground) / 0.8); font-weight: 500; margin-bottom: 8px; }
+.more-sub { font-size: 0.85rem; color: hsl(var(--foreground) / 0.4); margin-bottom: 20px; line-height: 1.5; }
+.more-cta {
+  display: inline-block;
+  background: hsl(var(--primary));
+  color: hsl(var(--background));
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.more-cta:hover { opacity: 0.85; }
+
+@media (max-width: 640px) {
+  .demo-table .col-org, .demo-table .col-fuente { display: none; }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+  const presetCards = document.querySelectorAll('.preset-card');
+  const resultsPanel = document.getElementById('demo-results')!;
+  const resultsTitle = document.getElementById('results-title')!;
+  const resultsDesc = document.getElementById('results-desc')!;
+  const resultsBody = document.getElementById('results-body')!;
+  const resultsMore = document.getElementById('results-more')!;
+  const resultsLoading = document.getElementById('results-loading')!;
+  const closeBtn = document.getElementById('demo-close')!;
+
+  function formatImporte(v: any): string {
+    if (!v && v !== 0) return '—';
+    const n = typeof v === 'bigint' ? Number(v) : Number(v);
+    if (isNaN(n)) return '—';
+    if (n >= 1_000_000) return `${(n/1_000_000).toFixed(1)}M €`;
+    if (n >= 1_000) return `${(n/1_000).toFixed(0)}K €`;
+    return `${n.toFixed(0)} €`;
+  }
+
+  function formatDate(d: any): string {
+    if (!d) return '—';
+    try { return String(d).slice(0, 10); } catch { return '—'; }
+  }
+
+  function esc(s: string): string {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function loadPreset(presetId: string) {
+    presetCards.forEach(c => c.classList.remove('active'));
+    const card = document.querySelector(`[data-preset="${presetId}"]`);
+    if (card) card.classList.add('active');
+
+    resultsPanel.classList.remove('hidden');
+    resultsMore.classList.add('hidden');
+    resultsBody.innerHTML = '';
+    resultsLoading.classList.remove('hidden');
+
+    try {
+      const res = await fetch(`/api/demo/search?q=${presetId}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        resultsLoading.classList.add('hidden');
+        resultsBody.innerHTML = '<div class="loading">Error al cargar datos. Inténtalo de nuevo.</div>';
+        return;
+      }
+
+      resultsTitle.textContent = data.label;
+      resultsDesc.textContent = `${data.count} licitaciones reales · ${data.desc}`;
+      resultsLoading.classList.add('hidden');
+
+      if (!data.resultados?.length) {
+        resultsBody.innerHTML = '<div class="loading">Sin resultados en este momento.</div>';
+        return;
+      }
+
+      let html = '<table class="demo-table"><thead><tr>';
+      html += '<th>Objeto</th><th>Organismo</th><th>Importe</th><th>Fecha</th><th>Fuente</th>';
+      html += '</tr></thead><tbody>';
+
+      for (const r of data.resultados) {
+        const obj = esc(r.objeto || '—');
+        const org = esc(r.organismo || '—');
+        const imp = formatImporte(r.importe_licitacion || r.importe_adjudicacion);
+        const fecha = formatDate(r.fecha_publicacion);
+        const fuente = r.fuente || '—';
+        const adj = esc(r.adjudicatario || '');
+        const estado = r.estado || '';
+        const cpv = r.cpv ? String(r.cpv).replace('.0','').trim() : '';
+        const url = r.url || '';
+
+        html += `<tr class="demo-row" data-expanded="false">
+          <td class="col-obj" title="${obj}">${obj}</td>
+          <td class="col-org" title="${org}">${org}</td>
+          <td class="col-imp">${imp}</td>
+          <td class="col-fecha">${fecha}</td>
+          <td class="col-fuente">${fuente}</td>
+        </tr>
+        <tr class="demo-row-detail">
+          <td colspan="5">
+            <div class="detail-grid">
+              <div class="detail-field"><div class="detail-label">Objeto completo</div><div class="detail-value">${obj}</div></div>
+              <div class="detail-field"><div class="detail-label">Organismo</div><div class="detail-value">${org}</div></div>
+              ${adj ? `<div class="detail-field"><div class="detail-label">Adjudicatario</div><div class="detail-value">${adj}</div></div>` : ''}
+              ${cpv ? `<div class="detail-field"><div class="detail-label">CPV</div><div class="detail-value">${cpv}</div></div>` : ''}
+              ${estado ? `<div class="detail-field"><div class="detail-label">Estado</div><div class="detail-value">${estado}</div></div>` : ''}
+              <div class="detail-field"><div class="detail-label">Importe adjudicación</div><div class="detail-value">${formatImporte(r.importe_adjudicacion)}</div></div>
+            </div>
+            ${url ? `<a href="${url}" target="_blank" rel="noopener" class="detail-link">Ver publicación original →</a>` : ''}
+          </td>
+        </tr>`;
+      }
+      html += '</tbody></table>';
+      resultsBody.innerHTML = html;
+
+      // Toggle detail rows
+      resultsBody.querySelectorAll('.demo-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const detail = row.nextElementSibling as HTMLElement;
+          if (!detail || !detail.classList.contains('demo-row-detail')) return;
+          const isOpen = detail.classList.contains('open');
+          resultsBody.querySelectorAll('.demo-row-detail').forEach(d => d.classList.remove('open'));
+          if (!isOpen) detail.classList.add('open');
+        });
+      });
+
+      resultsMore.classList.remove('hidden');
+    } catch (e) {
+      resultsLoading.classList.add('hidden');
+      resultsBody.innerHTML = '<div class="loading">Error de conexión.</div>';
+    }
+  }
+
+  presetCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const preset = card.getAttribute('data-preset');
+      if (preset) loadPreset(preset);
+    });
+  });
+
+  closeBtn.addEventListener('click', () => {
+    resultsPanel.classList.add('hidden');
+    presetCards.forEach(c => c.classList.remove('active'));
+  });
+</script>

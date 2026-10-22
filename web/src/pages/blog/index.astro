@@ -1,0 +1,161 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/main.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const posts = allPosts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const seriesMeta = [
+  {
+    name: 'Market Intelligence',
+    eyebrow: 'Mercados',
+    description: 'Quién lidera cada sector, dónde compite y cómo cambia el reparto del mercado público.',
+  },
+  {
+    name: 'Radiografía',
+    eyebrow: 'Sistema',
+    description: 'Las fuerzas estructurales de la contratación: concentración, incumbencia, CPV y cobertura.',
+  },
+  {
+    name: 'Dossiers de compradores',
+    eyebrow: 'Compradores',
+    description: 'Qué compran los grandes organismos, a quién y cómo ha evolucionado su red de proveedores.',
+  },
+  {
+    name: 'Guías y producto',
+    eyebrow: 'Práctica',
+    description: 'Métodos, fuentes y herramientas para convertir datos públicos en decisiones defendibles.',
+  },
+] as const;
+
+const series = ['Todos', ...seriesMeta.map(item => item.name)];
+const featured = posts.find(post => post.id === 'oligopolio-it-publico');
+---
+
+<Layout
+  title="Blog e inteligencia de mercados — elicita_"
+  description="Análisis de contratación pública española: concentración, incumbencia, CPV y metodología, sobre 63M+ registros oficiales de 16 fuentes actualizados cada 4 horas."
+>
+  <section class="py-20 md:py-28">
+    <div class="container mx-auto px-4">
+      <header class="max-w-4xl mb-14">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-emerald-400 mb-4">Elicita Market Intelligence</p>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tight max-w-3xl">El mapa empresarial de la contratación pública</h1>
+        <p class="text-lg md:text-xl text-muted-foreground max-w-3xl mt-5 leading-relaxed">
+          Mercados, compradores y competidores explicados con datos trazables. Los expedientes son la evidencia; el objeto de análisis es quién lidera cada sector y cómo cambia.
+        </p>
+      </header>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-12" aria-label="Colecciones editoriales">
+        {seriesMeta.map(item => (
+          <button
+            class="series-overview text-left rounded-lg border border-white/10 bg-white/[0.02] p-5 hover:border-emerald-500/30 hover:bg-emerald-500/[0.03] transition-colors"
+            data-series-target={item.name}
+          >
+            <span class="font-mono text-xs uppercase tracking-[0.14em] text-emerald-400">{item.eyebrow}</span>
+            <strong class="block text-sm mt-2 mb-2">{item.name}</strong>
+            <span class="block text-xs leading-relaxed text-muted-foreground">{item.description}</span>
+          </button>
+        ))}
+      </div>
+
+      {featured && (
+        <aside class="mb-12 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-6 md:p-8">
+          <div class="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
+            <div>
+              <p class="font-mono text-xs uppercase tracking-[0.16em] text-emerald-400 mb-3">Punto de partida · Market Intelligence</p>
+              <h2 class="text-2xl md:text-3xl font-bold leading-tight">{featured.data.title}</h2>
+              <p class="text-muted-foreground mt-3 max-w-3xl leading-relaxed">{featured.data.excerpt}</p>
+            </div>
+            <a href={`/blog/${featured.id}`} class="inline-flex items-center justify-center rounded-md bg-emerald-500 px-5 py-3 text-sm font-semibold text-black hover:bg-emerald-400 transition-colors whitespace-nowrap">
+              Leer el análisis
+            </a>
+          </div>
+        </aside>
+      )}
+
+      <div class="flex flex-wrap gap-2 mb-10" id="series-filters" aria-label="Filtrar artículos por colección">
+        {series.map((name, index) => (
+          <button
+            class={`series-btn rounded-md border px-3.5 py-2 text-xs font-medium transition-colors ${
+              index === 0
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : 'border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground hover:bg-white/[0.03]'
+            }`}
+            data-series={name}
+            aria-pressed={index === 0 ? 'true' : 'false'}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-5xl" id="posts-grid">
+        {posts.map(post => (
+          <article
+            class="post-card group rounded-xl border border-white/10 bg-card overflow-hidden hover:border-emerald-500/25 hover:bg-white/[0.02] transition-colors"
+            data-series={post.data.series}
+          >
+            <a href={`/blog/${post.id}`} class="block p-6 h-full">
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs uppercase tracking-wide text-white/50 mb-4">
+                <span>{post.data.date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                <span class="text-white/20">·</span>
+                <span>{post.data.readTime}</span>
+                <span class="text-white/20">·</span>
+                <span class="text-emerald-400/80">{post.data.series}</span>
+              </div>
+              <h2 class="text-lg font-bold mb-2.5 group-hover:text-emerald-400 transition-colors leading-snug">
+                {post.data.title}
+              </h2>
+              <p class="text-sm text-muted-foreground leading-relaxed mb-5">
+                {post.data.excerpt}
+              </p>
+              <span class="inline-flex items-center gap-2 text-sm font-medium text-emerald-400">
+                Leer análisis <span aria-hidden="true">→</span>
+              </span>
+            </a>
+          </article>
+        ))}
+      </div>
+
+      <div id="empty-state" class="hidden py-20 text-muted-foreground">
+        <p class="text-lg">No hay artículos en esta colección todavía.</p>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.series-btn');
+  const overviews = document.querySelectorAll<HTMLButtonElement>('.series-overview');
+  const cards = document.querySelectorAll<HTMLElement>('.post-card');
+  const emptyState = document.getElementById('empty-state');
+
+  function selectSeries(selected: string) {
+    buttons.forEach(button => {
+      const active = button.dataset.series === selected;
+      button.classList.toggle('bg-emerald-500/10', active);
+      button.classList.toggle('border-emerald-500/30', active);
+      button.classList.toggle('text-emerald-400', active);
+      button.classList.toggle('border-white/10', !active);
+      button.classList.toggle('text-muted-foreground', !active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+
+    let visible = 0;
+    cards.forEach(card => {
+      const match = selected === 'Todos' || card.dataset.series === selected;
+      card.classList.toggle('hidden', !match);
+      if (match) visible += 1;
+    });
+    emptyState?.classList.toggle('hidden', visible > 0);
+  }
+
+  buttons.forEach(button => button.addEventListener('click', () => selectSeries(button.dataset.series || 'Todos')));
+  overviews.forEach(button => button.addEventListener('click', () => {
+    selectSeries(button.dataset.seriesTarget || 'Todos');
+    document.getElementById('series-filters')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }));
+</script>

@@ -1,0 +1,633 @@
+---
+// /cuenta/perfil-ia — Configuración del perfil IA para matching
+import DashboardLayout from '../../layouts/dashboard.astro';
+---
+
+<DashboardLayout title="Perfil IA — elicita_">
+  <div class="perfil-ia-page">
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Perfil IA de oportunidades</h1>
+        <p class="page-subtitle">Configura qué licitaciones te interesan y deja que la IA encuentre las mejores</p>
+      </div>
+      <div class="alert-status" id="status-badge">
+        <span class="status-dot"></span>
+        <span id="status-text">Cargando…</span>
+      </div>
+    </div>
+
+    <form id="perfil-form" class="perfil-grid">
+
+      <!-- CPVs -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">🏷</div>
+          <div>
+            <h2>CPVs de interés</h2>
+            <p>Códigos de productos o servicios que te interesan</p>
+          </div>
+        </div>
+        <div class="input-row">
+          <input type="text" id="cpv-input" class="field-input" placeholder="48000000, 50000000... (separados por comas)" />
+        </div>
+        <div id="cpv-chips" class="chips-container"></div>
+      </section>
+
+      <!-- Organismos -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">🏛</div>
+          <div>
+            <h2>Organismos favoritos</h2>
+            <p>Organismos contratantes que quieres seguir</p>
+          </div>
+        </div>
+        <textarea id="organismos-input" class="field-textarea" rows="3" placeholder="Junta de Andalucía, Ministerio de... (uno por línea)"></textarea>
+      </section>
+
+      <!-- Fuentes -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">📡</div>
+          <div>
+            <h2>Fuentes</h2>
+            <p>Comunidades o fuentes de contratación</p>
+          </div>
+        </div>
+        <div class="checkbox-grid" id="fuentes-grid">
+          {['PLACSP', 'ANDALUCIA', 'MADRID', 'VALENCIA', 'EUSKADI', 'GALICIA', 'ASTURIAS', 'CATALUNYA', 'ARAGON', 'TED'].map(fuente => (
+            <label class="checkbox-label">
+              <input type="checkbox" name="fuente" value={fuente} />
+              <span>{fuente}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <!-- Sectores -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">🎯</div>
+          <div>
+            <h2>Sectores</h2>
+            <p>Sectores de actividad que te interesan</p>
+          </div>
+        </div>
+        <div class="checkbox-grid" id="sectores-grid">
+          {['sanidad', 'construcción', 'software', 'consultoría', 'transporte', 'hostelería', 'educación', 'energía', 'medio ambiente', 'seguridad'].map(s => (
+            <label class="checkbox-label">
+              <input type="checkbox" name="sector" value={s} />
+              <span>{s}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <!-- Importes -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">💶</div>
+          <div>
+            <h2>Rango de importe</h2>
+            <p>Licitaciones dentro de este rango</p>
+          </div>
+        </div>
+        <div class="importe-row">
+          <div>
+            <label class="field-label">Mínimo (€)</label>
+            <input type="number" id="importe-min" class="field-input" min="0" step="1000" placeholder="0" />
+          </div>
+          <div>
+            <label class="field-label">Máximo (€)</label>
+            <input type="number" id="importe-max" class="field-input" min="0" step="1000" placeholder="Sin límite" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Activación -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-icon">🔔</div>
+          <div>
+            <h2>Alertas IA</h2>
+            <p>Recibe emails con las mejores oportunidades</p>
+          </div>
+        </div>
+        <label class="toggle-label">
+          <input type="checkbox" id="activo-toggle" checked />
+          <span class="toggle-switch"></span>
+          <span class="toggle-text">Activar alertas IA</span>
+        </label>
+      </section>
+
+    </form>
+
+    <div class="actions-bar">
+      <button type="button" id="save-btn" class="primary-btn">Guardar perfil</button>
+      <button type="button" id="test-btn" class="secondary-btn">Probar matching</button>
+    </div>
+
+    <div id="test-results" class="test-results" style="display:none">
+      <h2>Resultados del matching</h2>
+      <div id="test-loading" class="test-loading" style="display:none">Analizando contratos…</div>
+      <div id="test-empty" class="test-empty" style="display:none">No se encontraron contratos coincidentes.</div>
+      <div id="test-list" class="test-list"></div>
+    </div>
+
+  </div>
+</DashboardLayout>
+
+<style>
+  .perfil-ia-page {
+    max-width: 960px;
+    padding: 24px 32px;
+  }
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .page-header-left h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .page-subtitle {
+    font-size: 14px;
+    color: hsl(var(--foreground) / 0.55);
+    margin: 0;
+  }
+  .alert-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.55);
+    background: hsl(var(--foreground) / 0.04);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: hsl(var(--emerald));
+  }
+  .perfil-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 767px) {
+    .perfil-grid {
+      grid-template-columns: 1fr;
+    }
+    .perfil-ia-page {
+      padding: 16px;
+    }
+  }
+  .section-card {
+    background: hsl(var(--foreground) / 0.03);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .section-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+  .section-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 3px;
+  }
+  .section-header p {
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.5);
+    margin: 0;
+  }
+  .field-input, .field-textarea {
+    width: 100%;
+    background: hsl(var(--background) / 0.4);
+    border: 1px solid hsl(var(--foreground) / 0.1);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: hsl(var(--foreground) / 0.9);
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .field-input::placeholder, .field-textarea::placeholder {
+    color: hsl(var(--foreground) / 0.3);
+  }
+  .field-input:focus, .field-textarea:focus {
+    border-color: hsl(var(--emerald) / 0.5);
+    outline: none;
+  }
+  .field-textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  .field-label {
+    display: block;
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.5);
+    margin-bottom: 6px;
+  }
+  .importe-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.75);
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .checkbox-label:hover {
+    background: hsl(var(--foreground) / 0.05);
+  }
+  .checkbox-label input {
+    accent-color: hsl(var(--emerald));
+  }
+  .chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    min-height: 28px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: hsl(var(--emerald) / 0.12);
+    color: hsl(var(--emerald));
+    border: 1px solid hsl(var(--emerald) / 0.25);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .chip button {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+  }
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .toggle-label input {
+    display: none;
+  }
+  .toggle-switch {
+    width: 40px;
+    height: 22px;
+    background: hsl(var(--foreground) / 0.15);
+    border-radius: 11px;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle-label input:checked + .toggle-switch {
+    background: hsl(var(--emerald));
+  }
+  .toggle-label input:checked + .toggle-switch::after {
+    transform: translateX(18px);
+  }
+  .toggle-text {
+    font-size: 14px;
+    color: hsl(var(--foreground) / 0.85);
+  }
+  .actions-bar {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .primary-btn, .secondary-btn {
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .primary-btn {
+    background: hsl(var(--emerald));
+    color: #000;
+    border: none;
+  }
+  .primary-btn:hover {
+    background: hsl(152 60% 55%);
+  }
+  .secondary-btn {
+    background: transparent;
+    color: hsl(var(--foreground) / 0.8);
+    border: 1px solid hsl(var(--foreground) / 0.15);
+  }
+  .secondary-btn:hover {
+    background: hsl(var(--foreground) / 0.06);
+  }
+  .actions-bar button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .test-results {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid hsl(var(--foreground) / 0.08);
+  }
+  .test-results h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px;
+  }
+  .test-loading, .test-empty {
+    font-size: 14px;
+    color: hsl(var(--foreground) / 0.55);
+    padding: 16px 0;
+  }
+  .test-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .test-item {
+    background: hsl(var(--foreground) / 0.03);
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .test-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .test-item-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    flex: 1;
+  }
+  .test-item-title a {
+    color: hsl(var(--emerald));
+    text-decoration: none;
+  }
+  .test-item-title a:hover {
+    text-decoration: underline;
+  }
+  .test-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: hsl(var(--emerald) / 0.12);
+    color: hsl(var(--emerald));
+    border: 1px solid hsl(var(--emerald) / 0.25);
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .test-meta {
+    font-size: 12px;
+    color: hsl(var(--foreground) / 0.5);
+    margin-bottom: 8px;
+  }
+  .test-motivo {
+    font-size: 13px;
+    color: hsl(var(--foreground) / 0.75);
+    line-height: 1.5;
+    padding: 8px 10px;
+    background: hsl(var(--background) / 0.4);
+    border-radius: 4px;
+  }
+</style>
+
+<script>
+  import { urlFichaNormalizada } from '../../lib/licitacion-url';
+
+  (function() {
+    const cpvInput = document.getElementById('cpv-input');
+    const organismosInput = document.getElementById('organismos-input');
+    const importeMin = document.getElementById('importe-min');
+    const importeMax = document.getElementById('importe-max');
+    const activoToggle = document.getElementById('activo-toggle');
+    const saveBtn = document.getElementById('save-btn');
+    const testBtn = document.getElementById('test-btn');
+    const statusText = document.getElementById('status-text');
+    const cpvChips = document.getElementById('cpv-chips');
+    const testResults = document.getElementById('test-results');
+    const testLoading = document.getElementById('test-loading');
+    const testEmpty = document.getElementById('test-empty');
+    const testList = document.getElementById('test-list');
+
+    let perfil = null;
+    let cpvs = [];
+
+    function renderCpvChips() {
+      cpvChips.innerHTML = '';
+      if (!cpvs.length) {
+        cpvChips.innerHTML = '<span style="font-size:13px;color:hsl(var(--foreground)/0.35)">Añade CPVs separados por comas</span>';
+        return;
+      }
+      cpvs.forEach(c => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.innerHTML = `${c} <button type="button" data-cpv="${c}" aria-label="Eliminar">×</button>`;
+        cpvChips.appendChild(chip);
+      });
+    }
+
+    cpvInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+        e.preventDefault();
+        const val = cpvInput.value.trim().replace(/,/g, ' ');
+        const parts = val.split(/\s+/).filter(Boolean);
+        parts.forEach(p => { if (!cpvs.includes(p)) cpvs.push(p); });
+        cpvInput.value = '';
+        renderCpvChips();
+      }
+    });
+
+    cpvChips.addEventListener('click', function(e) {
+      if (e.target.tagName === 'BUTTON') {
+        const c = e.target.dataset.cpv;
+        cpvs = cpvs.filter(x => x !== c);
+        renderCpvChips();
+      }
+    });
+
+    function getFuentes() {
+      return Array.from(document.querySelectorAll('input[name="fuente"]:checked')).map(i => i.value);
+    }
+    function getSectores() {
+      return Array.from(document.querySelectorAll('input[name="sector"]:checked')).map(i => i.value);
+    }
+
+    function setForm(data) {
+      cpvs = Array.isArray(data.cpvs) ? [...data.cpvs] : [];
+      renderCpvChips();
+      organismosInput.value = Array.isArray(data.organismos) ? data.organismos.join('\n') : '';
+      importeMin.value = data.importe_min != null ? data.importe_min : '';
+      importeMax.value = data.importe_max != null ? data.importe_max : '';
+      activoToggle.checked = data.activo !== false;
+
+      document.querySelectorAll('input[name="fuente"]').forEach(i => {
+        i.checked = Array.isArray(data.fuentes) && data.fuentes.includes(i.value);
+      });
+      document.querySelectorAll('input[name="sector"]').forEach(i => {
+        i.checked = Array.isArray(data.sectores) && data.sectores.includes(i.value);
+      });
+    }
+
+    async function loadPerfil() {
+      try {
+        const res = await fetch('/api/ai/perfil');
+        const json = await res.json();
+        if (json.ok && json.perfil) {
+          perfil = json.perfil;
+          setForm(perfil);
+          statusText.textContent = 'Perfil cargado';
+        } else {
+          statusText.textContent = 'Sin perfil guardado';
+        }
+      } catch (e) {
+        statusText.textContent = 'Error cargando perfil';
+        console.error(e);
+      }
+    }
+
+    async function savePerfil() {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Guardando…';
+      try {
+        const payload = {
+          cpvs,
+          organismos: organismosInput.value.split(/\n/).map(s => s.trim()).filter(Boolean),
+          fuentes: getFuentes(),
+          sectores: getSectores(),
+          importe_min: importeMin.value ? Number(importeMin.value) : null,
+          importe_max: importeMax.value ? Number(importeMax.value) : null,
+          activo: activoToggle.checked,
+        };
+        const res = await fetch('/api/ai/perfil', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (json.ok) {
+          statusText.textContent = 'Perfil guardado';
+          setTimeout(() => statusText.textContent = 'Perfil cargado', 2000);
+        } else {
+          statusText.textContent = json.error || 'Error guardando';
+        }
+      } catch (e) {
+        statusText.textContent = 'Error guardando';
+        console.error(e);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Guardar perfil';
+      }
+    }
+
+    async function testMatching() {
+      testResults.style.display = 'block';
+      testLoading.style.display = 'block';
+      testEmpty.style.display = 'none';
+      testList.innerHTML = '';
+      testBtn.disabled = true;
+      testBtn.textContent = 'Analizando…';
+
+      try {
+        const res = await fetch('/api/ai/matching', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ limite: 20 }),
+        });
+        const json = await res.json();
+        testLoading.style.display = 'none';
+        if (!json.ok || !json.resultados || !json.resultados.length) {
+          testEmpty.style.display = 'block';
+          return;
+        }
+        testList.innerHTML = json.resultados.map(r => {
+          const importe = r.importe_licitacion != null ? `€${Number(r.importe_licitacion).toLocaleString('es-ES')}` : '—';
+          const fecha = r.fecha_publicacion ? r.fecha_publicacion.slice(0, 10) : '—';
+          return `
+            <div class="test-item">
+              <div class="test-item-header">
+                <div class="test-item-title">
+                  <a href="${urlFichaNormalizada(String(r.fuente || 'unknown'), String(r.id_contrato))}" target="_blank">
+                    ${escapeHtml((r.objeto || 'Sin título').slice(0, 110))}
+                  </a>
+                </div>
+                <span class="test-score">${r.score}/100</span>
+              </div>
+              <div class="test-meta">${escapeHtml(r.organismo || '—')} · ${importe} · ${fecha}</div>
+              <div class="test-motivo">${escapeHtml(r.motivo)}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        testLoading.style.display = 'none';
+        testEmpty.style.display = 'block';
+        testEmpty.textContent = 'Error en el matching. Inténtalo de nuevo.';
+        console.error(e);
+      } finally {
+        testBtn.disabled = false;
+        testBtn.textContent = 'Probar matching';
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    saveBtn.addEventListener('click', savePerfil);
+    testBtn.addEventListener('click', testMatching);
+
+    loadPerfil();
+  })();
+</script>
